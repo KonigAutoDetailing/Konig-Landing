@@ -77,7 +77,7 @@
     .nav-cta:hover{background:var(--purpleB);transform:translateY(-1px)}
 
     /* ── HERO ── */
-    .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:160px 24px 60px;position:relative;overflow:hidden;background:linear-gradient(180deg,#050510 0%,#0a0820 40%,#100820 100%)}
+    .hero{min-height:80vh;display:flex;flex-direction:column;justify-content:flex-end;padding:60px 24px 60px;position:relative;overflow:hidden;background:linear-gradient(180deg,#050510 0%,#0a0820 40%,#100820 100%)}
     .hero-orb{position:absolute;top:-100px;right:-80px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(123,47,190,0.25) 0%,transparent 70%);animation:orbFloat 6s ease-in-out infinite}
     @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20px,20px) scale(1.05)}}
     .hero-line{position:absolute;top:0;right:80px;width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(123,47,190,0.5) 40%,transparent)}
@@ -189,7 +189,7 @@
     @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
 
     @media(max-width:640px){
-      .hero{padding:150px 20px 56px}
+      .hero{padding:50px 20px 50px}
       .hero-stats{gap:20px}
       .hero-stat-num{font-size:28px}
       .section-inner{padding:60px 20px}
@@ -239,14 +239,23 @@
 </nav>
 
 <!-- HERO -->
+<!-- GRAPHENE BANNER — full width above hero -->
+<div style="position:relative;z-index:1;cursor:pointer;margin-top:84px;"
+  onclick="document.getElementById('bannerModal').style.display='flex';trackEvent('hero_banner_click')">
+  <img src="graphene-banner.png" alt="KONIG Graphene Coating — Next Gen Protection"
+    style="width:100%;display:block;border-bottom:2px solid rgba(123,47,190,0.5);box-shadow:0 4px 40px rgba(123,47,190,0.25);" />
+  <div style="position:absolute;bottom:12px;right:16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;background:rgba(0,0,0,0.5);padding:4px 12px;">
+    Tap untuk detail →
+  </div>
+</div>
+
 <section class="hero" id="home">
   <div class="hero-orb"></div>
   <div class="hero-line"></div>
   <div style="position:relative;z-index:1;">
-    <!-- Graphene promo inline in hero -->
-    <div style="margin-bottom:28px;opacity:0;animation:fadeUp 0.6s 0.1s forwards;cursor:pointer;" onclick="document.getElementById('bannerModal').style.display='flex';trackEvent('hero_banner_click')">
-      <img src="graphene-banner.png" alt="KONIG Graphene Coating" style="width:100%;max-width:680px;display:block;border:1px solid rgba(123,47,190,0.35);box-shadow:0 8px 40px rgba(123,47,190,0.2);" />
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(176,106,255,0.7);margin-top:6px;text-align:right;">Tap untuk detail →</div>
+    <!-- Graphene promo inline in hero — full width -->
+    <div style="position:absolute;left:0;right:0;bottom:0;cursor:pointer;opacity:0;animation:fadeUp 0.6s 0.1s forwards;"
+      onclick="document.getElementById('bannerModal').style.display='flex';trackEvent('hero_banner_click')">
     </div>
     <p class="hero-eyebrow">Premium Auto Detailing · Pagedangan, Tangerang</p>
     <h1 class="hero-title">PROTECT<br/>YOUR <span>RIDE.</span></h1>
