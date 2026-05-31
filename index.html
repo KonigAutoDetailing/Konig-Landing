@@ -213,7 +213,7 @@
 </div>
 
 <!-- GRAPHENE PROMO BAR (always visible) -->
-<div class="promo-bar" onclick="document.getElementById('bannerModal').style.display='flex';trackEvent('promo_bar_click')">
+<div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')">
   <div class="promo-bar-inner">
     <span class="promo-tag">🔥 Eksklusif</span>
     <span class="promo-text">KONÏG Graphene Coating — Next Gen Protection · Eternity up to 8 Years · Made in Korea</span>
@@ -221,11 +221,14 @@
   </div>
 </div>
 
-<!-- GRAPHENE BANNER MODAL -->
+<!-- GRAPHENE BANNER MODAL — desktop: landscape banner, mobile: portrait pricelist -->
 <div class="banner-overlay" id="bannerModal" style="display:none;">
-  <div class="banner-box">
+  <div class="banner-box" id="bannerContent">
     <button class="banner-close" onclick="document.getElementById('bannerModal').style.display='none'">×</button>
-    <img src="graphene-banner.png" alt="KONIG Graphene Coating"/>
+    <!-- Desktop: landscape banner -->
+    <img src="graphene-banner.png" alt="KONIG Graphene Coating" id="bannerImgDesktop"/>
+    <!-- Mobile: portrait pricelist -->
+    <img src="graphene-pricelist.png" alt="KONIG Graphene Coating Pricelist" id="bannerImgMobile" style="display:none;"/>
     <a href="#inquiry" class="banner-cta" onclick="document.getElementById('bannerModal').style.display='none';trackEvent('banner_cta_click')">
       Tanya Graphene Coating Sekarang →
     </a>
@@ -239,13 +242,11 @@
 </nav>
 
 <!-- HERO -->
-<!-- GRAPHENE BANNER — full width above hero, logo covered -->
+<!-- GRAPHENE BANNER — full width above hero -->
 <div style="position:relative;z-index:1;cursor:pointer;margin-top:84px;overflow:hidden;"
-  onclick="document.getElementById('bannerModal').style.display='flex';trackEvent('hero_banner_click')">
+  onclick="openGrapheneBanner();trackEvent('hero_banner_click')">
   <img src="graphene-banner.png" alt="KONIG Graphene Coating — Next Gen Protection"
     style="width:100%;display:block;border-bottom:2px solid rgba(123,47,190,0.5);box-shadow:0 4px 40px rgba(123,47,190,0.25);" />
-  <!-- Cover the KONIG logo in top-left of banner image -->
-  <div style="position:absolute;top:0;left:0;width:22%;height:35%;background:linear-gradient(135deg,#0a0010 60%,transparent 100%);"></div>
   <div style="position:absolute;bottom:12px;right:16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;background:rgba(0,0,0,0.5);padding:4px 12px;">
     Tap untuk detail →
   </div>
@@ -576,6 +577,21 @@
 
   // ── EmailJS ──
   emailjs.init('ldjEJ0m9FeUhGxTpZ')
+
+  // ── Open graphene banner: show pricelist on mobile, landscape on desktop ──
+  function openGrapheneBanner() {
+    const isMobile = window.innerWidth <= 768
+    document.getElementById('bannerImgDesktop').style.display = isMobile ? 'none' : 'block'
+    document.getElementById('bannerImgMobile').style.display = isMobile ? 'block' : 'none'
+    // On mobile, make modal box narrower to fit portrait poster
+    const box = document.getElementById('bannerContent')
+    if (isMobile) {
+      box.style.maxWidth = '420px'
+    } else {
+      box.style.maxWidth = '900px'
+    }
+    document.getElementById('bannerModal').style.display = 'flex'
+  }
 
   // ── GA ──
   function trackEvent(name, params) {
