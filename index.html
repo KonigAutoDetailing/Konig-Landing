@@ -239,11 +239,13 @@
 </nav>
 
 <!-- HERO -->
-<!-- GRAPHENE BANNER — full width above hero -->
-<div style="position:relative;z-index:1;cursor:pointer;margin-top:84px;"
+<!-- GRAPHENE BANNER — full width above hero, logo covered -->
+<div style="position:relative;z-index:1;cursor:pointer;margin-top:84px;overflow:hidden;"
   onclick="document.getElementById('bannerModal').style.display='flex';trackEvent('hero_banner_click')">
   <img src="graphene-banner.png" alt="KONIG Graphene Coating — Next Gen Protection"
     style="width:100%;display:block;border-bottom:2px solid rgba(123,47,190,0.5);box-shadow:0 4px 40px rgba(123,47,190,0.25);" />
+  <!-- Cover the KONIG logo in top-left of banner image -->
+  <div style="position:absolute;top:0;left:0;width:22%;height:35%;background:linear-gradient(135deg,#0a0010 60%,transparent 100%);"></div>
   <div style="position:absolute;bottom:12px;right:16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;background:rgba(0,0,0,0.5);padding:4px 12px;">
     Tap untuk detail →
   </div>
@@ -326,20 +328,7 @@
         </div>
       </div>
 
-      <div class="service-card">
-        <span class="service-tag">Precision · Multi-Step</span>
-        <div class="service-name">Paint Correction</div>
-        <div class="service-duration">⏱ Estimasi 1–3 hari kerja</div>
-        <p class="service-desc">Restorasi gloss cat mendekati kondisi showroom menggunakan compound dan polish multi-step. Menghilangkan swirl marks, goresan halus, water spot, oxidasi, dan defect lainnya — dengan paint thickness check sebelum dan sesudah setiap tahap untuk keamanan cat.</p>
-        <div class="service-features">
-          <span class="service-feat">1-Step Correction</span>
-          <span class="service-feat">2-Step Correction</span>
-          <span class="service-feat">Swirl Removal</span>
-          <span class="service-feat">Water Spot Removal</span>
-          <span class="service-feat">Glass Polishing</span>
-          <span class="service-feat">Headlight Restore</span>
-        </div>
-      </div>
+
 
       <div class="service-card">
         <span class="service-tag">Exterior · Detailing</span>
@@ -520,9 +509,6 @@
               <option>Ceramic Coating — Essential Series</option>
               <option>Ceramic Coating — Signature Series</option>
               <option>Ceramic Coating — Prestige Series</option>
-              <option>Paint Correction 1-Step</option>
-              <option>Paint Correction 2-Step</option>
-              <option>Paint Correction + Coating</option>
               <option>Premium Wash Exterior</option>
               <option>Window Coating</option>
               <option>Express Polish</option>
