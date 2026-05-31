@@ -188,6 +188,10 @@
     .wa-float:hover{transform:scale(1.1)}
     @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
 
+    @media(max-width:768px){
+      .promo-text-desktop{display:none !important}
+      .promo-text-mobile{display:inline !important}
+    }
     @media(max-width:640px){
       .hero{padding:50px 20px 50px}
       .hero-stats{gap:20px}
@@ -225,10 +229,10 @@
 <div class="banner-overlay" id="bannerModal" style="display:none;">
   <div class="banner-box" id="bannerContent">
     <button class="banner-close" onclick="document.getElementById('bannerModal').style.display='none'">×</button>
-    <!-- Desktop: landscape banner -->
-    <img src="graphene-banner.png" alt="KONIG Graphene Coating" id="bannerImgDesktop"/>
+    <!-- Desktop/tablet: landscape pricelist -->
+    <img src="graphene-pricelist-desktop.png" alt="KONIG Graphene Coating Pricelist" id="bannerImgDesktop"/>
     <!-- Mobile: portrait pricelist -->
-    <img src="graphene-pricelist.png" alt="KONIG Graphene Coating Pricelist" id="bannerImgMobile" style="display:none;"/>
+    <img src="graphene-pricelist-mobile.png" alt="KONIG Graphene Coating Pricelist" id="bannerImgMobile" style="display:none;"/>
     <a href="#inquiry" class="banner-cta" onclick="document.getElementById('bannerModal').style.display='none';trackEvent('banner_cta_click')">
       Tanya Graphene Coating Sekarang →
     </a>
@@ -578,18 +582,13 @@
   // ── EmailJS ──
   emailjs.init('ldjEJ0m9FeUhGxTpZ')
 
-  // ── Open graphene banner: show pricelist on mobile, landscape on desktop ──
+  // ── Open graphene banner: portrait on mobile, landscape on desktop/tablet ──
   function openGrapheneBanner() {
     const isMobile = window.innerWidth <= 768
     document.getElementById('bannerImgDesktop').style.display = isMobile ? 'none' : 'block'
     document.getElementById('bannerImgMobile').style.display = isMobile ? 'block' : 'none'
-    // On mobile, make modal box narrower to fit portrait poster
     const box = document.getElementById('bannerContent')
-    if (isMobile) {
-      box.style.maxWidth = '420px'
-    } else {
-      box.style.maxWidth = '900px'
-    }
+    box.style.maxWidth = isMobile ? '420px' : '1000px'
     document.getElementById('bannerModal').style.display = 'flex'
   }
 
