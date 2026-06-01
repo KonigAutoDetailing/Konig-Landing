@@ -339,9 +339,11 @@
 
 
 
-      <div class="service-card">
+      <div class="service-card" style="cursor:pointer;" onclick="openServiceModal('premium-wash')">
         <span class="service-tag">Exterior · Detailing</span>
-        <div class="service-name">Premium Wash</div>
+        <div class="service-name">Premium Wash
+          <span style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;display:inline-block;margin-left:8px;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;">Tap untuk info →</span>
+        </div>
         <div class="service-duration">⏱ Estimasi 3–5 jam</div>
         <p class="service-desc">Exterior detailing menyeluruh dengan standar yang jauh di atas car wash biasa. Setiap bagian dibersihkan secara detail — bukan sekadar disemprot dan dilap. Termasuk pH neutral soap wash, wheels & tire cleaning, tar remover, trim protection, dan wetcoat protection 1 bulan.</p>
         <div class="service-features">
@@ -567,6 +569,18 @@
   </div>
 </div>
 
+<!-- SERVICE INFO MODAL — reusable for all service cards -->
+<div id="serviceModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
+  <div id="serviceModalContent" style="position:relative;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <button onclick="document.getElementById('serviceModal').style.display='none'" style="position:sticky;top:0;right:0;float:right;width:36px;height:36px;border-radius:50%;background:var(--purple2);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(123,47,190,0.5);z-index:10;margin-bottom:8px;">×</button>
+    <div style="clear:both;"></div>
+    <img id="serviceModalImg" src="" alt="" style="width:100%;display:block;border:1px solid rgba(123,47,190,0.4);" />
+    <a href="#inquiry" onclick="document.getElementById('serviceModal').style.display='none'" style="display:block;text-align:center;margin-top:12px;padding:14px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;">
+      Booking Sekarang →
+    </a>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
@@ -603,15 +617,35 @@
     const isMobile = window.innerWidth <= 600
     const img = document.getElementById('grapheneWhyImg')
     const box = document.getElementById('grapheneWhyContent')
-    if (isMobile) {
-      img.src = 'graphene-why-mobile.png'
-      box.style.maxWidth = '420px'
-    } else {
-      img.src = 'graphene-why-desktop.png'
-      box.style.maxWidth = '1100px'
-    }
+    img.src = isMobile ? 'graphene-why-mobile.png' : 'graphene-why-desktop.png'
+    box.style.maxWidth = isMobile ? '420px' : '1100px'
     document.getElementById('grapheneWhyModal').style.display = 'flex'
     trackEvent('graphene_why_open', { device: isMobile ? 'mobile' : 'desktop' })
+  }
+
+  // ── Generic service modal — supports mobile + desktop images ──
+  // serviceImages: { mobile: 'file.png', desktop: 'file.png' }
+  // If only desktop provided, use for both
+  const SERVICE_IMAGES = {
+    'premium-wash': {
+      desktop: 'premium-wash-desktop.png',
+      mobile:  'premium-wash-desktop.png', // use same until mobile version available
+    },
+    // Add more services here as banners are ready:
+    // 'ceramic-coating': { desktop: '...', mobile: '...' },
+    // 'window-coating':  { desktop: '...', mobile: '...' },
+  }
+
+  function openServiceModal(serviceKey) {
+    const imgs = SERVICE_IMAGES[serviceKey]
+    if (!imgs) return
+    const isMobile = window.innerWidth <= 600
+    const img = document.getElementById('serviceModalImg')
+    const box = document.getElementById('serviceModalContent')
+    img.src = isMobile ? imgs.mobile : imgs.desktop
+    box.style.maxWidth = isMobile ? '420px' : '1100px'
+    document.getElementById('serviceModal').style.display = 'flex'
+    trackEvent('service_modal_open', { service: serviceKey, device: isMobile ? 'mobile' : 'desktop' })
   }
 
   // ── Open graphene banner: portrait on mobile, landscape on desktop/tablet ──
