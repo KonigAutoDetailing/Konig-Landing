@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="description" content="KONÏG Auto Detailing — Pricelist Graphene Coating & Ceramic Coating Tangerang"/>
+  <title>Pricelist — KONÏG Auto Detailing</title>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;
+      --purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;
+      --white:#f0eeff;--text:#d4cef0;--muted:#9d93c0;
+    }
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden}
+
+    /* NAV */
+    nav{
+      position:sticky;top:0;z-index:100;
+      padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
+      background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(123,47,190,0.3);
+    }
+    .nav-back{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:color 0.2s}
+    .nav-back:hover{color:var(--purpleB)}
+    .nav-cta{padding:10px 20px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
+    .nav-cta:hover{background:var(--purpleB)}
+
+    /* HERO */
+    .page-hero{
+      padding:60px 24px 40px;text-align:center;
+      background:linear-gradient(180deg,#0a0820,#080810);
+      border-bottom:1px solid var(--border);position:relative;overflow:hidden;
+    }
+    .page-hero::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(123,47,190,0.15) 0%,transparent 70%);pointer-events:none}
+    .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px}
+    .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,72px);letter-spacing:3px;color:var(--white);line-height:1;margin-bottom:12px}
+    .page-title span{color:var(--purpleB)}
+    .page-desc{font-size:14px;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.7}
+
+    /* TAB NAV */
+    .tab-nav{display:flex;overflow-x:auto;gap:0;border-bottom:2px solid var(--border);background:var(--dark);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .tab-nav::-webkit-scrollbar{display:none}
+    .tab-btn{flex-shrink:0;padding:16px 24px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;white-space:nowrap;transition:all 0.2s}
+    .tab-btn.active{color:var(--purpleB);border-bottom-color:var(--purpleB)}
+    .tab-btn:hover{color:var(--white)}
+
+    /* PRICELIST CONTENT */
+    .tab-content{display:none;max-width:900px;margin:0 auto;padding:40px 24px 80px}
+    .tab-content.active{display:block}
+
+    /* Pricelist image full width */
+    .pricelist-img{width:100%;display:block;border:1px solid rgba(123,47,190,0.3);margin-bottom:32px}
+
+    /* CTA box */
+    .cta-box{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--purple2);padding:28px 24px;text-align:center;margin-top:8px}
+    .cta-box-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white);margin-bottom:8px}
+    .cta-box-desc{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7}
+    .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-primary{padding:14px 28px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s}
+    .btn-primary:hover{background:var(--purpleB)}
+    .btn-wa{padding:14px 28px;background:#25D366;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s}
+    .btn-wa:hover{background:#1da851}
+
+    /* Note box */
+    .note-box{padding:14px 18px;background:rgba(123,47,190,0.08);border:1px solid rgba(123,47,190,0.25);border-left:3px solid var(--purple2);margin-bottom:24px;font-size:12px;color:var(--muted);line-height:1.8}
+    .note-box strong{color:var(--purpleB)}
+
+    /* WA Float */
+    .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
+    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
+
+    @media(max-width:480px){
+      .tab-btn{padding:14px 16px;font-size:11px}
+      .tab-content{padding:28px 16px 80px}
+      .cta-btns{flex-direction:column}
+      .btn-primary,.btn-wa{justify-content:center}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-back">← Kembali ke Home</a>
+  <img src="konig-logo.png" alt="KONIG" style="height:28px;width:auto;position:absolute;left:50%;transform:translateX(-50%);"/>
+  <a href="/#inquiry" class="nav-cta">Booking</a>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <p class="page-eyebrow">KONÏG Auto Detailing · Pagedangan, Tangerang</p>
+  <h1 class="page-title">PRICELIST <span>COATING</span></h1>
+  <p class="page-desc">Semua harga sudah termasuk proses prep lengkap. Harga menyesuaikan ukuran kendaraan — konsultasi gratis sebelum booking.</p>
+</div>
+
+<!-- TABS -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('graphene')">🔮 Graphene Coating</button>
+  <button class="tab-btn" onclick="showTab('prestige')">⭐ Prestige Series</button>
+  <button class="tab-btn" onclick="showTab('signature')">💎 Signature Series</button>
+  <button class="tab-btn" onclick="showTab('essential')">🛡 Essential Series</button>
+</div>
+
+<!-- GRAPHENE -->
+<div class="tab-content active" id="tab-graphene">
+  <div class="note-box">
+    <strong>Graphene Coating</strong> — Teknologi generasi terbaru berbasis Graphene dari Korea. Tersedia 3 tier: <strong>Eternity (8 tahun)</strong>, <strong>Shield (7 tahun)</strong>, <strong>Armor (3 tahun)</strong>. Harga sudah termasuk full prep & paint correction ringan.
+  </div>
+  <img src="pricelist-graphene.png" alt="KONIG Graphene Coating Pricelist" class="pricelist-img"/>
+  <div class="cta-box">
+    <div class="cta-box-title">Tertarik Graphene Coating?</div>
+    <p class="cta-box-desc">Konsultasikan kondisi kendaraan kamu dulu — kami bantu pilih tier yang paling sesuai kebutuhan dan budget.</p>
+    <div class="cta-btns">
+      <a href="/#inquiry" class="btn-primary">Isi Form Inquiry →</a>
+      <a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20tertarik%20dengan%20Graphene%20Coating,%20boleh%20konsultasi?" target="_blank" class="btn-wa">💬 Chat WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<!-- PRESTIGE -->
+<div class="tab-content" id="tab-prestige">
+  <div class="note-box">
+    <strong>Prestige Series</strong> — Tier tertinggi ceramic coating untuk kendaraan premium & exotic. Produk: <strong>CarPro D.Quartz Go</strong> & <strong>Gyeon Syncro EVO</strong>. Perlindungan hingga 4 tahun dengan gloss depth maksimal.
+  </div>
+  <img src="pricelist-prestige.jpg" alt="KONIG Prestige Series Pricelist" class="pricelist-img"/>
+  <div class="cta-box">
+    <div class="cta-box-title">Prestige Series untuk Kendaraan Terbaik Kamu</div>
+    <p class="cta-box-desc">Untuk BMW, Mercedes, Porsche, dan kendaraan premium lainnya — standar pengerjaan yang tidak berkompromi.</p>
+    <div class="cta-btns">
+      <a href="/#inquiry" class="btn-primary">Isi Form Inquiry →</a>
+      <a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20tertarik%20dengan%20Prestige%20Series,%20boleh%20konsultasi?" target="_blank" class="btn-wa">💬 Chat WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNATURE -->
+<div class="tab-content" id="tab-signature">
+  <div class="note-box">
+    <strong>Signature Series</strong> — Keseimbangan sempurna antara proteksi dan performa. Produk: <strong>Sonax CC Pro</strong>, <strong>CarPro CQ UK 3.0</strong>, <strong>Gyeon Q2 Pure EVO</strong>. Perlindungan hingga 4 tahun.
+  </div>
+  <img src="pricelist-signature.jpg" alt="KONIG Signature Series Pricelist" class="pricelist-img"/>
+  <div class="cta-box">
+    <div class="cta-box-title">Signature Series — Best Value</div>
+    <p class="cta-box-desc">Pilihan terpopuler di KONÏG — proteksi premium dengan harga yang masih kompetitif.</p>
+    <div class="cta-btns">
+      <a href="/#inquiry" class="btn-primary">Isi Form Inquiry →</a>
+      <a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20tertarik%20dengan%20Signature%20Series,%20boleh%20konsultasi?" target="_blank" class="btn-wa">💬 Chat WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<!-- ESSENTIAL -->
+<div class="tab-content" id="tab-essential">
+  <div class="note-box">
+    <strong>Essential Series</strong> — Proteksi ceramic coating entry-level untuk kendaraan harian. Produk: <strong>Sonax CC One</strong>, <strong>CarPro Lite</strong>, <strong>Sapphire 10H</strong>. Standar pengerjaan sama dengan tier di atasnya.
+  </div>
+  <img src="pricelist-essential.jpg" alt="KONIG Essential Series Pricelist" class="pricelist-img"/>
+  <div class="cta-box">
+    <div class="cta-box-title">Essential Series — Mulai Proteksi Sekarang</div>
+    <p class="cta-box-desc">Harga terjangkau, standar pengerjaan tidak berkompromi. Cocok untuk kendaraan harian yang mau tampil selalu bersih.</p>
+    <div class="cta-btns">
+      <a href="/#inquiry" class="btn-primary">Isi Form Inquiry →</a>
+      <a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20tertarik%20dengan%20Essential%20Series,%20boleh%20konsultasi?" target="_blank" class="btn-wa">💬 Chat WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<!-- WA Float -->
+<a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20coating" class="wa-float" target="_blank">💬</a>
+
+<script>
+  function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'))
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'))
+    document.getElementById('tab-' + tab).classList.add('active')
+    event.target.classList.add('active')
+    if (typeof gtag !== 'undefined') gtag('event', 'pricelist_tab_view', { tab: tab })
+  }
+</script>
+</body>
+</html>

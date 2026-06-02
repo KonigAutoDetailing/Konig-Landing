@@ -244,7 +244,10 @@
 <!-- NAV -->
 <nav>
   <img src="konig-logo.png" alt="KONIG Auto Detailing" style="height:30px;width:auto;display:block;filter:brightness(1.1);"/>
-  <a href="#inquiry" class="nav-cta" onclick="trackEvent('nav_cta_click')">Booking Sekarang</a>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <a href="/pricelist.html" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#b06aff'" onmouseout="this.style.color='var(--muted)'">Pricelist</a>
+    <a href="#inquiry" class="nav-cta" onclick="trackEvent('nav_cta_click')">Booking Sekarang</a>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -385,6 +388,21 @@
     </div>
   </div>
 </section>
+
+<!-- PRICELIST CTA BAND -->
+<div style="background:linear-gradient(135deg,#0f0820,#1a0840,#0f0820);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px 24px;text-align:center;position:relative;z-index:1;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:10px;">Transparansi Harga</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,7vw,48px);letter-spacing:2px;color:var(--white);margin-bottom:10px;">LIHAT PRICELIST<br/>LENGKAP KAMI</div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.7;">Graphene Coating, Prestige, Signature & Essential Series — semua harga transparan tanpa biaya tersembunyi.</p>
+    <a href="/pricelist.html" onclick="trackEvent('pricelist_cta_click')"
+      style="display:inline-flex;align-items:center;gap:10px;padding:16px 36px;background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;box-shadow:0 8px 32px rgba(123,47,190,0.4);transition:all 0.25s;"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(123,47,190,0.55)'"
+      onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 32px rgba(123,47,190,0.4)'">
+      Lihat Pricelist Lengkap →
+    </a>
+  </div>
+</div>
 
 <!-- PROCESS -->
 <section class="process-section">
