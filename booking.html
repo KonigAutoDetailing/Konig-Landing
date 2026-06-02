@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="description" content="KONÏG Auto Detailing — Booking & Konsultasi Gratis. Ceramic Coating, Graphene Coating, Premium Wash di Gading Serpong, Tangerang."/>
+  <meta name="keywords" content="booking coating tangerang, konsultasi ceramic coating, graphene coating gading serpong"/>
+  <title>Booking & Konsultasi — KONÏG Auto Detailing</title>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;
+      --purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;
+      --white:#f0eeff;--text:#d4cef0;--muted:#9d93c0;--success:#4cd4a0;
+    }
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;min-height:100vh}
+
+    /* NAV */
+    nav{position:sticky;top:0;z-index:100;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.3);}
+    .nav-back{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:color 0.2s}
+    .nav-back:hover{color:var(--purpleB)}
+
+    /* LAYOUT */
+    .page-wrap{max-width:1000px;margin:0 auto;padding:60px 24px 80px;display:grid;gap:48px;}
+    @media(min-width:768px){.page-wrap{grid-template-columns:1fr 1fr;align-items:start;padding-top:80px}}
+
+    /* LEFT */
+    .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px;display:block}
+    .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,64px);letter-spacing:2px;color:var(--white);line-height:1;margin-bottom:16px}
+    .page-title span{color:var(--purpleB)}
+    .page-desc{font-size:15px;font-weight:400;color:var(--text);line-height:1.8;margin-bottom:32px;opacity:0.9}
+
+    .info-cards{display:flex;flex-direction:column;gap:12px}
+    .info-card{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border:1px solid var(--border);border-left:3px solid var(--purple2);text-decoration:none}
+    .info-icon{font-size:18px;flex-shrink:0}
+    .info-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--white);letter-spacing:1px;text-transform:uppercase}
+    .info-val{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.6}
+    .info-link{font-size:10px;color:var(--purpleB);margin-top:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px}
+
+    /* FORM */
+    .form-box{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--purple2);padding:28px 24px}
+    .form-box-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--white);margin-bottom:20px}
+    .inquiry-form{display:flex;flex-direction:column;gap:14px}
+    .field-group{display:flex;flex-direction:column;gap:6px}
+    .field-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+    .field-input,.field-select,.field-textarea{background:var(--black);border:1px solid var(--border);color:var(--white);padding:13px 16px;font-family:'Barlow',sans-serif;font-size:14px;font-weight:300;outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;-webkit-appearance:none;border-radius:0}
+    .field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--purple2);box-shadow:0 0 0 3px rgba(123,47,190,0.15)}
+    .field-input::placeholder,.field-textarea::placeholder{color:#3a3558}
+    .field-select option{background:var(--panel);color:var(--white)}
+    .field-textarea{resize:vertical;min-height:100px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:480px){.form-row{grid-template-columns:1fr}}
+    .submit-btn{padding:18px 32px;width:100%;background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:3px;text-transform:uppercase;border:none;cursor:pointer;box-shadow:0 8px 32px rgba(123,47,190,0.35);transition:all 0.25s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px}
+    .submit-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 40px rgba(123,47,190,0.5)}
+    .submit-btn:disabled{opacity:0.5;cursor:not-allowed}
+    .form-success{display:none;padding:32px 24px;text-align:center;background:rgba(76,212,160,0.08);border:1px solid rgba(76,212,160,0.3);border-left:4px solid var(--success)}
+    .form-success.show{display:block}
+    .form-success-icon{font-size:48px;margin-bottom:16px}
+    .form-success-title{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--white);letter-spacing:2px;margin-bottom:8px}
+    .form-success-text{font-size:13px;color:var(--muted);line-height:1.8}
+
+    /* WA Float */
+    .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
+    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-back" onclick="sessionStorage.setItem('konig_welcomed','1')">← Home</a>
+  <img src="konig-logo.png" alt="KONIG" style="height:28px;width:auto;position:absolute;left:50%;transform:translateX(-50%);"/>
+  <a href="/pricelist.html" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;" onmouseover="this.style.color='#b06aff'" onmouseout="this.style.color='var(--muted)'">Pricelist</a>
+</nav>
+
+<div class="page-wrap">
+  <!-- LEFT: info -->
+  <div>
+    <span class="page-eyebrow">Konsultasi Gratis</span>
+    <h1 class="page-title">BOOKING &<br/><span>KONSULTASI</span></h1>
+    <p class="page-desc">Isi form di samping dan tim kami akan menghubungi kamu dalam 1×24 jam. Konsultasi gratis — tidak ada komitmen sebelum kamu yakin.</p>
+
+    <div class="info-cards">
+      <a href="https://maps.app.goo.gl/UuXzCDLM3RSTB8Q48" target="_blank" class="info-card" style="text-decoration:none;">
+        <div class="info-icon">📍</div>
+        <div>
+          <div class="info-title">Lokasi Workshop</div>
+          <div class="info-val">Ruko Downtown Drive, Jl. Scientia Blvd DDBLV No.027<br/>Medang, Kec. Pagedangan, Kab. Tangerang, Banten 15334</div>
+          <div class="info-link">Buka di Google Maps →</div>
+        </div>
+      </a>
+      <a href="https://wa.me/62881080578712" target="_blank" class="info-card" style="text-decoration:none;">
+        <div class="info-icon">📱</div>
+        <div>
+          <div class="info-title">WhatsApp</div>
+          <div class="info-val">+62 881-0805-78712</div>
+          <div class="info-link">Chat langsung →</div>
+        </div>
+      </a>
+      <div class="info-card">
+        <div class="info-icon">🕐</div>
+        <div>
+          <div class="info-title">Jam Operasional</div>
+          <div class="info-val">Senin–Sabtu · 08.00–18.00 WIB</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">✅</div>
+        <div>
+          <div class="info-title">Yang Kamu Dapat</div>
+          <div class="info-val">Konsultasi kondisi cat gratis · Rekomendasi layanan yang tepat · Harga transparan tanpa biaya tersembunyi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: form -->
+  <div>
+    <div class="form-box">
+      <div class="form-box-title">ISI FORM SEKARANG</div>
+      <form class="inquiry-form" id="inquiryForm" onsubmit="handleSubmit(event)">
+        <div class="form-row">
+          <div class="field-group">
+            <label class="field-label">Nama Lengkap *</label>
+            <input class="field-input" type="text" name="name" placeholder="Nama kamu" required/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">No. WhatsApp *</label>
+            <input class="field-input" type="tel" name="phone" placeholder="08xx-xxxx-xxxx" required/>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Jenis Kendaraan *</label>
+          <input class="field-input" type="text" name="car" placeholder="Contoh: Toyota GR Yaris 2023" required/>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Layanan yang Diminati *</label>
+          <select class="field-select" name="service" required>
+            <option value="">Pilih layanan</option>
+            <option>Graphene Coating — Eternity (Up to 8 Yrs)</option>
+            <option>Graphene Coating — Shield (Up to 7 Yrs)</option>
+            <option>Graphene Coating — Armor (Up to 3 Yrs)</option>
+            <option>Ceramic Coating — Essential Series</option>
+            <option>Ceramic Coating — Signature Series</option>
+            <option>Ceramic Coating — Prestige Series</option>
+            <option>Premium Wash Exterior</option>
+            <option>Window Coating</option>
+            <option>Express Polish</option>
+            <option>Premium Polish</option>
+            <option>Konsultasi dulu — belum yakin</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Kondisi Cat Saat Ini</label>
+          <select class="field-select" name="condition">
+            <option value="">Pilih kondisi</option>
+            <option>Sangat baik — tidak ada defect</option>
+            <option>Baik — ada swirl halus</option>
+            <option>Perlu correction — baret/swirl banyak</option>
+            <option>Belum tahu — perlu inspeksi</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Pesan Tambahan</label>
+          <textarea class="field-textarea" name="message" placeholder="Ceritakan lebih lanjut tentang kendaraan atau pertanyaan kamu..."></textarea>
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span id="submitText">Kirim Sekarang →</span>
+          <span id="submitLoading" style="display:none">Mengirim...</span>
+        </button>
+      </form>
+      <div class="form-success" id="formSuccess">
+        <div class="form-success-icon">✅</div>
+        <div class="form-success-title">TERIMA KASIH!</div>
+        <p class="form-success-text">
+          Inquiry kamu sudah kami terima.<br/>
+          Tim KONÏG akan menghubungi kamu via WhatsApp dalam <strong style="color:var(--white)">1×24 jam</strong>.<br/><br/>
+          Atau hubungi kami langsung:
+        </p>
+        <a href="https://wa.me/62881080578712" target="_blank"
+          style="display:inline-block;margin-top:16px;padding:14px 28px;background:#25D366;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">
+          Chat WhatsApp →
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20layanan%20coating" class="wa-float" target="_blank">💬</a>
+
+<script>
+  emailjs.init('ldjEJ0m9FeUhGxTpZ')
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    const btn = document.getElementById('submitBtn')
+    document.getElementById('submitText').style.display = 'none'
+    document.getElementById('submitLoading').style.display = 'inline'
+    btn.disabled = true
+    const data = Object.fromEntries(new FormData(e.target))
+    try {
+      await emailjs.send('service_bjn5779', 'template_dhp2j5j', {
+        to_email: 'konigmobilindonesia@gmail.com',
+        owner_name: data.name,
+        phone: data.phone,
+        car_model: data.car,
+        service_type: data.service,
+        car_condition: data.condition || '-',
+        message: data.message || '-',
+        reminder_date: new Date().toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}),
+      })
+      if (typeof gtag !== 'undefined') gtag('event', 'booking_form_submitted', {service: data.service})
+      e.target.style.display = 'none'
+      document.getElementById('formSuccess').classList.add('show')
+    } catch(err) {
+      alert('Gagal mengirim. Silakan hubungi kami langsung via WhatsApp.')
+      btn.disabled = false
+      document.getElementById('submitText').style.display = 'inline'
+      document.getElementById('submitLoading').style.display = 'none'
+    }
+  }
+</script>
+</body>
+</html>
