@@ -327,9 +327,11 @@
         </div>
       </div>
 
-      <div class="service-card">
+      <div class="service-card" style="cursor:pointer;" onclick="openServiceModal('ceramic-coating')">
         <span class="service-tag">Essential · Signature · Prestige</span>
-        <div class="service-name">Ceramic Coating</div>
+        <div class="service-name">Ceramic Coating
+          <span style="font-size:11px;font-weight:600;letter-spacing:1px;color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;display:inline-block;margin-left:8px;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;">Tap untuk info →</span>
+        </div>
         <div class="service-duration">⏱ Estimasi 1–3 hari kerja</div>
         <p class="service-desc">Tiga tier perlindungan ceramic — dari Essential untuk daily driver hingga Prestige untuk kendaraan premium. Setiap tier melalui proses prep lengkap: snow foam, decontaminasi ferro, dan clay bar sebelum coating diaplikasikan panel per panel dalam ruang terkontrol.</p>
         <div class="service-features">
@@ -661,9 +663,13 @@
       desktop: 'premium-wash-desktop.png',
       mobile:  'premium-wash-mobile.png',
     },
+    'ceramic-coating': {
+      desktop: 'ceramic-coating-desktop.png',
+      mobile:  'ceramic-coating-mobile.png',
+    },
     // Add more services here as banners are ready:
-    // 'ceramic-coating': { desktop: '...', mobile: '...' },
     // 'window-coating':  { desktop: '...', mobile: '...' },
+    // 'express-polish':  { desktop: '...', mobile: '...' },
   }
 
   function openServiceModal(serviceKey) {
