@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="description" content="KONÏG Auto Detailing — Lokasi Workshop di Gading Serpong, Tangerang. Ruko Downtown Drive DDBLV No.027."/>
+  <title>Lokasi — KONÏG Auto Detailing</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;--purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;--white:#f0eeff;--text:#d4cef0;--muted:#9d93c0}
+    html{overflow-x:hidden}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
+    nav{position:sticky;top:0;z-index:100;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.3)}
+    .nav-back{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:color 0.2s}
+    .nav-back:hover{color:var(--purpleB)}
+    .nav-cta{padding:10px 20px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
+    .nav-cta:hover{background:var(--purpleB)}
+
+    .page-inner{max-width:1000px;margin:0 auto;padding:48px 24px 80px}
+    .eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px;display:block}
+    .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,64px);letter-spacing:2px;color:var(--white);line-height:1;margin-bottom:32px}
+    .page-title span{color:var(--purpleB)}
+
+    /* MAP embed */
+    .map-wrap{width:100%;border:2px solid var(--border);border-left:4px solid var(--purple2);margin-bottom:28px;position:relative;overflow:hidden}
+    .map-wrap iframe{width:100%;height:420px;display:block;border:none}
+    @media(max-width:480px){.map-wrap iframe{height:300px}}
+
+    /* Info grid */
+    .info-grid{display:grid;gap:12px;margin-bottom:32px}
+    @media(min-width:600px){.info-grid{grid-template-columns:1fr 1fr}}
+    .info-card{display:flex;gap:14px;align-items:flex-start;padding:18px;border:1px solid var(--border);border-left:3px solid var(--purple2);text-decoration:none}
+    .info-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+    .info-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--white);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+    .info-val{font-size:13px;color:var(--text);line-height:1.7}
+    .info-sub{font-size:10px;color:var(--purpleB);margin-top:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px}
+
+    /* CTA buttons */
+    .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px}
+    .btn-maps{padding:16px 28px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s}
+    .btn-maps:hover{background:var(--purpleB);transform:translateY(-1px)}
+    .btn-wa{padding:16px 28px;background:#25D366;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s}
+    .btn-wa:hover{background:#1da851;transform:translateY(-1px)}
+    .btn-outline{padding:16px 28px;border:1px solid var(--border2);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s}
+    .btn-outline:hover{border-color:var(--purpleB);color:var(--purpleB)}
+
+    /* WA Float */
+    .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
+    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-back" onclick="sessionStorage.setItem('konig_welcomed','1')">← Home</a>
+  <img src="konig-logo.png" alt="KONIG" style="height:28px;width:auto;position:absolute;left:50%;transform:translateX(-50%);"/>
+  <a href="/booking.html" class="nav-cta">Booking</a>
+</nav>
+
+<div class="page-inner">
+  <span class="eyebrow">Workshop KONÏG Auto Detailing</span>
+  <h1 class="page-title">LOKASI<br/><span>KAMI</span></h1>
+
+  <!-- Google Maps embed -->
+  <div class="map-wrap">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.521039!2d106.61789!3d-6.235920!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69fb5b37197a63%3A0x5a4e3ffe3432c04!2sKONIG%20Auto%20Detailing!5e0!3m2!1sid!2sid!4v1717200000000!5m2!1sid!2sid"
+      allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+  </div>
+
+  <!-- CTA buttons -->
+  <div class="cta-row">
+    <a href="https://maps.app.goo.gl/UuXzCDLM3RSTB8Q48" target="_blank" class="btn-maps">
+      📍 Buka di Google Maps
+    </a>
+    <a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20tanya%20arah%20ke%20workshop" target="_blank" class="btn-wa">
+      💬 Tanya Arah via WA
+    </a>
+    <a href="/booking.html" class="btn-outline">
+      Booking Sekarang →
+    </a>
+  </div>
+
+  <!-- Info grid -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-icon">📍</div>
+      <div>
+        <div class="info-title">Alamat Lengkap</div>
+        <div class="info-val">Ruko Downtown Drive, Jl. Scientia Blvd DDBLV No.027<br/>Medang, Kec. Pagedangan<br/>Kab. Tangerang, Banten 15334</div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">🕐</div>
+      <div>
+        <div class="info-title">Jam Operasional</div>
+        <div class="info-val">Senin – Sabtu<br/>08.00 – 18.00 WIB</div>
+        <div class="info-sub">Minggu & Hari Libur: Tutup</div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">📱</div>
+      <div>
+        <div class="info-title">WhatsApp</div>
+        <div class="info-val">+62 881-0805-78712</div>
+        <div class="info-sub">Respon cepat via chat</div>
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="info-icon">🚗</div>
+      <div>
+        <div class="info-title">Area Terdekat</div>
+        <div class="info-val">Gading Serpong · Serpong · BSD · Alam Sutera · Karawaci</div>
+        <div class="info-sub">±15 menit dari Toll Karawaci</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20layanan%20coating" class="wa-float" target="_blank">💬</a>
+
+</body>
+</html>

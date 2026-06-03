@@ -218,12 +218,28 @@
 </div>
 
 <!-- GRAPHENE PROMO BAR (always visible) -->
-<div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')">
-  <div class="promo-bar-inner">
-    <span class="promo-text" id="promoTextShort">🔥 Eksklusif Promo</span>
-    <span class="promo-tag" id="promoTagFull" style="display:none;">🔥 Eksklusif</span>
-    <span class="promo-text" id="promoTextFull" style="display:none;">KONÏG Graphene Coating — Next Gen Protection · Eternity up to 8 Years · Made in Korea</span>
-    <span class="promo-cta">Tanya Sekarang →</span>
+<div class="promo-bar" style="cursor:default;">
+  <div class="promo-bar-inner" style="gap:0;justify-content:stretch;padding:0;">
+    <!-- Graphene promo section — clickable -->
+    <div onclick="openGrapheneBanner();trackEvent('promo_bar_click')"
+      style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 16px;cursor:pointer;border-right:1px solid rgba(123,47,190,0.3);">
+      <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
+      <span id="promoTagFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;">🔥 Graphene Coating</span>
+      <span id="promoTextFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#e0d0ff;">Next Gen Protection · Eternity up to 8 Years</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:var(--purpleB);border:1px solid var(--purpleB);padding:2px 10px;white-space:nowrap;">Tanya →</span>
+    </div>
+    <!-- Our Services — clickable -->
+    <a href="#services" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;text-decoration:none;border-right:1px solid rgba(123,47,190,0.3);white-space:nowrap;"
+      onclick="trackEvent('promo_services_click')">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">Our Services</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--purpleB);">↓</span>
+    </a>
+    <!-- Pricelist — clickable -->
+    <a href="/pricelist.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;text-decoration:none;white-space:nowrap;"
+      onclick="trackEvent('promo_pricelist_click')">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">Pricelist</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--purpleB);">→</span>
+    </a>
   </div>
 </div>
 
@@ -244,9 +260,10 @@
 <!-- NAV -->
 <nav>
   <img src="konig-logo.png" alt="KONIG Auto Detailing" style="height:30px;width:auto;display:block;filter:brightness(1.1);"/>
-  <div style="display:flex;align-items:center;gap:10px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <a href="/location.html" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#b06aff'" onmouseout="this.style.color='var(--muted)'">Lokasi</a>
     <a href="/pricelist.html" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#b06aff'" onmouseout="this.style.color='var(--muted)'">Pricelist</a>
-    <a href="/booking.html" class="nav-cta" onclick="trackEvent('nav_cta_click')">Booking Sekarang</a>
+    <a href="/booking.html" class="nav-cta" onclick="trackEvent('nav_cta_click')">Booking</a>
   </div>
 </nav>
 
