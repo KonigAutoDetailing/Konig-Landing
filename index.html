@@ -243,14 +243,34 @@
 
 <!-- NAV -->
 <nav>
-  <img src="konig-logo.png" alt="KONIG Auto Detailing" style="height:30px;width:auto;display:block;filter:brightness(1.1);"/>
-  <div style="display:flex;align-items:center;gap:18px;">
+  <img src="konig-logo.png" alt="KONIG Auto Detailing" style="height:26px;width:auto;display:block;filter:brightness(1.1);flex-shrink:0;"/>
+
+  <!-- Desktop nav links -->
+  <div class="nav-links-desktop" style="display:flex;align-items:center;gap:18px;">
     <a href="/location.html" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#b06aff'" onmouseout="this.style.color='var(--text)'">Lokasi</a>
     <a href="#services" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#b06aff'" onmouseout="this.style.color='var(--text)'">Services</a>
     <a href="/pricelist.html" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#b06aff'" onmouseout="this.style.color='var(--text)'">Pricelist</a>
     <a href="/booking.html" class="nav-cta" onclick="trackEvent('nav_cta_click')">Booking</a>
   </div>
+
+  <!-- Mobile: Booking + Hamburger -->
+  <div class="nav-links-mobile" style="display:none;align-items:center;gap:10px;">
+    <a href="/booking.html" class="nav-cta" style="padding:8px 14px;font-size:11px;" onclick="trackEvent('nav_cta_click')">Booking</a>
+    <button id="navHamburger" onclick="toggleMobileMenu()" style="background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:5px;">
+      <span style="display:block;width:22px;height:2px;background:var(--white);transition:all 0.3s;"></span>
+      <span style="display:block;width:22px;height:2px;background:var(--white);transition:all 0.3s;"></span>
+      <span style="display:block;width:22px;height:2px;background:var(--white);transition:all 0.3s;"></span>
+    </button>
+  </div>
 </nav>
+
+<!-- Mobile dropdown menu -->
+<div id="mobileMenu" style="display:none;position:fixed;top:84px;left:0;right:0;z-index:99;background:rgba(8,8,16,0.98);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:8px 0;">
+  <a href="/location.html" style="display:block;padding:14px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);" onclick="closeMobileMenu()">📍 Lokasi</a>
+  <a href="#services" style="display:block;padding:14px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);" onclick="closeMobileMenu()">🔧 Services</a>
+  <a href="/pricelist.html" style="display:block;padding:14px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text);text-decoration:none;border-bottom:1px solid var(--border);" onclick="closeMobileMenu()">💰 Pricelist</a>
+  <a href="/booking.html" style="display:block;padding:14px 24px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);text-decoration:none;" onclick="closeMobileMenu()">📅 Booking →</a>
+</div>
 
 <!-- HERO -->
 <!-- GRAPHENE BANNER — full width above hero -->
