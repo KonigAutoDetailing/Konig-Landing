@@ -48,9 +48,10 @@
     .page-desc{font-size:14px;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.7}
 
     /* TAB NAV */
-    .tab-nav{display:flex;overflow-x:auto;gap:0;border-bottom:2px solid var(--border);background:var(--dark);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .tab-nav{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-bottom:2px solid var(--border)}
+    @media(min-width:600px){.tab-nav{display:flex;overflow-x:auto;gap:0;}}
     .tab-nav::-webkit-scrollbar{display:none}
-    .tab-btn{flex-shrink:0;padding:16px 24px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:transparent;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;white-space:nowrap;transition:all 0.2s}
+    .tab-btn{flex-shrink:0;padding:14px 8px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);background:var(--dark);border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;white-space:normal;text-align:center;transition:all 0.2s}
     .tab-btn.active{color:var(--purpleB);border-bottom-color:var(--purpleB)}
     .tab-btn:hover{color:var(--white)}
 
@@ -90,10 +91,18 @@
 <body>
 
 <!-- NAV -->
-<nav>
-  <a href="/" class="nav-back" onclick="sessionStorage.setItem('konig_welcomed','1')">← Kembali ke Home</a>
-  <img src="konig-logo.png" alt="KONIG" style="height:28px;width:auto;position:absolute;left:50%;transform:translateX(-50%);"/>
-  <a href="/#inquiry" class="nav-cta">Booking</a>
+<nav style="display:flex;flex-direction:column;position:sticky;top:0;z-index:100;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.3);">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;">
+    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')">
+      <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
+    </a>
+    <a href="/booking.html" style="padding:8px 16px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Booking</a>
+  </div>
+  <div style="display:flex;border-top:1px solid #2a2a45;">
+    <a href="/location.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;border-right:1px solid #2a2a45;">Lokasi</a>
+    <a href="/services.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;border-right:1px solid #2a2a45;">Services</a>
+    <a href="/pricelist.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b06aff;text-decoration:none;">Pricelist</a>
+  </div>
 </nav>
 
 <!-- HERO -->
