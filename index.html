@@ -656,9 +656,32 @@
     const isMobile = window.innerWidth <= 600
     const img = document.getElementById('grapheneWhyImg')
     const box = document.getElementById('grapheneWhyContent')
+    const modal = document.getElementById('grapheneWhyModal')
     img.src = isMobile ? 'graphene-why-mobile.png' : 'graphene-why-desktop.png'
-    box.style.maxWidth = isMobile ? '420px' : '1100px'
-    document.getElementById('grapheneWhyModal').style.display = 'flex'
+    if (isMobile) {
+      box.style.maxWidth = '100%'
+      box.style.maxHeight = '100vh'
+      box.style.overflowY = 'hidden'
+      box.style.display = 'flex'
+      box.style.flexDirection = 'column'
+      img.style.flex = '1'
+      img.style.objectFit = 'contain'
+      img.style.maxHeight = 'calc(100vh - 56px)'
+      img.style.width = '100%'
+      modal.style.padding = '0'
+      modal.style.alignItems = 'flex-end'
+    } else {
+      box.style.maxWidth = '1100px'
+      box.style.maxHeight = '92vh'
+      box.style.overflowY = 'auto'
+      box.style.display = 'block'
+      img.style.flex = ''
+      img.style.objectFit = ''
+      img.style.maxHeight = ''
+      modal.style.padding = '16px'
+      modal.style.alignItems = 'center'
+    }
+    modal.style.display = 'flex'
     trackEvent('graphene_why_open', { device: isMobile ? 'mobile' : 'desktop' })
   }
 
@@ -685,9 +708,40 @@
     const isMobile = window.innerWidth <= 600
     const img = document.getElementById('serviceModalImg')
     const box = document.getElementById('serviceModalContent')
+    const modal = document.getElementById('serviceModal')
+
     img.src = isMobile ? imgs.mobile : imgs.desktop
-    box.style.maxWidth = isMobile ? '420px' : '1100px'
-    document.getElementById('serviceModal').style.display = 'flex'
+
+    if (isMobile) {
+      // Mobile: fit entire image on screen, no scroll needed
+      box.style.maxWidth = '100%'
+      box.style.maxHeight = '100vh'
+      box.style.overflowY = 'hidden'
+      box.style.display = 'flex'
+      box.style.flexDirection = 'column'
+      box.style.padding = '0'
+      img.style.flex = '1'
+      img.style.objectFit = 'contain'
+      img.style.maxHeight = 'calc(100vh - 56px)' // leave room for CTA button
+      img.style.width = '100%'
+      modal.style.padding = '0'
+      modal.style.alignItems = 'flex-end'
+    } else {
+      // Desktop: scrollable, max width
+      box.style.maxWidth = '1100px'
+      box.style.maxHeight = '92vh'
+      box.style.overflowY = 'auto'
+      box.style.display = 'block'
+      box.style.padding = ''
+      img.style.flex = ''
+      img.style.objectFit = ''
+      img.style.maxHeight = ''
+      img.style.width = '100%'
+      modal.style.padding = '16px'
+      modal.style.alignItems = 'center'
+    }
+
+    modal.style.display = 'flex'
     trackEvent('service_modal_open', { service: serviceKey, device: isMobile ? 'mobile' : 'desktop' })
   }
 
