@@ -47,19 +47,32 @@
   </style>
 </head>
 <body>
-<nav>
-  <div class="nav-row1">
-    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')">
+<!-- PROMO BAR -->
+<div style="background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(123,47,190,0.4);position:relative;z-index:201;" onclick="window.location.href='/booking.html'">
+  <style>@keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}</style>
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto;">
+    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
+    <span id="promoTextFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#e0d0ff;">KONÏG Graphene Coating — Next Gen Protection · Eternity up to 8 Years · Made in Korea</span>
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:#b06aff;border:1px solid #b06aff;padding:2px 12px;">Tanya Sekarang →</span>
+  </div>
+  <script>if(window.innerWidth>=600){document.getElementById('promoTextShort').style.display='none';document.getElementById('promoTextFull').style.display='inline';}</script>
+</div>
+<!-- NAV -->
+<nav style="position:sticky;top:0;z-index:200;display:flex;flex-direction:column;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.3);">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;">
+    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;">
       <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
     </a>
-    <a href="/booking.html" class="nav-cta">Booking</a>
+    <a href="/booking.html" style="padding:8px 16px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Booking</a>
   </div>
-  <div class="nav-row2">
-    <a href="/location.html" class="nav-link-item">Lokasi</a>
-    <a href="/services.html" class="nav-link-item active">Services</a>
-    <a href="/pricelist.html" class="nav-link-item">Pricelist</a>
+  <div style="display:flex;border-top:1px solid #2a2a45;">
+    <a href="/location.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-right:1px solid #2a2a45;color:#d4cef0;">Lokasi</a>
+    <a href="/services.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-right:1px solid #2a2a45;color:#b06aff;">Services</a>
+    <a href="/pricelist.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-right:1px solid #2a2a45;color:#d4cef0;">Pricelist</a>
+    <a href="/reviews.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;color:#d4cef0;">Reviews</a>
   </div>
 </nav>
+
 
 <div class="section-inner">
   <span class="page-eyebrow">KONÏG Auto Detailing · Gading Serpong</span>
@@ -67,9 +80,9 @@
   <p class="page-desc">Setiap layanan dikerjakan dengan prosedur ketat dan produk terbaik — dari kendaraan harian hingga exotic car.</p>
 
   <div class="services-grid">
-    <div class="service-card">
+    <div class="service-card" style="cursor:pointer;" onclick="openGrapheneWhy()">
       <span class="service-tag">Next Gen · Made in Korea</span>
-      <div class="service-name">Graphene Coating</div>
+      <div class="service-name">Graphene Coating <span style="font-size:11px;font-weight:600;color:#b06aff;font-family:'Barlow Condensed',sans-serif;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;margin-left:6px;">Tap untuk info →</span></div>
       <div class="service-duration">⏱ Estimasi 2–3 hari kerja</div>
       <p class="service-desc">Teknologi coating generasi terbaru berbasis Graphene dari Korea. Struktur 200× lebih kuat dari baja — menghasilkan efek hydrophobic ekstrem, gloss mendalam seperti kaca basah, dan daya tahan superior hingga 8 tahun. Tersedia tiga tier: Eternity (8 tahun), Shield (7 tahun), dan Armor (3 tahun).</p>
       <div class="service-features">
@@ -82,10 +95,10 @@
       <a href="/booking.html" class="service-cta">Tanya / Booking →</a>
     </div>
 
-    <div class="service-card">
+    <div class="service-card" style="cursor:pointer;" onclick="openServiceModal('ceramic-coating')">
       <span class="service-tag">Essential · Signature · Prestige</span>
-      <div class="service-name">Ceramic Coating</div>
-      <div class="service-duration">⏱ Estimasi 1–3 hari kerja</div>
+      <div class="service-name">Ceramic Coating <span style="font-size:11px;font-weight:600;color:#b06aff;font-family:'Barlow Condensed',sans-serif;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;margin-left:6px;">Tap untuk info →</span></div>
+      <div class="service-duration">⏱ Estimasi 2–3 hari kerja</div>
       <p class="service-desc">Tiga tier perlindungan ceramic — dari Essential untuk daily driver hingga Prestige untuk kendaraan premium. Setiap tier melalui proses prep lengkap: snow foam, decontaminasi ferro, dan clay bar sebelum coating diaplikasikan panel per panel.</p>
       <div class="service-features">
         <span class="service-feat">Sonax CC One / Pro</span>
@@ -98,10 +111,10 @@
       <a href="/booking.html" class="service-cta">Tanya / Booking →</a>
     </div>
 
-    <div class="service-card">
+    <div class="service-card" style="cursor:pointer;" onclick="openServiceModal('premium-wash')">
       <span class="service-tag">Exterior · Detailing</span>
-      <div class="service-name">Premium Wash</div>
-      <div class="service-duration">⏱ Estimasi 3–5 jam</div>
+      <div class="service-name">Premium Wash <span style="font-size:11px;font-weight:600;color:#b06aff;font-family:'Barlow Condensed',sans-serif;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;margin-left:6px;">Tap untuk info →</span></div>
+      <div class="service-duration">⏱ Estimasi 1–2 jam</div>
       <p class="service-desc">Exterior detailing menyeluruh dengan standar jauh di atas car wash biasa. pH neutral soap wash, wheels & tire cleaning, tar remover, trim protection, dan wetcoat protection 1 bulan. Swirl-free washing process dengan 2-bucket method.</p>
       <div class="service-features">
         <span class="service-feat">pH Neutral Soap</span>
@@ -144,6 +157,53 @@
     </div>
   </div>
 </div>
+
+<!-- SERVICE MODAL -->
+<div id="serviceModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
+  <div id="serviceModalContent" style="position:relative;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <button onclick="document.getElementById('serviceModal').style.display='none'" style="position:sticky;top:0;right:0;float:right;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;z-index:10;margin-bottom:8px;">×</button>
+    <div style="clear:both;"></div>
+    <img id="serviceModalImg" src="" alt="" style="width:100%;display:block;border:1px solid rgba(123,47,190,0.4);" />
+    <a href="/booking.html" onclick="document.getElementById('serviceModal').style.display='none'" style="display:block;text-align:center;margin-top:12px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;">Booking Sekarang →</a>
+  </div>
+</div>
+
+<div id="grapheneWhyModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
+  <div id="grapheneWhyContent" style="position:relative;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <button onclick="document.getElementById('grapheneWhyModal').style.display='none'" style="position:sticky;top:0;right:0;float:right;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;z-index:10;margin-bottom:8px;">×</button>
+    <div style="clear:both;"></div>
+    <img id="grapheneWhyImg" src="" alt="" style="width:100%;display:block;border:1px solid rgba(123,47,190,0.4);" />
+    <a href="/booking.html" onclick="document.getElementById('grapheneWhyModal').style.display='none'" style="display:block;text-align:center;margin-top:12px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;">Booking Sekarang →</a>
+  </div>
+</div>
+
+<script>
+  const SERVICE_IMAGES = {
+    'premium-wash': { desktop:'premium-wash-desktop.png', mobile:'premium-wash-mobile.png' },
+    'ceramic-coating': { desktop:'ceramic-coating-desktop.png', mobile:'ceramic-coating-mobile.png' },
+  }
+  function openServiceModal(key) {
+    const imgs = SERVICE_IMAGES[key]; if(!imgs) return
+    const isMobile = window.innerWidth <= 600
+    const img = document.getElementById('serviceModalImg')
+    const box = document.getElementById('serviceModalContent')
+    const modal = document.getElementById('serviceModal')
+    img.src = isMobile ? imgs.mobile : imgs.desktop
+    if(isMobile){box.style.maxWidth='100%';box.style.maxHeight='100vh';box.style.overflowY='hidden';box.style.display='flex';box.style.flexDirection='column';img.style.flex='1';img.style.objectFit='contain';img.style.maxHeight='calc(100vh - 56px)';img.style.width='100%';modal.style.padding='0';modal.style.alignItems='flex-end'}
+    else{box.style.maxWidth='1100px';box.style.maxHeight='92vh';box.style.overflowY='auto';box.style.display='block';img.style.flex='';img.style.objectFit='';img.style.maxHeight='';img.style.width='100%';modal.style.padding='16px';modal.style.alignItems='center'}
+    modal.style.display='flex'
+  }
+  function openGrapheneWhy() {
+    const isMobile = window.innerWidth <= 600
+    const img = document.getElementById('grapheneWhyImg')
+    const box = document.getElementById('grapheneWhyContent')
+    const modal = document.getElementById('grapheneWhyModal')
+    img.src = isMobile ? 'graphene-why-mobile.png' : 'graphene-why-desktop.png'
+    if(isMobile){box.style.maxWidth='100%';box.style.maxHeight='100vh';box.style.overflowY='hidden';box.style.display='flex';box.style.flexDirection='column';img.style.flex='1';img.style.objectFit='contain';img.style.maxHeight='calc(100vh - 56px)';img.style.width='100%';modal.style.padding='0';modal.style.alignItems='flex-end'}
+    else{box.style.maxWidth='1100px';box.style.maxHeight='92vh';box.style.overflowY='auto';box.style.display='block';img.style.flex='';img.style.objectFit='';img.style.maxHeight='';modal.style.padding='16px';modal.style.alignItems='center'}
+    modal.style.display='flex'
+  }
+</script>
 
 <a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20layanan%20coating" class="wa-float" target="_blank">💬</a>
 </body>

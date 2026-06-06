@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="description" content="KONÏG Auto Detailing — Review & Testimoni Client. Ceramic Coating, Graphene Coating di Gading Serpong, Tangerang."/>
+  <title>Reviews — KONÏG Auto Detailing</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;--purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;--white:#f0eeff;--text:#d4cef0;--muted:#9d93c0}
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden}
+    @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+    .section-inner{max-width:1000px;margin:0 auto;padding:52px 24px 80px}
+    .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px;display:block}
+    .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,64px);letter-spacing:2px;color:var(--white);line-height:1;margin-bottom:16px}
+    .page-title span{color:var(--purpleB)}
+
+    /* Rating summary */
+    .rating-box{display:flex;align-items:center;gap:24px;padding:24px;background:var(--panel);border:1px solid var(--border);border-left:4px solid #f59e0b;margin-bottom:40px;flex-wrap:wrap}
+    .rating-num{font-family:'Bebas Neue',sans-serif;font-size:72px;color:#f59e0b;line-height:1}
+    .rating-stars{font-size:28px;color:#f59e0b;letter-spacing:4px;margin-bottom:4px}
+    .rating-sub{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+
+    /* Review grid */
+    .review-grid{display:grid;gap:16px;margin-bottom:40px}
+    @media(min-width:640px){.review-grid{grid-template-columns:1fr 1fr}}
+    .review-card{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--purple2);padding:24px}
+    .review-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .review-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#7B2FBE,#9B3FDE);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;flex-shrink:0}
+    .review-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--white);letter-spacing:0.5px}
+    .review-meta{font-size:10px;color:var(--muted);margin-top:2px}
+    .review-stars{color:#f59e0b;font-size:13px;letter-spacing:2px;margin-bottom:10px}
+    .review-text{font-size:13px;color:var(--text);line-height:1.8;font-style:italic}
+
+    /* CTA */
+    .review-cta{text-align:center;padding:40px 24px;background:var(--dark);border:1px solid var(--border);border-top:3px solid var(--purple2)}
+    .review-cta-title{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--white);letter-spacing:2px;margin-bottom:8px}
+    .review-cta-desc{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.7}
+    .btn-maps{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;margin:6px;transition:background 0.2s}
+    .btn-maps:hover{background:var(--purpleB)}
+    .btn-ig{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;margin:6px;transition:opacity 0.2s}
+    .btn-ig:hover{opacity:0.85}
+
+    .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
+    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
+  </style>
+</head>
+<body>
+
+<!-- PROMO BAR -->
+<div style="background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(123,47,190,0.4);position:sticky;top:0;z-index:201;" onclick="window.location.href='/booking.html'">
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto;">
+    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
+    <span id="promoTextFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#e0d0ff;">KONÏG Graphene Coating — Next Gen Protection · Eternity up to 8 Years · Made in Korea</span>
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:#b06aff;border:1px solid #b06aff;padding:2px 12px;">Tanya Sekarang →</span>
+  </div>
+  <script>if(window.innerWidth>=600){document.getElementById('promoTextShort').style.display='none';document.getElementById('promoTextFull').style.display='inline';}</script>
+</div>
+
+<!-- NAV -->
+<nav style="position:sticky;top:42px;z-index:200;display:flex;flex-direction:column;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.3);">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;">
+    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;">
+      <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
+    </a>
+    <a href="/booking.html" style="padding:8px 16px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Booking</a>
+  </div>
+  <div style="display:flex;border-top:1px solid #2a2a45;">
+    <a href="/location.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;border-right:1px solid #2a2a45;">Lokasi</a>
+    <a href="/services.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;border-right:1px solid #2a2a45;">Services</a>
+    <a href="/pricelist.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;border-right:1px solid #2a2a45;">Pricelist</a>
+    <a href="/reviews.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#b06aff;text-decoration:none;">Reviews</a>
+  </div>
+</nav>
+
+<div class="section-inner">
+  <span class="page-eyebrow">Google Reviews · Verified</span>
+  <h1 class="page-title">APA KATA<br/><span>CLIENT KAMI</span></h1>
+
+  <!-- Rating summary -->
+  <div class="rating-box">
+    <div>
+      <div class="rating-num">5.0</div>
+    </div>
+    <div>
+      <div class="rating-stars">★★★★★</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--white);margin-bottom:4px;">Rating Sempurna di Google</div>
+      <div class="rating-sub">Verified Google Reviews · Gading Serpong</div>
+    </div>
+    <a href="https://maps.app.goo.gl/UuXzCDLM3RSTB8Q48" target="_blank"
+      style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">
+      Lihat di Google Maps →
+    </a>
+  </div>
+
+  <!-- Reviews -->
+  <div class="review-grid">
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">M</div>
+        <div>
+          <div class="review-name">Mulki Hafidz Aditya Putra</div>
+          <div class="review-meta">11 reviews · 6 photos · A week ago</div>
+        </div>
+        <img src="https://www.google.com/favicon.ico" style="width:14px;height:14px;opacity:0.5;margin-left:auto;"/>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"I recently brought my car to Konig for their Premium Wash, and I am absolutely blown away! The team was incredibly welcoming, polite, and professional. They paid attention to every single detail — areas that usually get missed by other places were left absolutely spotless. The result was a brilliant shine that looks like it just rolled out of a showroom. Highly recommended, and I will definitely be a returning customer!"</p>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">K</div>
+        <div>
+          <div class="review-name">Kevin Budiman</div>
+          <div class="review-meta">Local Guide · 85 reviews · 3 months ago</div>
+        </div>
+        <img src="https://www.google.com/favicon.ico" style="width:14px;height:14px;opacity:0.5;margin-left:auto;"/>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"I only took the regular car wash package, but the quality was truly above standard. Every part was thoroughly cleaned, not just sprayed and wiped. What I appreciate is that Ben and his team aren't the type to upsell blindly — they educate, explaining the car's condition, treatment options, and the technical rationale. A place that prioritizes honesty and quality, not just volume."</p>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">H</div>
+        <div>
+          <div class="review-name">Heni Minata</div>
+          <div class="review-meta">Local Guide · 14 reviews · 3 months ago</div>
+        </div>
+        <img src="https://www.google.com/favicon.ico" style="width:14px;height:14px;opacity:0.5;margin-left:auto;"/>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"Old, dried coffee stains were thoroughly cleaned. They even included a complete car cleaning package. The guys were also very friendly. I was late picking up my car due to an impromptu meeting, and they waited for me even though it was already closing time. The service was excellent."</p>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">V</div>
+        <div>
+          <div class="review-name">Vincent Wendy</div>
+          <div class="review-meta">Local Guide · 240 reviews · A month ago</div>
+        </div>
+        <img src="https://www.google.com/favicon.ico" style="width:14px;height:14px;opacity:0.5;margin-left:auto;"/>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"The coating results are excellent, meeting expectations. The process took 2-3 days, but the results are satisfactory and optimal. The owner's explanations were clear, detailed, friendly, and very responsive. The price is quite competitive with many brand options. Overall, highly recommended!"</p>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">A</div>
+        <div>
+          <div class="review-name">Adrian Putra</div>
+          <div class="review-meta">7 reviews · 3 weeks ago</div>
+        </div>
+        <img src="https://www.google.com/favicon.ico" style="width:14px;height:14px;opacity:0.5;margin-left:auto;"/>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"Highly recommended for those who want coating — you can get educated by the friendly and informative owner. Great experience from the consultation all the way to the final result."</p>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">C</div>
+        <div>
+          <div class="review-name">Chrestella Sanggra</div>
+          <div class="review-meta">Google Review</div>
+        </div>
+        <img src="https://www.google.com/favicon.ico" style="width:14px;height:14px;opacity:0.5;margin-left:auto;"/>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"The service is really good, fast and neat, everything is clearly explained at the beginning of the price so you won't be surprised when you pay."</p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="review-cta">
+    <div class="review-cta-title">PUAS DENGAN HASIL KONÏG?</div>
+    <p class="review-cta-desc">Bagikan pengalaman kamu di Google Maps atau follow Instagram kami untuk update terbaru.</p>
+    <div>
+      <a href="https://maps.app.goo.gl/UuXzCDLM3RSTB8Q48" target="_blank" class="btn-maps">⭐ Tulis Review di Google</a>
+      <a href="https://www.instagram.com/konig.auto.detailing" target="_blank" class="btn-ig">📸 @konig.auto.detailing</a>
+    </div>
+    <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);">
+      <a href="/booking.html" style="display:inline-flex;align-items:center;gap:10px;padding:16px 36px;background:linear-gradient(135deg,#9B3FDE,#7B2FBE);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;">
+        Booking & Konsultasi Sekarang →
+      </a>
+    </div>
+  </div>
+</div>
+
+<a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20layanan%20coating" class="wa-float" target="_blank">💬</a>
+</body>
+</html>

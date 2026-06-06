@@ -78,19 +78,32 @@
 </head>
 <body>
 
-<nav style="display:flex;flex-direction:column;position:sticky;top:0;z-index:100;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.3);">
+<!-- PROMO BAR -->
+<div style="background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(123,47,190,0.4);position:relative;z-index:201;" onclick="window.location.href='/booking.html'">
+  <style>@keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}</style>
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto;">
+    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
+    <span id="promoTextFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#e0d0ff;">KONÏG Graphene Coating — Next Gen Protection · Eternity up to 8 Years · Made in Korea</span>
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:1px;color:#b06aff;border:1px solid #b06aff;padding:2px 12px;">Tanya Sekarang →</span>
+  </div>
+  <script>if(window.innerWidth>=600){document.getElementById('promoTextShort').style.display='none';document.getElementById('promoTextFull').style.display='inline';}</script>
+</div>
+<!-- NAV -->
+<nav style="position:sticky;top:0;z-index:200;display:flex;flex-direction:column;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.3);">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;">
-    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')">
+    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;">
       <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
     </a>
-    <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#b06aff;">Booking</span>
+    <a href="/booking.html" style="padding:8px 16px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;">Booking</a>
   </div>
   <div style="display:flex;border-top:1px solid #2a2a45;">
-    <a href="/location.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;border-right:1px solid #2a2a45;">Lokasi</a>
-    <a href="/services.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;border-right:1px solid #2a2a45;">Services</a>
-    <a href="/pricelist.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d4cef0;text-decoration:none;">Pricelist</a>
+    <a href="/location.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-right:1px solid #2a2a45;color:#d4cef0;">Lokasi</a>
+    <a href="/services.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-right:1px solid #2a2a45;color:#d4cef0;">Services</a>
+    <a href="/pricelist.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;border-right:1px solid #2a2a45;color:#d4cef0;">Pricelist</a>
+    <a href="/reviews.html" style="flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;color:#d4cef0;">Reviews</a>
   </div>
 </nav>
+
 
 <div class="page-wrap">
   <!-- LEFT: info -->
@@ -114,6 +127,13 @@
           <div class="info-title">WhatsApp</div>
           <div class="info-val">+62 881-0805-78712</div>
           <div class="info-link">Chat langsung →</div>
+        </div>
+      </a>
+      <a href="https://www.instagram.com/konig.auto.detailing" target="_blank" class="info-card" style="text-decoration:none;">
+        <div class="info-icon">📸</div>
+        <div>
+          <div class="info-title">Instagram</div>
+          <div class="info-val">@konig.auto.detailing</div>
         </div>
       </a>
       <div class="info-card">
