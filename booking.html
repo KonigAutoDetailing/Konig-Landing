@@ -31,10 +31,10 @@
       --white:#f0eeff;--text:#d4cef0;--muted:#9d93c0;--success:#4cd4a0;
     }
     html{scroll-behavior:smooth;overflow-x:hidden}
-    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;min-height:100vh}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;min-height:100vh;padding-top:128px}
 
     /* NAV */
-    nav{display:block}
+    nav{position:fixed;top:42px;left:0;right:0;z-index:100;display:flex;flex-direction:column;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.2)}
     .nav-back{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:color 0.2s}
     .nav-back:hover{color:var(--purpleB)}
 
@@ -88,7 +88,7 @@
       animation:promoShimmer 6s ease-in-out infinite;
       padding:10px 24px;text-align:center;cursor:pointer;
       border-bottom:1px solid rgba(123,47,190,0.4);
-      position:sticky;top:0;left:0;right:0;z-index:201;
+      position:fixed;top:0;left:0;right:0;z-index:201;
     }
     @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
     .promo-bar-inner{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
