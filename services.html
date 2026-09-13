@@ -13,7 +13,7 @@
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{--black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;--purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;--white:#f0eeff;--text:#d4cef0;--muted:#9d93c0}
     html{scroll-behavior:smooth;overflow-x:hidden}
-    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;padding-top:128px}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;padding-top:118px}
 
     /* PROMO BAR */
     .promo-bar{background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(123,47,190,0.4);position:fixed;top:0;left:0;right:0;z-index:201;}
@@ -77,9 +77,9 @@
 <!-- PROMO BAR (fixed top:0) -->
 <div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')">
   <div class="promo-bar-inner">
-    <span id="promoTextShort">🔥 Eksklusif Promo</span>
-    <span id="promoTagFull" style="display:none;" class="promo-tag">🔥 September Promo</span>
-    <span id="promoTextFull" style="display:none;" class="promo-text">KONÏG September Promo — Sapphire 10% Off · Sonax CC EVO 13% Off · Ceramic Coating Terbaik</span>
+    <span class="promo-text" id="promoTextShort">🔥 Eksklusif Promo</span>
+    <span class="promo-tag" id="promoTagFull" style="display:none;">🔥 Eksklusif</span>
+    <span class="promo-text" id="promoTextFull" style="display:none;">KONÏG September Promo — Sapphire 10% Off · Sonax CC EVO 13% Off · Ceramic Coating Terbaik</span>
     <span class="promo-cta">Tanya Sekarang →</span>
   </div>
 </div>
