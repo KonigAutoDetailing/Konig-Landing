@@ -19,8 +19,8 @@
     .promo-bar{background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(123,47,190,0.4);position:fixed;top:0;left:0;right:0;z-index:201;}
     @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
     .promo-bar-inner{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
-    .promo-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#f59e0b;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);padding:2px 10px}
-    .promo-text{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:#fff}
+
+
     .promo-cta{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#b06aff;border:1px solid #b06aff;padding:3px 12px;transition:all 0.2s}
     .promo-bar:hover .promo-cta{background:#b06aff;color:#fff}
 
@@ -77,9 +77,9 @@
 <!-- PROMO BAR (fixed top:0) -->
 <div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')">
   <div class="promo-bar-inner">
-    <span class="promo-text" id="promoTextShort">🔥 Eksklusif Promo</span>
-    <span class="promo-tag" id="promoTagFull" style="display:none;">🔥 Eksklusif</span>
-    <span class="promo-text" id="promoTextFull" style="display:none;">KONÏG September Promo — Sapphire 10% Off · Sonax CC EVO 13% Off · Ceramic Coating Terbaik</span>
+    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
+    <span id="promoTagFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;">🔥 September Promo</span>
+    <span id="promoTextFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#e0d0ff;">KONÏG September Promo — Sapphire 10% Off · Sonax CC EVO 13% Off · Ceramic Coating Terbaik</span>
     <span class="promo-cta">Tanya Sekarang →</span>
   </div>
 </div>
