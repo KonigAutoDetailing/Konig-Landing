@@ -1,47 +1,30 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <!-- Google Analytics + Google Ads Tag -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZQDE2DGZZ4"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-ZQDE2DGZZ4');
-    gtag('config', 'AW-17788548573');
-  </script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-  <meta name="description" content="KONÏG Auto Detailing — Layanan Ceramic Coating, Graphene Coating, Premium Wash, Window Coating, Express & Premium Polish di Gading Serpong, Tangerang."/>
+  <meta name="description" content="KONÏG Auto Detailing — Layanan Ceramic Coating, Graphene Coating, Premium Wash, Window Coating di Gading Serpong, Tangerang."/>
   <title>Services — KONÏG Auto Detailing</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZQDE2DGZZ4"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-ZQDE2DGZZ4');gtag('config','AW-17788548573');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-    :root{--black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;--purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;--white:#f0eeff;--text:#d4cef0;--muted:#9d93c0;--success:#4cd4a0}
+    :root{--black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;--purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;--white:#f0eeff;--text:#d4cef0;--muted:#9d93c0}
     html{scroll-behavior:smooth;overflow-x:hidden}
     body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;padding-top:128px}
-    .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px;display:block}
-    .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,64px);letter-spacing:2px;color:var(--white);line-height:1;margin-bottom:8px}
-    .page-title span{color:var(--purpleB)}
-    .page-desc{font-size:15px;font-weight:400;color:var(--text);line-height:1.8;max-width:540px;margin-bottom:48px;opacity:0.9}
 
-    .services-grid{display:grid;gap:2px}
-    @media(min-width:768px){.services-grid{grid-template-columns:1fr 1fr}}
-    .service-card{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--purple);padding:28px 24px;transition:all 0.25s;position:relative}
-    .service-card:hover{background:#1a1a2e;border-left-color:var(--purpleB)}
-    .service-tag{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--purpleB);background:rgba(123,47,190,0.12);border:1px solid rgba(123,47,190,0.3);padding:3px 10px;display:inline-block;margin-bottom:12px}
-    .service-name{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;letter-spacing:1px;color:var(--white);text-transform:uppercase;margin-bottom:8px}
-    .service-duration{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--purpleB);text-transform:uppercase;margin-bottom:12px}
-    .service-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:14px}
-    .service-features{display:flex;flex-wrap:wrap;gap:6px}
-    .service-feat{font-size:10px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase}
-    .service-cta{display:inline-block;margin-top:16px;padding:10px 20px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
-    .service-cta:hover{background:var(--purpleB)}
+    /* PROMO BAR */
+    .promo-bar{background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(123,47,190,0.4);position:fixed;top:0;left:0;right:0;z-index:201;}
+    @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    .promo-bar-inner{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
+    .promo-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#f59e0b;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);padding:2px 10px}
+    .promo-text{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:#fff}
+    .promo-cta{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#b06aff;border:1px solid #b06aff;padding:3px 12px;transition:all 0.2s}
+    .promo-bar:hover .promo-cta{background:#b06aff;color:#fff}
 
-    .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
-    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
-    .site-
+    /* NAV */
     .site-nav{position:fixed;top:42px;left:0;right:0;z-index:100;display:flex;flex-direction:column;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.2)}
     .nav-row1{display:flex;align-items:center;justify-content:space-between;padding:10px 20px}
     .nav-row2{display:flex;border-top:1px solid var(--border)}
@@ -52,6 +35,14 @@
     .nav-cta{padding:8px 16px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
     .nav-cta:hover{background:var(--purpleB)}
 
+    /* BANNER MODAL */
+    .banner-overlay{position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;}
+    .banner-box{position:relative;max-width:1000px;width:100%;}
+    .banner-box img{width:100%;display:block;border:1px solid rgba(123,47,190,0.4)}
+    .banner-close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .banner-cta{display:block;text-align:center;margin-top:14px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none}
+
+    /* CONTENT */
     .section-inner{max-width:1100px;margin:0 auto;padding:48px 24px 80px}
     .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px;display:block}
     .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,64px);letter-spacing:2px;color:var(--white);line-height:1;margin-bottom:8px}
@@ -59,33 +50,41 @@
     .page-desc{font-size:15px;font-weight:400;color:var(--text);line-height:1.8;max-width:540px;margin-bottom:48px;opacity:0.9}
     .services-grid{display:grid;gap:2px}
     @media(min-width:768px){.services-grid{grid-template-columns:1fr 1fr}}
-  </style>
-  <style>
-    .promo-bar{
-      background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);
-      background-size:300% 100%;
-      animation:promoShimmer 6s ease-in-out infinite;
-      padding:10px 24px;text-align:center;cursor:pointer;
-      border-bottom:1px solid rgba(123,47,190,0.4);
-      position:fixed;top:0;left:0;right:0;z-index:201;
-    }
-    @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-    .promo-bar-inner{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
-    .promo-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#f59e0b;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);padding:2px 10px}
-    .promo-text{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:#fff}
-    .promo-cta{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#b06aff;border:1px solid #b06aff;padding:3px 12px;transition:all 0.2s}
-    .promo-bar:hover .promo-cta{background:#b06aff;color:#fff}
-    .banner-overlay{position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;}
-    .banner-box{position:relative;max-width:1000px;width:100%;}
-    .banner-box img{width:100%;display:block;border:1px solid rgba(123,47,190,0.4)}
-    .banner-close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(123,47,190,0.5)}
-    .banner-cta{display:block;text-align:center;margin-top:14px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none}
+    .service-card{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--purple);padding:28px 24px;transition:all 0.25s;position:relative}
+    .service-card:hover{background:#1a1a2e;border-left-color:var(--purpleB)}
+    .service-tag{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--purpleB);background:rgba(123,47,190,0.12);border:1px solid rgba(123,47,190,0.3);padding:3px 10px;display:inline-block;margin-bottom:12px}
+    .service-name{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;letter-spacing:1px;color:var(--white);text-transform:uppercase;margin-bottom:8px}
+    .service-duration{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--purpleB);text-transform:uppercase;margin-bottom:12px}
+    .service-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:14px}
+    .service-features{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+    .service-feat{font-size:10px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase}
+    .service-cta{display:inline-block;padding:10px 20px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
+    .service-cta:hover{background:var(--purpleB)}
+
+    .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
+    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
+
+    /* SERVICE MODALS */
+    .svc-modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;}
+    .svc-modal-box{position:relative;width:100%;max-height:92vh;overflow-y:auto;}
+    .svc-modal-close{position:sticky;top:0;right:0;float:right;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;z-index:10;margin-bottom:8px;}
+    .svc-modal-img{width:100%;display:block;border:1px solid rgba(123,47,190,0.4);}
+    .svc-modal-cta{display:block;text-align:center;margin-top:12px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;}
   </style>
 </head>
 <body>
 
-<!-- GRAPHENE PROMO BAR (always visible) -->
+<!-- PROMO BAR (fixed top:0) -->
+<div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')">
+  <div class="promo-bar-inner">
+    <span id="promoTextShort">🔥 Eksklusif Promo</span>
+    <span id="promoTagFull" style="display:none;" class="promo-tag">🔥 September Promo</span>
+    <span id="promoTextFull" style="display:none;" class="promo-text">KONÏG September Promo — Sapphire 10% Off · Sonax CC EVO 13% Off · Ceramic Coating Terbaik</span>
+    <span class="promo-cta">Tanya Sekarang →</span>
+  </div>
+</div>
 
+<!-- NAV (fixed top:42px) -->
 <nav class="site-nav">
   <div class="nav-row1">
     <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;line-height:0;">
@@ -101,62 +100,37 @@
   </div>
 </nav>
 
-<div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')" style="cursor:pointer;">
-  <div class="promo-bar-inner">
-    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
-    <span id="promoTagFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;">🔥 Graphene Coating</span>
-    <span id="promoTextFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#e0d0ff;">KONÏG Graphene Coating — Next Gen Protection · Eternity up to 8 Years · Made in Korea</span>
-    <span class="promo-cta">Tanya Sekarang →</span>
-  </div>
-</div>
-
-<!-- GRAPHENE BANNER MODAL — desktop: landscape banner, mobile: portrait pricelist -->
+<!-- BANNER MODAL -->
 <div class="banner-overlay" id="bannerModal" style="display:none;">
   <div class="banner-box" id="bannerContent">
     <button class="banner-close" onclick="document.getElementById('bannerModal').style.display='none'">×</button>
-    <img src="graphene-pricelist-desktop.png" alt="KONIG Graphene Coating Pricelist" id="bannerImgDesktop"/>
-    <img src="graphene-pricelist-mobile.png" alt="KONIG Graphene Coating Pricelist" id="bannerImgMobile" style="display:none;"/>
-    <a href="/booking.html" class="banner-cta" onclick="document.getElementById('bannerModal').style.display='none';trackEvent('banner_cta_click')">
-      Tanya Graphene Coating Sekarang →
-    </a>
+    <img src="graphene-pricelist-desktop.png" id="bannerImgDesktop" alt="Pricelist"/>
+    <img src="graphene-pricelist-mobile.png" id="bannerImgMobile" style="display:none;" alt="Pricelist"/>
+    <a href="/booking.html" class="banner-cta" onclick="document.getElementById('bannerModal').style.display='none'">Tanya Graphene Coating Sekarang →</a>
   </div>
 </div>
 
-<script>
-  function trackEvent(name, params) {
-    if (typeof gtag !== 'undefined') gtag('event', name, params || {})
-  }
-  function openGrapheneBanner() {
-    const isMobile = window.innerWidth <= 768
-    document.getElementById('bannerImgDesktop').style.display = isMobile ? 'none' : 'block'
-    document.getElementById('bannerImgMobile').style.display = isMobile ? 'block' : 'none'
-    const box = document.getElementById('bannerContent')
-    box.style.maxWidth = isMobile ? '420px' : '1000px'
-    document.getElementById('bannerModal').style.display = 'flex'
-  }
-  if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', function(){
-      var m = document.getElementById('bannerModal')
-      if (m) m.addEventListener('click', function(e){ if(e.target === this) this.style.display = 'none' })
-      if (window.innerWidth >= 600) {
-        var s = document.getElementById('promoTextShort')
-        var t = document.getElementById('promoTagFull')
-        var f = document.getElementById('promoTextFull')
-        if (s) s.style.display = 'none'
-        if (t) t.style.display = 'inline'
-        if (f) f.style.display = 'inline'
-      }
-    })
-  }
-</script>
-
-
+<!-- GRAPHENE WHY MODAL -->
+<div class="svc-modal" id="grapheneWhyModal">
+  <div class="svc-modal-box" id="grapheneWhyContent">
+    <button class="svc-modal-close" onclick="document.getElementById('grapheneWhyModal').style.display='none'">×</button>
+    <div style="clear:both;"></div>
+    <img class="svc-modal-img" id="grapheneWhyImg" src="" alt="Kenapa Graphene Coating?"/>
+    <a href="/booking.html" class="svc-modal-cta" onclick="document.getElementById('grapheneWhyModal').style.display='none'">Booking Sekarang →</a>
+  </div>
 </div>
 
+<!-- SERVICE INFO MODAL -->
+<div class="svc-modal" id="serviceModal">
+  <div class="svc-modal-box" id="serviceModalContent">
+    <button class="svc-modal-close" onclick="document.getElementById('serviceModal').style.display='none'">×</button>
+    <div style="clear:both;"></div>
+    <img class="svc-modal-img" id="serviceModalImg" src="" alt=""/>
+    <a href="/booking.html" class="svc-modal-cta" onclick="document.getElementById('serviceModal').style.display='none'">Booking Sekarang →</a>
+  </div>
 </div>
 
-
-
+<!-- CONTENT -->
 <div class="section-inner">
   <span class="page-eyebrow">KONÏG Auto Detailing · Gading Serpong</span>
   <h1 class="page-title">LAYANAN<br/><span>KAMI</span></h1>
@@ -200,7 +174,7 @@
       <div class="service-duration">⏱ Estimasi 1–2 jam</div>
       <p class="service-desc">Exterior detailing menyeluruh dengan standar jauh di atas car wash biasa. pH neutral soap wash, wheels & tire cleaning, tar remover, trim protection, dan wetcoat protection 1 bulan. Swirl-free washing process dengan 2-bucket method.</p>
       <div class="service-features">
-        <span class="service-feat">pH Neutral Soap</span>
+        <span class="service-feat">PH Neutral Soap</span>
         <span class="service-feat">Wheels & Tire</span>
         <span class="service-feat">Tar Remover</span>
         <span class="service-feat">Trim Protection</span>
@@ -241,53 +215,49 @@
   </div>
 </div>
 
-<!-- SERVICE MODAL -->
-<div id="serviceModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
-  <div id="serviceModalContent" style="position:relative;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-    <button onclick="document.getElementById('serviceModal').style.display='none'" style="position:fixed;top:42px;left:0;right:0;top:0;right:0;float:right;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;z-index:10;margin-bottom:8px;">×</button>
-    <div style="clear:both;"></div>
-    <img id="serviceModalImg" src="" alt="" style="width:100%;display:block;border:1px solid rgba(123,47,190,0.4);" />
-    <a href="/booking.html" onclick="document.getElementById('serviceModal').style.display='none'" style="display:block;text-align:center;margin-top:12px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;">Booking Sekarang →</a>
-  </div>
-</div>
-
-<div id="grapheneWhyModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;">
-  <div id="grapheneWhyContent" style="position:relative;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
-    <button onclick="document.getElementById('grapheneWhyModal').style.display='none'" style="position:fixed;top:42px;left:0;right:0;top:0;right:0;float:right;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;z-index:10;margin-bottom:8px;">×</button>
-    <div style="clear:both;"></div>
-    <img id="grapheneWhyImg" src="" alt="" style="width:100%;display:block;border:1px solid rgba(123,47,190,0.4);" />
-    <a href="/booking.html" onclick="document.getElementById('grapheneWhyModal').style.display='none'" style="display:block;text-align:center;margin-top:12px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;">Booking Sekarang →</a>
-  </div>
-</div>
+<a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20layanan%20coating" class="wa-float" target="_blank">💬</a>
 
 <script>
-  const SERVICE_IMAGES = {
-    'premium-wash': { desktop:'premium-wash-desktop.png', mobile:'premium-wash-mobile.png' },
-    'ceramic-coating': { desktop:'ceramic-coating-desktop.png', mobile:'ceramic-coating-mobile.png' },
-  }
-  function openServiceModal(key) {
-    const imgs = SERVICE_IMAGES[key]; if(!imgs) return
-    const isMobile = window.innerWidth <= 600
-    const img = document.getElementById('serviceModalImg')
-    const box = document.getElementById('serviceModalContent')
-    const modal = document.getElementById('serviceModal')
-    img.src = isMobile ? imgs.mobile : imgs.desktop
-    if(isMobile){box.style.maxWidth='100%';box.style.maxHeight='100vh';box.style.overflowY='hidden';box.style.display='flex';box.style.flexDirection='column';img.style.flex='1';img.style.objectFit='contain';img.style.maxHeight='calc(100vh - 56px)';img.style.width='100%';modal.style.padding='0';modal.style.alignItems='flex-end'}
-    else{box.style.maxWidth='1100px';box.style.maxHeight='92vh';box.style.overflowY='auto';box.style.display='block';img.style.flex='';img.style.objectFit='';img.style.maxHeight='';img.style.width='100%';modal.style.padding='16px';modal.style.alignItems='center'}
-    modal.style.display='flex'
-  }
-  function openGrapheneWhy() {
-    const isMobile = window.innerWidth <= 600
-    const img = document.getElementById('grapheneWhyImg')
-    const box = document.getElementById('grapheneWhyContent')
-    const modal = document.getElementById('grapheneWhyModal')
-    img.src = isMobile ? 'graphene-why-mobile.png' : 'graphene-why-desktop.png'
-    if(isMobile){box.style.maxWidth='100%';box.style.maxHeight='100vh';box.style.overflowY='hidden';box.style.display='flex';box.style.flexDirection='column';img.style.flex='1';img.style.objectFit='contain';img.style.maxHeight='calc(100vh - 56px)';img.style.width='100%';modal.style.padding='0';modal.style.alignItems='flex-end'}
-    else{box.style.maxWidth='1100px';box.style.maxHeight='92vh';box.style.overflowY='auto';box.style.display='block';img.style.flex='';img.style.objectFit='';img.style.maxHeight='';modal.style.padding='16px';modal.style.alignItems='center'}
-    modal.style.display='flex'
-  }
-</script>
+  function trackEvent(n,p){if(typeof gtag!=='undefined')gtag('event',n,p||{})}
 
-<a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20layanan%20coating" class="wa-float" target="_blank">💬</a>
+  function openGrapheneBanner(){
+    const isMobile=window.innerWidth<=768
+    document.getElementById('bannerImgDesktop').style.display=isMobile?'none':'block'
+    document.getElementById('bannerImgMobile').style.display=isMobile?'block':'none'
+    document.getElementById('bannerContent').style.maxWidth=isMobile?'420px':'1000px'
+    document.getElementById('bannerModal').style.display='flex'
+  }
+
+  const SERVICE_IMAGES={
+    'premium-wash':{desktop:'premium-wash-desktop.png',mobile:'premium-wash-mobile.png'},
+    'ceramic-coating':{desktop:'ceramic-coating-desktop.png',mobile:'ceramic-coating-mobile.png'},
+  }
+  function openServiceModal(key){
+    const imgs=SERVICE_IMAGES[key];if(!imgs)return
+    const isMobile=window.innerWidth<=600
+    document.getElementById('serviceModalImg').src=isMobile?imgs.mobile:imgs.desktop
+    const box=document.getElementById('serviceModalContent')
+    box.style.maxWidth=isMobile?'420px':'1100px'
+    document.getElementById('serviceModal').style.display='flex'
+  }
+  function openGrapheneWhy(){
+    const isMobile=window.innerWidth<=600
+    document.getElementById('grapheneWhyImg').src=isMobile?'graphene-why-mobile.png':'graphene-why-desktop.png'
+    const box=document.getElementById('grapheneWhyContent')
+    box.style.maxWidth=isMobile?'420px':'1100px'
+    document.getElementById('grapheneWhyModal').style.display='flex'
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    if(window.innerWidth>=600){
+      document.getElementById('promoTextShort').style.display='none'
+      document.getElementById('promoTagFull').style.display='inline'
+      document.getElementById('promoTextFull').style.display='inline'
+    }
+    ;[document.getElementById('bannerModal'),document.getElementById('grapheneWhyModal'),document.getElementById('serviceModal')].forEach(function(m){
+      if(m)m.addEventListener('click',function(e){if(e.target===this)this.style.display='none'})
+    })
+  })
+</script>
 </body>
 </html>
