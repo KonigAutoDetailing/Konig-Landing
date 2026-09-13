@@ -86,21 +86,6 @@
 
 <!-- GRAPHENE PROMO BAR (always visible) -->
 
-<nav class="site-nav">
-  <div class="nav-row1">
-    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;line-height:0;">
-      <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
-    </a>
-    <a href="/booking.html" class="nav-cta">Booking</a>
-  </div>
-  <div class="nav-row2">
-    <a href="/location.html" class="nav-link-item">Lokasi</a>
-    <a href="/services.html" class="nav-link-item active">Services</a>
-    <a href="/pricelist.html" class="nav-link-item">Pricelist</a>
-    <a href="/reviews.html" class="nav-link-item">Reviews</a>
-  </div>
-</nav>
-
 <div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')" style="cursor:pointer;">
   <div class="promo-bar-inner">
     <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
@@ -121,6 +106,21 @@
     </a>
   </div>
 </div>
+  
+  <nav class="site-nav">
+  <div class="nav-row1">
+    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;line-height:0;">
+      <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
+    </a>
+    <a href="/booking.html" class="nav-cta">Booking</a>
+  </div>
+  <div class="nav-row2">
+    <a href="/location.html" class="nav-link-item">Lokasi</a>
+    <a href="/services.html" class="nav-link-item active">Services</a>
+    <a href="/pricelist.html" class="nav-link-item">Pricelist</a>
+    <a href="/reviews.html" class="nav-link-item">Reviews</a>
+  </div>
+</nav>
 
 <script>
   function trackEvent(name, params) {
