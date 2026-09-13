@@ -56,6 +56,15 @@
 
     .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
     @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
+    .site-nav{position:fixed;top:42px;left:0;right:0;z-index:100;display:flex;flex-direction:column;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.2)}
+    .nav-row1{display:flex;align-items:center;justify-content:space-between;padding:10px 20px}
+    .nav-row2{display:flex;border-top:1px solid var(--border)}
+    .nav-link-item{flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);text-decoration:none;border-right:1px solid var(--border);transition:color 0.2s}
+    .nav-link-item:last-child{border-right:none}
+    .nav-link-item:hover{color:var(--purpleB)}
+    .nav-link-item.active{color:var(--purpleB)}
+    .nav-cta{padding:8px 16px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
+    .nav-cta:hover{background:var(--purpleB)}
   </style>
   <style>
     .promo-bar{
@@ -167,30 +176,24 @@
 <!-- NAV -->
 <style>
   :root{--border:#2a2a45;--purple2:#9B3FDE;--purpleB:#b06aff;--text:#d4cef0;}
-  .nav-link-item{flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);text-decoration:none;border-right:1px solid var(--border);transition:color 0.2s}
-  .nav-link-item:last-child{border-right:none}
-  .nav-link-item:hover{color:var(--purpleB)}
-  .nav-link-item.active{color:var(--purpleB)}
-  .nav-cta{padding:8px 16px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:background 0.2s,transform 0.2s}
-  .nav-cta:hover{background:var(--purpleB);transform:translateY(-1px)}
 </style>
-<nav style="position:fixed;top:42px;left:0;right:0;z-index:100;flex-direction:column;padding:0;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.2);display:flex;">
-  <!-- Row 1: Logo + Booking -->
-  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 20px;">
+
+
+
+<nav class="site-nav">
+  <div class="nav-row1">
     <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;line-height:0;">
-      <img src="konig-logo.png" alt="KONIG Auto Detailing" style="height:24px;width:auto;display:block;filter:brightness(1.1);flex-shrink:0;"/>
+      <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
     </a>
     <a href="/booking.html" class="nav-cta">Booking</a>
   </div>
-  <!-- Row 2: Nav links -->
-  <div style="display:flex;align-items:center;width:100%;border-top:1px solid var(--border);">
+  <div class="nav-row2">
     <a href="/location.html" class="nav-link-item">Lokasi</a>
     <a href="/services.html" class="nav-link-item">Services</a>
     <a href="/pricelist.html" class="nav-link-item">Pricelist</a>
     <a href="/reviews.html" class="nav-link-item active">Reviews</a>
   </div>
 </nav>
-
 <div class="section-inner">
   <span class="page-eyebrow">Google Reviews · Verified</span>
   <h1 class="page-title">APA KATA<br/><span>CLIENT KAMI</span></h1>
