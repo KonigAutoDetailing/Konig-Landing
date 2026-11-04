@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="description" content="KONÏG Auto Detailing — Layanan Ceramic Coating, Graphene Coating, Premium Wash, Window Coating di Gading Serpong, Tangerang."/>
+  <title>Services — KONÏG Auto Detailing</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZQDE2DGZZ4"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-ZQDE2DGZZ4');gtag('config','AW-17788548573');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{--black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;--purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;--white:#f0eeff;--text:#d4cef0;--muted:#9d93c0}
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden;padding-top:118px}
+
+    /* PROMO BAR */
+    .promo-bar{background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(123,47,190,0.4);position:fixed;top:0;left:0;right:0;z-index:201;}
+    @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    .promo-bar-inner{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
+
+
+    .promo-cta{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#b06aff;border:1px solid #b06aff;padding:3px 12px;transition:all 0.2s}
+    .promo-bar:hover .promo-cta{background:#b06aff;color:#fff}
+
+    /* NAV */
+    .site-nav{position:fixed;top:42px;left:0;right:0;z-index:100;display:flex;flex-direction:column;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.2)}
+    .nav-row1{display:flex;align-items:center;justify-content:space-between;padding:10px 20px}
+    .nav-row2{display:flex;border-top:1px solid var(--border)}
+    .nav-link-item{flex:1;text-align:center;padding:9px 4px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text);text-decoration:none;border-right:1px solid var(--border);transition:color 0.2s}
+    .nav-link-item:last-child{border-right:none}
+    .nav-link-item:hover{color:var(--purpleB)}
+    .nav-link-item.active{color:var(--purpleB)}
+    .nav-cta{padding:8px 16px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
+    .nav-cta:hover{background:var(--purpleB)}
+
+    /* BANNER MODAL */
+    .banner-overlay{position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;}
+    .banner-box{position:relative;max-width:1000px;width:100%;}
+    .banner-box img{width:100%;display:block;border:1px solid rgba(123,47,190,0.4)}
+    .banner-close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .banner-cta{display:block;text-align:center;margin-top:14px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none}
+
+    /* CONTENT */
+    .section-inner{max-width:1100px;margin:0 auto;padding:48px 24px 80px}
+    .page-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px;display:block}
+    .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,64px);letter-spacing:2px;color:var(--white);line-height:1;margin-bottom:8px}
+    .page-title span{color:var(--purpleB)}
+    .page-desc{font-size:15px;font-weight:400;color:var(--text);line-height:1.8;max-width:540px;margin-bottom:48px;opacity:0.9}
+    .services-grid{display:grid;gap:2px}
+    @media(min-width:768px){.services-grid{grid-template-columns:1fr 1fr}}
+    .service-card{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--purple);padding:28px 24px;transition:all 0.25s;position:relative}
+    .service-card:hover{background:#1a1a2e;border-left-color:var(--purpleB)}
+    .service-tag{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--purpleB);background:rgba(123,47,190,0.12);border:1px solid rgba(123,47,190,0.3);padding:3px 10px;display:inline-block;margin-bottom:12px}
+    .service-name{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;letter-spacing:1px;color:var(--white);text-transform:uppercase;margin-bottom:8px}
+    .service-duration{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--purpleB);text-transform:uppercase;margin-bottom:12px}
+    .service-desc{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:14px}
+    .service-features{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+    .service-feat{font-size:10px;letter-spacing:1px;padding:4px 10px;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase}
+    .service-cta{display:inline-block;padding:10px 20px;background:var(--purple2);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:background 0.2s}
+    .service-cta:hover{background:var(--purpleB)}
+
+    .wa-float{position:fixed;bottom:24px;right:24px;z-index:200;width:56px;height:56px;border-radius:50%;background:#25D366;color:white;display:flex;align-items:center;justify-content:center;font-size:26px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.4);animation:waPulse 3s ease-in-out infinite}
+    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,0.4)}50%{box-shadow:0 8px 36px rgba(37,211,102,0.65)}}
+
+    /* SERVICE MODALS */
+    .svc-modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(4,2,16,0.94);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:16px;}
+    .svc-modal-box{position:relative;width:100%;max-height:92vh;overflow-y:auto;}
+    .svc-modal-close{position:sticky;top:0;right:0;float:right;width:36px;height:36px;border-radius:50%;background:#9B3FDE;border:none;color:#fff;font-size:18px;cursor:pointer;z-index:10;margin-bottom:8px;}
+    .svc-modal-img{width:100%;display:block;border:1px solid rgba(123,47,190,0.4);}
+    .svc-modal-cta{display:block;text-align:center;margin-top:12px;padding:14px;background:#9B3FDE;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;text-decoration:none;}
+  </style>
+</head>
+<body>
+
+<!-- PROMO BAR (fixed top:0) -->
+<div class="promo-bar" onclick="openGrapheneBanner();trackEvent('promo_bar_click')">
+  <div class="promo-bar-inner">
+    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Eksklusif Promo</span>
+    <span id="promoTagFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:#fff;">🔥 September Promo</span>
+    <span id="promoTextFull" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#e0d0ff;">KONÏG September Promo — Sapphire 10% Off · Sonax CC EVO 13% Off · Ceramic Coating Terbaik</span>
+    <span class="promo-cta">Tanya Sekarang →</span>
+  </div>
+</div>
+
+<!-- NAV (fixed top:42px) -->
+<nav class="site-nav">
+  <div class="nav-row1">
+    <a href="/" onclick="sessionStorage.setItem('konig_welcomed','1')" style="display:block;line-height:0;">
+      <img src="konig-logo.png" alt="KONIG" style="height:24px;width:auto;display:block;filter:brightness(1.1);"/>
+    </a>
+    <a href="/booking.html" class="nav-cta">Booking</a>
+  </div>
+  <div class="nav-row2">
+    <a href="/location.html" class="nav-link-item">Lokasi</a>
+    <a href="/services.html" class="nav-link-item active">Services</a>
+    <a href="/pricelist.html" class="nav-link-item">Pricelist</a>
+    <a href="/reviews.html" class="nav-link-item">Reviews</a>
+  </div>
+</nav>
+
+<!-- BANNER MODAL -->
+<div class="banner-overlay" id="bannerModal" style="display:none;">
+  <div class="banner-box" id="bannerContent">
+    <button class="banner-close" onclick="document.getElementById('bannerModal').style.display='none'">×</button>
+    <img src="graphene-pricelist-desktop.png" id="bannerImgDesktop" alt="Pricelist"/>
+    <img src="graphene-pricelist-mobile.png" id="bannerImgMobile" style="display:none;" alt="Pricelist"/>
+    <a href="/booking.html" class="banner-cta" onclick="document.getElementById('bannerModal').style.display='none'">Tanya Graphene Coating Sekarang →</a>
+  </div>
+</div>
+
+<!-- GRAPHENE WHY MODAL -->
+<div class="svc-modal" id="grapheneWhyModal">
+  <div class="svc-modal-box" id="grapheneWhyContent">
+    <button class="svc-modal-close" onclick="document.getElementById('grapheneWhyModal').style.display='none'">×</button>
+    <div style="clear:both;"></div>
+    <img class="svc-modal-img" id="grapheneWhyImg" src="" alt="Kenapa Graphene Coating?"/>
+    <a href="/booking.html" class="svc-modal-cta" onclick="document.getElementById('grapheneWhyModal').style.display='none'">Booking Sekarang →</a>
+  </div>
+</div>
+
+<!-- SERVICE INFO MODAL -->
+<div class="svc-modal" id="serviceModal">
+  <div class="svc-modal-box" id="serviceModalContent">
+    <button class="svc-modal-close" onclick="document.getElementById('serviceModal').style.display='none'">×</button>
+    <div style="clear:both;"></div>
+    <img class="svc-modal-img" id="serviceModalImg" src="" alt=""/>
+    <a href="/booking.html" class="svc-modal-cta" onclick="document.getElementById('serviceModal').style.display='none'">Booking Sekarang →</a>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="section-inner">
+  <span class="page-eyebrow">KONÏG Auto Detailing · Gading Serpong</span>
+  <h1 class="page-title">LAYANAN<br/><span>KAMI</span></h1>
+  <p class="page-desc">Setiap layanan dikerjakan dengan prosedur ketat dan produk terbaik — dari kendaraan harian hingga exotic car.</p>
+
+  <div class="services-grid">
+    <div class="service-card" style="cursor:pointer;" onclick="openGrapheneWhy()">
+      <span class="service-tag">Next Gen · Made in Korea</span>
+      <div class="service-name">Graphene Coating <span style="font-size:11px;font-weight:600;color:#b06aff;font-family:'Barlow Condensed',sans-serif;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;margin-left:6px;">Tap untuk info →</span></div>
+      <div class="service-duration">⏱ Estimasi 2–3 hari kerja</div>
+      <p class="service-desc">Teknologi coating generasi terbaru berbasis Graphene dari Korea. Struktur 200× lebih kuat dari baja — menghasilkan efek hydrophobic ekstrem, gloss mendalam seperti kaca basah, dan daya tahan superior hingga 8 tahun. Tersedia tiga tier: Eternity (8 tahun), Shield (7 tahun), dan Armor (3 tahun).</p>
+      <div class="service-features">
+        <span class="service-feat">Eternity — 8 Yrs</span>
+        <span class="service-feat">Shield — 7 Yrs</span>
+        <span class="service-feat">Armor — 3 Yrs</span>
+        <span class="service-feat">Hydrophobic Ekstrem</span>
+        <span class="service-feat">Made in Korea</span>
+      </div>
+      <a href="/booking.html" class="service-cta">Tanya / Booking →</a>
+    </div>
+
+    <div class="service-card" style="cursor:pointer;" onclick="openServiceModal('ceramic-coating')">
+      <span class="service-tag">Essential · Signature · Prestige</span>
+      <div class="service-name">Ceramic Coating <span style="font-size:11px;font-weight:600;color:#b06aff;font-family:'Barlow Condensed',sans-serif;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;margin-left:6px;">Tap untuk info →</span></div>
+      <div class="service-duration">⏱ Estimasi 2–3 hari kerja</div>
+      <p class="service-desc">Tiga tier perlindungan ceramic — dari Essential untuk daily driver hingga Prestige untuk kendaraan premium. Setiap tier melalui proses prep lengkap: snow foam, decontaminasi ferro, dan clay bar sebelum coating diaplikasikan panel per panel.</p>
+      <div class="service-features">
+        <span class="service-feat">Sonax CC One / Pro</span>
+        <span class="service-feat">CarPro Lite / CQ UK 3.0</span>
+        <span class="service-feat">Gyeon Q2 Pure EVO</span>
+        <span class="service-feat">CarPro D.Quartz Go</span>
+        <span class="service-feat">Gyeon Syncro EVO</span>
+        <span class="service-feat">Up to 4 Tahun</span>
+      </div>
+      <a href="/booking.html" class="service-cta">Tanya / Booking →</a>
+    </div>
+
+    <div class="service-card" style="cursor:pointer;" onclick="openServiceModal('premium-wash')">
+      <span class="service-tag">Exterior · Detailing</span>
+      <div class="service-name">Premium Wash <span style="font-size:11px;font-weight:600;color:#b06aff;font-family:'Barlow Condensed',sans-serif;vertical-align:middle;border:1px solid rgba(176,106,255,0.4);padding:2px 8px;margin-left:6px;">Tap untuk info →</span></div>
+      <div class="service-duration">⏱ Estimasi 1–2 jam</div>
+      <p class="service-desc">Exterior detailing menyeluruh dengan standar jauh di atas car wash biasa. pH neutral soap wash, wheels & tire cleaning, tar remover, trim protection, dan wetcoat protection 1 bulan. Swirl-free washing process dengan 2-bucket method.</p>
+      <div class="service-features">
+        <span class="service-feat">PH Neutral Soap</span>
+        <span class="service-feat">Wheels & Tire</span>
+        <span class="service-feat">Tar Remover</span>
+        <span class="service-feat">Trim Protection</span>
+        <span class="service-feat">Wetcoat 1 Bulan</span>
+        <span class="service-feat">Swirl-Free</span>
+      </div>
+      <a href="/booking.html" class="service-cta">Tanya / Booking →</a>
+    </div>
+
+    <div class="service-card">
+      <span class="service-tag">Glass · Hydrophobic</span>
+      <div class="service-name">Window Coating</div>
+      <div class="service-duration">⏱ Estimasi 2–4 jam</div>
+      <p class="service-desc">Lapisan hydrophobic pada kaca depan dan seluruh kaca kendaraan. Air langsung mengalir saat berkendara tanpa perlu wiper — visibilitas lebih aman di kondisi hujan. Tersedia untuk windshield saja atau seluruh kaca kendaraan.</p>
+      <div class="service-features">
+        <span class="service-feat">Front Windshield</span>
+        <span class="service-feat">Side & Rear Glass</span>
+        <span class="service-feat">Hydrophobic Coating</span>
+        <span class="service-feat">Rain Repellent</span>
+      </div>
+      <a href="/booking.html" class="service-cta">Tanya / Booking →</a>
+    </div>
+
+    <div class="service-card">
+      <span class="service-tag">Express · Premium</span>
+      <div class="service-name">Express & Premium Polish</div>
+      <div class="service-duration">⏱ Express: 1 hari · Premium: 1–3 hari</div>
+      <p class="service-desc">Express Polish untuk restorasi cepat hingga 90% swirl removal dengan proteksi 6 bulan. Premium Polish untuk pengerjaan mendalam 3-step dengan perlindungan 12 bulan durability — termasuk wheel cleaning, tar remover, dan waterspot removal.</p>
+      <div class="service-features">
+        <span class="service-feat">Up to 90% Swirl Removal</span>
+        <span class="service-feat">Waterspot Removal</span>
+        <span class="service-feat">Tar Remover</span>
+        <span class="service-feat">Express: 6 Bln</span>
+        <span class="service-feat">Premium: 12 Bln</span>
+      </div>
+      <a href="/booking.html" class="service-cta">Tanya / Booking →</a>
+    </div>
+  </div>
+</div>
+
+<a href="https://wa.me/62881080578712?text=Halo%20KONÏG,%20saya%20ingin%20konsultasi%20tentang%20layanan%20coating" class="wa-float" target="_blank">💬</a>
+
+<script>
+  function trackEvent(n,p){if(typeof gtag!=='undefined')gtag('event',n,p||{})}
+
+  function openGrapheneBanner(){
+    const isMobile=window.innerWidth<=768
+    document.getElementById('bannerImgDesktop').style.display=isMobile?'none':'block'
+    document.getElementById('bannerImgMobile').style.display=isMobile?'block':'none'
+    document.getElementById('bannerContent').style.maxWidth=isMobile?'420px':'1000px'
+    document.getElementById('bannerModal').style.display='flex'
+  }
+
+  const SERVICE_IMAGES={
+    'premium-wash':{desktop:'premium-wash-desktop.png',mobile:'premium-wash-mobile.png'},
+    'ceramic-coating':{desktop:'ceramic-coating-desktop.png',mobile:'ceramic-coating-mobile.png'},
+  }
+  function openServiceModal(key){
+    const imgs=SERVICE_IMAGES[key];if(!imgs)return
+    const isMobile=window.innerWidth<=600
+    document.getElementById('serviceModalImg').src=isMobile?imgs.mobile:imgs.desktop
+    const box=document.getElementById('serviceModalContent')
+    box.style.maxWidth=isMobile?'420px':'1100px'
+    document.getElementById('serviceModal').style.display='flex'
+  }
+  function openGrapheneWhy(){
+    const isMobile=window.innerWidth<=600
+    document.getElementById('grapheneWhyImg').src=isMobile?'graphene-why-mobile.png':'graphene-why-desktop.png'
+    const box=document.getElementById('grapheneWhyContent')
+    box.style.maxWidth=isMobile?'420px':'1100px'
+    document.getElementById('grapheneWhyModal').style.display='flex'
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    if(window.innerWidth>=600){
+      document.getElementById('promoTextShort').style.display='none'
+      document.getElementById('promoTagFull').style.display='inline'
+      document.getElementById('promoTextFull').style.display='inline'
+    }
+    ;[document.getElementById('bannerModal'),document.getElementById('grapheneWhyModal'),document.getElementById('serviceModal')].forEach(function(m){
+      if(m)m.addEventListener('click',function(e){if(e.target===this)this.style.display='none'})
+    })
+  })
+</script>
+</body>
+</html>
