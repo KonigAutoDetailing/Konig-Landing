@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZQDE2DGZZ4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-ZQDE2DGZZ4');
+    gtag('config', 'AW-17788548573');
+  </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="description" content="KONÏG Graphene Campaign — Diskon hingga 20% untuk Graphene Coating terbaik. Eternity, Shield, dan Armor Graphene. Stronger Protection, Longer Lasting."/>
+  <meta name="keywords" content="graphene campaign, graphene coating promo, konig graphene, ceramic coating diskon, graphene coating tangerang"/>
+  <meta property="og:title" content="KONÏG Graphene Campaign — Diskon hingga 20%"/>
+  <meta property="og:description" content="Stronger Protection. Longer Lasting. Eternity 20% Off · Shield 15% Off · Armor 10% Off"/>
+  <meta property="og:image" content="https://konigautodetailing.com/graphene-campaign-desktop.png"/>
+  <meta property="og:url" content="https://konigautodetailing.com/graphene-campaign"/>
+  <title>KONÏG Graphene Campaign — Stronger Protection, Longer Lasting</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;
+      --purple:#7B2FBE;--purple2:#9B3FDE;--purpleB:#b06aff;--purpleD:rgba(123,47,190,0.15);
+      --white:#f0eeff;--text:#d4cef0;--muted:#9d93c0;--gold:#f59e0b;
+    }
+    html{scroll-behavior:smooth;overflow-x:hidden}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden}
+
+    /* ── HEADER / NAV ── */
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:100;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:16px 24px;
+      background:rgba(8,8,16,0.85);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(42,42,69,0.5);
+    }
+    .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--white);text-decoration:none}
+    .nav-logo span{color:var(--purpleB)}
+    .nav-back{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s}
+    .nav-back:hover{color:var(--purpleB)}
+
+    /* ── HERO ── */
+    .hero{
+      min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;
+      padding:120px 24px 60px;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse 80% 60% at 50% 40%, rgba(123,47,190,0.22) 0%, transparent 70%);
+    }
+    .hero-hex{
+      position:absolute;inset:0;opacity:0.04;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='70'%3E%3Cpolygon points='30,2 58,17 58,53 30,68 2,53 2,17' fill='none' stroke='%23b06aff' stroke-width='1'/%3E%3C/svg%3E");
+      background-size:60px 70px;
+    }
+    .hero-eyebrow{
+      font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:5px;
+      text-transform:uppercase;color:var(--gold);
+      background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);
+      padding:5px 18px;margin-bottom:28px;position:relative;
+    }
+    .hero h1{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(52px,14vw,110px);
+      letter-spacing:3px;line-height:0.9;
+      color:var(--white);position:relative;
+      text-shadow:0 0 60px rgba(176,106,255,0.3);
+    }
+    .hero h1 span{color:var(--purpleB)}
+    .hero-sub{
+      font-family:'Barlow Condensed',sans-serif;font-size:clamp(14px,3vw,18px);
+      font-weight:500;letter-spacing:4px;text-transform:uppercase;
+      color:var(--muted);margin:16px 0 48px;position:relative;
+    }
+    .hero-img{
+      width:100%;max-width:900px;border-radius:4px;
+      box-shadow:0 20px 80px rgba(123,47,190,0.3);
+      position:relative;
+    }
+    .hero-img-mobile{display:none;width:100%;max-width:420px}
+    @media(max-width:640px){
+      .hero-img{display:none}
+      .hero-img-mobile{display:block}
+    }
+
+    /* ── PRODUCTS ── */
+    .products{padding:80px 24px;background:var(--dark);border-top:1px solid var(--border)}
+    .products-inner{max-width:1100px;margin:0 auto}
+    .section-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:5px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px;display:block;text-align:center}
+    .section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,56px);letter-spacing:2px;color:var(--white);text-align:center;margin-bottom:12px}
+    .section-desc{font-size:15px;color:var(--muted);text-align:center;margin-bottom:56px}
+    .products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media(max-width:768px){.products-grid{grid-template-columns:1fr;gap:16px}}
+    .product-card{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:4px;padding:32px 24px;
+      display:flex;flex-direction:column;gap:16px;
+      position:relative;overflow:hidden;
+      transition:border-color 0.3s,transform 0.3s;
+    }
+    .product-card::before{
+      content:'';position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,transparent,var(--purpleB),transparent);
+      opacity:0;transition:opacity 0.3s;
+    }
+    .product-card:hover{border-color:var(--purple);transform:translateY(-4px)}
+    .product-card:hover::before{opacity:1}
+    .product-card.featured{border-color:var(--purple);background:linear-gradient(135deg,rgba(123,47,190,0.12),var(--panel))}
+    .product-card.featured::before{opacity:1}
+    .product-badge{
+      position:absolute;top:16px;right:16px;
+      font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+      color:var(--gold);background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);
+      padding:3px 10px;
+    }
+    .product-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white)}
+    .product-type{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--purpleB);margin-top:-12px}
+    .product-discount{
+      font-family:'Bebas Neue',sans-serif;font-size:64px;letter-spacing:1px;line-height:1;
+      color:var(--purpleB);text-shadow:0 0 30px rgba(176,106,255,0.4);
+    }
+    .product-discount span{font-size:32px;vertical-align:top;margin-top:12px;display:inline-block}
+    .product-savings{
+      font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
+      color:var(--gold);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);
+      padding:4px 12px;display:inline-block;
+    }
+    .product-price{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--muted)}
+    .product-price strong{font-size:18px;color:var(--white)}
+    .product-durability{
+      display:flex;align-items:center;gap:8px;
+      font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;
+      color:var(--purpleB);border:1px solid rgba(176,106,255,0.3);padding:8px 14px;
+    }
+    .product-cta{
+      display:block;text-align:center;
+      font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+      color:var(--white);background:var(--purple);
+      padding:14px 24px;text-decoration:none;
+      transition:background 0.2s,transform 0.2s;margin-top:auto;
+    }
+    .product-cta:hover{background:var(--purple2);transform:translateY(-1px)}
+
+    /* ── WHY GRAPHENE ── */
+    .why{padding:80px 24px;background:var(--black);border-top:1px solid var(--border)}
+    .why-inner{max-width:1100px;margin:0 auto}
+    .why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+    @media(max-width:768px){.why-grid{grid-template-columns:1fr}}
+    .why-card{background:var(--panel);border:1px solid var(--border);padding:28px 24px}
+    .why-icon{font-size:28px;margin-bottom:12px}
+    .why-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;letter-spacing:1px;color:var(--white);margin-bottom:8px}
+    .why-desc{font-size:14px;color:var(--muted);line-height:1.7}
+
+    /* ── CTA SECTION ── */
+    .cta-section{
+      padding:80px 24px;
+      background:linear-gradient(135deg,rgba(123,47,190,0.15) 0%,var(--dark) 100%);
+      border-top:1px solid var(--border);text-align:center;
+    }
+    .cta-inner{max-width:600px;margin:0 auto}
+    .cta-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,56px);letter-spacing:2px;color:var(--white);margin-bottom:16px}
+    .cta-desc{font-size:15px;color:var(--muted);margin-bottom:40px;line-height:1.7}
+    .cta-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-primary{
+      font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+      color:var(--white);background:var(--purple);
+      padding:16px 36px;text-decoration:none;
+      transition:background 0.2s;
+    }
+    .btn-primary:hover{background:var(--purple2)}
+    .btn-secondary{
+      font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+      color:var(--purpleB);border:1px solid var(--purpleB);
+      padding:16px 36px;text-decoration:none;
+      transition:all 0.2s;
+    }
+    .btn-secondary:hover{background:var(--purpleB);color:var(--white)}
+
+    /* ── FOOTER ── */
+    footer{padding:32px 24px;background:var(--dark);border-top:1px solid var(--border);text-align:center}
+    footer p{font-size:13px;color:var(--muted)}
+    footer a{color:var(--purpleB);text-decoration:none}
+
+    /* ── INQUIRY FORM ── */
+    .inquiry{padding:80px 24px;background:var(--dark);border-top:1px solid var(--border)}
+    .inquiry-inner{max-width:600px;margin:0 auto}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+    @media(max-width:640px){.form-row{grid-template-columns:1fr}}
+    .form-group{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+    .form-group label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+    .form-group input,.form-group select,.form-group textarea{
+      background:rgba(255,255,255,0.04);border:1px solid var(--border);
+      color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;
+      padding:14px 16px;outline:none;width:100%;
+      transition:border-color 0.2s;
+    }
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--purple)}
+    .form-group select option{background:var(--dark)}
+    .form-group textarea{resize:vertical;min-height:100px}
+    .btn-submit{
+      width:100%;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:3px;text-transform:uppercase;
+      color:var(--white);background:var(--purple);border:none;cursor:pointer;
+      padding:18px;transition:background 0.2s;
+    }
+    .btn-submit:hover{background:var(--purple2)}
+    .form-success{display:none;text-align:center;padding:24px;background:rgba(76,212,160,0.1);border:1px solid rgba(76,212,160,0.3);color:#4cd4a0;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">KON<span>Ï</span>G</a>
+  <a href="/" class="nav-back">← Kembali ke Website</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-hex"></div>
+  <div class="hero-eyebrow">🔥 Promo Terbatas — November 2026</div>
+  <h1>GRAPHENE<br><span>CAMPAIGN</span></h1>
+  <p class="hero-sub">Stronger Protection. Longer Lasting.</p>
+  <img src="graphene-campaign-desktop.png" alt="KONIG Graphene Campaign" class="hero-img"/>
+  <img src="graphene-campaign-mobile.jpg" alt="KONIG Graphene Campaign" class="hero-img-mobile"/>
+</section>
+
+<!-- PRODUCTS -->
+<section class="products">
+  <div class="products-inner">
+    <span class="section-label">Pilih Paket Graphene Kamu</span>
+    <h2 class="section-title">3 Paket Tersedia</h2>
+    <p class="section-desc">Diskon eksklusif untuk semua paket graphene — teknologi perlindungan terdepan</p>
+    <div class="products-grid">
+
+      <!-- ETERNITY -->
+      <div class="product-card featured">
+        <div class="product-badge">BEST VALUE</div>
+        <div>
+          <div class="product-name">ETERNITY</div>
+          <div class="product-type">Graphene</div>
+        </div>
+        <div class="product-discount"><span>20</span>%<br><small style="font-size:18px;color:var(--muted)">OFF</small></div>
+        <div class="product-savings">Hemat hingga Rp 1.300.000</div>
+        <div class="product-price">Mulai dari <strong>Rp 4.000.000</strong></div>
+        <div class="product-durability">🛡️ Durabilitas hingga 8 Tahun</div>
+        <a href="#inquiry" class="product-cta" onclick="document.getElementById('packageSelect').value='eternity'">Pilih Eternity →</a>
+      </div>
+
+      <!-- SHIELD -->
+      <div class="product-card">
+        <div>
+          <div class="product-name">SHIELD</div>
+          <div class="product-type">Graphene</div>
+        </div>
+        <div class="product-discount"><span>15</span>%<br><small style="font-size:18px;color:var(--muted)">OFF</small></div>
+        <div class="product-savings">Hemat hingga Rp 825.000</div>
+        <div class="product-price">Mulai dari <strong>Rp 3.400.000</strong></div>
+        <div class="product-durability">🛡️ Durabilitas hingga 7 Tahun</div>
+        <a href="#inquiry" class="product-cta" onclick="document.getElementById('packageSelect').value='shield'">Pilih Shield →</a>
+      </div>
+
+      <!-- ARMOR -->
+      <div class="product-card">
+        <div>
+          <div class="product-name">ARMOR</div>
+          <div class="product-type">Graphene</div>
+        </div>
+        <div class="product-discount"><span>10</span>%<br><small style="font-size:18px;color:var(--muted)">OFF</small></div>
+        <div class="product-savings">Hemat hingga Rp 450.000</div>
+        <div class="product-price">Mulai dari <strong>Rp 2.700.000</strong></div>
+        <div class="product-durability">🛡️ Durabilitas hingga 3 Tahun</div>
+        <a href="#inquiry" class="product-cta" onclick="document.getElementById('packageSelect').value='armor'">Pilih Armor →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- WHY GRAPHENE -->
+<section class="why">
+  <div class="why-inner">
+    <span class="section-label">Kenapa Graphene?</span>
+    <h2 class="section-title" style="text-align:center">Teknologi Perlindungan Terdepan</h2>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">💧</div>
+        <div class="why-title">Superior Hydrophobic Effect</div>
+        <div class="why-desc">Air, debu, dan kotoran langsung meluncur. Mobil tetap bersih lebih lama dengan perawatan minimal.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">💎</div>
+        <div class="why-title">Deeper Gloss & Clarity</div>
+        <div class="why-desc">Lapisan graphene menghasilkan kilap yang lebih dalam dan jernih dibanding coating konvensional.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🧪</div>
+        <div class="why-title">Chemical & UV Resistant</div>
+        <div class="why-desc">Tahan terhadap bahan kimia keras, polusi, dan sinar UV yang merusak cat mobil kamu.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INQUIRY FORM -->
+<section class="inquiry" id="inquiry">
+  <div class="inquiry-inner">
+    <span class="section-label" style="text-align:center;display:block">Daftar Sekarang</span>
+    <h2 class="section-title" style="text-align:center;margin-bottom:12px">Klaim Promo Kamu</h2>
+    <p style="text-align:center;color:var(--muted);font-size:14px;margin-bottom:40px">Isi form di bawah — tim KONÏG akan menghubungi kamu dalam 1×24 jam</p>
+
+    <div id="formSuccess" class="form-success">
+      ✅ Terima kasih! Kami akan menghubungi kamu segera.<br>
+      <small style="font-weight:400;color:var(--muted)">Cek WhatsApp kamu.</small>
+    </div>
+
+    <form id="campaignForm" onsubmit="submitForm(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="userName" placeholder="John Doe" required/>
+        </div>
+        <div class="form-group">
+          <label>No. WhatsApp</label>
+          <input type="tel" id="userPhone" placeholder="08xx-xxxx-xxxx" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Paket Graphene</label>
+        <select id="packageSelect" required>
+          <option value="">Pilih paket...</option>
+          <option value="eternity">Eternity Graphene — 20% Off (Hemat s/d Rp 1.300.000)</option>
+          <option value="shield">Shield Graphene — 15% Off (Hemat s/d Rp 825.000)</option>
+          <option value="armor">Armor Graphene — 10% Off (Hemat s/d Rp 450.000)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Merk Mobil</label>
+          <input type="text" id="carBrand" placeholder="Toyota, Honda, BMW..."/>
+        </div>
+        <div class="form-group">
+          <label>Model & Tahun</label>
+          <input type="text" id="carModel" placeholder="Camry 2022"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Pesan (opsional)</label>
+        <textarea id="userMessage" placeholder="Ada pertanyaan atau request khusus?"></textarea>
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn">Kirim & Klaim Promo →</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 KONÏG Auto Detailing · <a href="https://wa.me/6288108057871" target="_blank">+62 881-0805-78712</a> · <a href="/">konigautodetailing.com</a></p>
+</footer>
+
+<script>
+  emailjs.init('ldjEJ0m9FeUhGxTpZ');
+
+  function submitForm(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Mengirim...';
+    btn.disabled = true;
+
+    const packageMap = {
+      eternity: 'Eternity Graphene — 20% Off',
+      shield: 'Shield Graphene — 15% Off',
+      armor: 'Armor Graphene — 10% Off'
+    };
+
+    const params = {
+      from_name: document.getElementById('userName').value,
+      phone: document.getElementById('userPhone').value,
+      service: packageMap[document.getElementById('packageSelect').value] || '-',
+      car: (document.getElementById('carBrand').value + ' ' + document.getElementById('carModel').value).trim(),
+      message: document.getElementById('userMessage').value || '-',
+      subject: '[Graphene Campaign] Pengajuan Promo — ' + document.getElementById('userName').value,
+    };
+
+    emailjs.send('service_bjn5779', 'template_dhp2j5j', params)
+      .then(() => {
+        document.getElementById('campaignForm').style.display = 'none';
+        document.getElementById('formSuccess').style.display = 'block';
+        // Also open WhatsApp
+        const wa = `https://wa.me/6288108057871?text=${encodeURIComponent(
+          `Halo KONÏG! Saya ingin klaim promo Graphene Campaign.\n\nNama: ${params.from_name}\nPaket: ${params.service}\nMobil: ${params.car || '-'}\n\n${params.message !== '-' ? 'Pesan: ' + params.message : ''}`
+        )}`;
+        setTimeout(() => window.open(wa, '_blank'), 1500);
+      })
+      .catch(() => {
+        btn.textContent = 'Kirim & Klaim Promo →';
+        btn.disabled = false;
+        alert('Gagal mengirim. Silakan hubungi kami langsung via WhatsApp.');
+        window.open('https://wa.me/6288108057871?text=' + encodeURIComponent('Halo KONÏG! Saya ingin info Graphene Campaign.'), '_blank');
+      });
+  }
+</script>
+</body>
+</html>
