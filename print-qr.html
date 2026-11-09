@@ -273,14 +273,30 @@ function makeQRCanvas(url, size) {
     document.body.appendChild(tmp);
     new QRCode(tmp, { text: url, width: size, height: size, colorDark: '#4B0082', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
     setTimeout(() => {
-      const img = tmp.querySelector('img') || tmp.querySelector('canvas');
+      // QRCode lib creates both a canvas AND an img — use canvas directly
+      const src = tmp.querySelector('canvas') || tmp.querySelector('img');
       const c = document.createElement('canvas');
       c.width = size; c.height = size;
       const ctx = c.getContext('2d');
-      ctx.drawImage(img, 0, 0, size, size);
-      document.body.removeChild(tmp);
-      res(c);
-    }, 150);
+      if (src.tagName === 'CANVAS') {
+        ctx.drawImage(src, 0, 0, size, size);
+        document.body.removeChild(tmp);
+        res(c);
+      } else {
+        // fallback: img — wait for it to load
+        if (src.complete) {
+          ctx.drawImage(src, 0, 0, size, size);
+          document.body.removeChild(tmp);
+          res(c);
+        } else {
+          src.onload = () => {
+            ctx.drawImage(src, 0, 0, size, size);
+            document.body.removeChild(tmp);
+            res(c);
+          };
+        }
+      }
+    }, 200);
   });
 }
 
