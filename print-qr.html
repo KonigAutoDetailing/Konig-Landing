@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script src="/qr-template-b64.js"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -265,39 +266,38 @@ function loadTemplate() {
   });
 }
 
-// Generate QR as canvas (pure canvas, no DOM)
+// Generate QR canvas directly — no DOM, no double image, pure canvas draw
 function makeQRCanvas(url, size) {
-  return new Promise(res => {
-    const tmp = document.createElement('div');
-    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
-    document.body.appendChild(tmp);
-    new QRCode(tmp, { text: url, width: size, height: size, colorDark: '#4B0082', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
-    setTimeout(() => {
-      // QRCode lib creates both a canvas AND an img — use canvas directly
-      const src = tmp.querySelector('canvas') || tmp.querySelector('img');
-      const c = document.createElement('canvas');
-      c.width = size; c.height = size;
-      const ctx = c.getContext('2d');
-      if (src.tagName === 'CANVAS') {
-        ctx.drawImage(src, 0, 0, size, size);
-        document.body.removeChild(tmp);
-        res(c);
-      } else {
-        // fallback: img — wait for it to load
-        if (src.complete) {
-          ctx.drawImage(src, 0, 0, size, size);
-          document.body.removeChild(tmp);
-          res(c);
-        } else {
-          src.onload = () => {
-            ctx.drawImage(src, 0, 0, size, size);
-            document.body.removeChild(tmp);
-            res(c);
-          };
-        }
+  // Use qrcode-generator (global: qrcode) for raw module matrix
+  const qr = qrcode(0, 'H');
+  qr.addData(url);
+  qr.make();
+  const moduleCount = qr.getModuleCount();
+  const cellSize = size / moduleCount;
+
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+
+  // Draw modules
+  ctx.fillStyle = '#4B0082';
+  for (let r = 0; r < moduleCount; r++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (qr.isDark(r, col)) {
+        ctx.fillRect(
+          Math.floor(col * cellSize),
+          Math.floor(r * cellSize),
+          Math.ceil(cellSize),
+          Math.ceil(cellSize)
+        );
       }
-    }, 200);
-  });
+    }
+  }
+  return Promise.resolve(c);
 }
 
 async function downloadSticker(code) {
@@ -315,33 +315,34 @@ async function downloadSticker(code) {
   const box_w = box_x2 - box_x1;  // 2391
   const box_h = box_y2 - box_y1;  // 2907
 
-  // QR = 60% of shorter dimension, centered in white box
-  const qSize = Math.floor(Math.min(box_w, box_h) * 0.60);  // 1434
-  const margin = Math.floor(qSize * 0.05);
+  // QR = 55% of shorter dimension so it fits with breathing room
+  const qSize = Math.floor(Math.min(box_w, box_h) * 0.55);  // ~1315
+  const margin = Math.floor(qSize * 0.08);
   const inner = qSize - margin * 2;
 
   try {
-    const [tmpl, qrCanvas] = await Promise.all([loadTemplate(), makeQRCanvas(url, inner)]);
+    const tmpl = await loadTemplate();
+    const qrCanvas = await makeQRCanvas(url, inner);
 
-    // Composite: white bg square + QR in center
+    // White bg square, QR centered inside
     const qBg = document.createElement('canvas');
     qBg.width = qSize; qBg.height = qSize;
     const qCtx = qBg.getContext('2d');
     qCtx.fillStyle = '#ffffff';
     qCtx.fillRect(0, 0, qSize, qSize);
-    qCtx.drawImage(qrCanvas, margin, margin, inner, inner);
+    qCtx.drawImage(qrCanvas, margin, margin);  // already exact inner size
 
     const canvas = document.createElement('canvas');
     canvas.width = TW; canvas.height = TH;
     const ctx = canvas.getContext('2d');
 
-    // Draw template upscaled
+    // 1. Draw template
     ctx.drawImage(tmpl, 0, 0, TW, TH);
 
-    // Center QR in white area
-    const cx = (box_x1 + box_x2) / 2;
-    const cy = (box_y1 + box_y2) / 2;
-    ctx.drawImage(qBg, cx - qSize/2, cy - qSize/2, qSize, qSize);
+    // 2. Draw QR centered in white box (once only)
+    const cx = Math.floor((box_x1 + box_x2) / 2);
+    const cy = Math.floor((box_y1 + box_y2) / 2);
+    ctx.drawImage(qBg, cx - Math.floor(qSize/2), cy - Math.floor(qSize/2), qSize, qSize);
 
     // Download
     canvas.toBlob(blob => {
