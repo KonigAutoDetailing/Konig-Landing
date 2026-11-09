@@ -58,6 +58,8 @@
     .car-panel.status-dent{fill:rgba(248,113,113,0.18);stroke:rgba(248,113,113,0.6)}
     .car-panel.status-other{fill:rgba(176,106,255,0.18);stroke:rgba(176,106,255,0.6)}
     .car-label{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;fill:#8882aa;text-anchor:middle;pointer-events:none;letter-spacing:0.5px}
+    /* interior panel special */
+    [data-panel="interior"]{fill:#1a1830;stroke:#3a365a;stroke-dasharray:3 2}
 
     /* ── SUMMARY LIST ── */
     .summary-list{margin-bottom:16px}
@@ -192,7 +194,10 @@
       <rect class="car-panel" data-panel="pintu_kanan_depan" x="144" y="116" width="34" height="52" rx="3"/>
       <text class="car-label" x="161" y="145">PND</text>
       <rect class="car-panel" data-panel="atap" x="58" y="116" width="84" height="94" rx="3"/>
-      <text class="car-label" x="100" y="167">ATAP</text>
+      <text class="car-label" x="100" y="130">ATAP</text>
+      <!-- Interior di atas atap supaya bisa diklik -->
+      <rect class="car-panel" data-panel="interior" x="68" y="140" width="64" height="66" rx="3"/>
+      <text class="car-label" x="100" y="177">INTERIOR</text>
       <rect class="car-panel" data-panel="pintu_kiri_belakang" x="22" y="172" width="34" height="52" rx="3"/>
       <text class="car-label" x="39" y="200">PKB</text>
       <rect class="car-panel" data-panel="pintu_kanan_belakang" x="144" y="172" width="34" height="52" rx="3"/>
@@ -215,8 +220,6 @@
       <text class="car-label" x="27" y="256">VKB</text>
       <ellipse class="car-panel" data-panel="velg_kanan_belakang" cx="173" cy="252" rx="14" ry="16"/>
       <text class="car-label" x="173" y="256">VNB</text>
-      <rect class="car-panel" data-panel="interior" x="66" y="116" width="68" height="94" rx="3" style="fill:#111128;stroke:#252540"/>
-      <text class="car-label" x="100" y="167" style="fill:#3f3c58">INTERIOR</text>
     </svg>
     <div class="diagram-hint">FKD=Fender Kiri Depan · FND=Fender Kanan Depan · PKD=Pintu Kiri Depan · dll</div>
   </div>
