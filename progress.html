@@ -530,8 +530,8 @@ window.adminLogin = async function() {
     const { doc, getDoc } = window._fbFns;
     const snap = await getDoc(doc(window._db, 'kasbon_settings', 'admin'));
     const stored = snap.exists() ? snap.data() : {};
-    const validUser = ['admin','bernhard'].includes(user);
-    const validPass = pass === (stored.password || 'konig2024');
+    const validUser = user === 'konig';
+    const validPass = pass === (stored.password || '6406506');
 
     if (validUser && validPass) {
       sessionStorage.setItem('konig_admin', '1');
@@ -542,7 +542,7 @@ window.adminLogin = async function() {
     }
   } catch(e) {
     // fallback
-    if (['admin','bernhard'].includes(user) && pass === 'konig2024') {
+    if (user === 'konig' && pass === '6406506') {
       sessionStorage.setItem('konig_admin', '1');
       showScreen('screenAdmin');
       loadJobs();
