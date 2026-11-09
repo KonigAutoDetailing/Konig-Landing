@@ -243,7 +243,7 @@
     <!-- Desktop/tablet: landscape pricelist -->
     <img src="graphene-campaign-desktop.png" alt="KONIG Graphene Campaign" id="bannerImgDesktop"/>
     <!-- Mobile: portrait pricelist -->
-    <img src="graphene-campaign-mobile.jpg" alt="KONIG Graphene Campaign" id="bannerImgMobile" style="display:none;"/>
+    <img src="graphene-campaign-mobile.png" alt="KONIG Graphene Campaign" id="bannerImgMobile" style="display:none;"/>
     <a href="#inquiry" class="banner-cta" onclick="document.getElementById('bannerModal').style.display='none';trackEvent('banner_cta_click')">
       Tanya Graphene Coating Sekarang →
     </a>
@@ -497,6 +497,49 @@
         onmouseout="this.style.borderColor='#2a2a45';this.style.color='#b8b0d8'">
         ⭐ Lihat Semua Review di Google Maps →
       </a>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESS TRACKER WIDGET -->
+<section style="background:var(--black);border-top:1px solid var(--border);padding:60px 24px" id="track">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center">
+
+      <!-- Customer side -->
+      <div>
+        <span class="section-label">Live Tracking</span>
+        <h2 class="section-title">CEK PROGRESS<br/>KENDARAAN</h2>
+        <p class="section-desc" style="margin-bottom:24px">Masukkan kode dari QR sticker di kendaraan kamu untuk melihat status pengerjaan secara real-time.</p>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="homeCodeInput"
+            placeholder="Masukkan kode..."
+            maxlength="8" autocorrect="off" autocapitalize="characters"
+            style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;padding:14px 18px;outline:none;text-transform:uppercase;transition:border-color 0.2s"
+            onkeydown="if(event.key==='Enter')goTrack()"
+            onfocus="this.style.borderColor='var(--purple)'"
+            onblur="this.style.borderColor='var(--border)'"/>
+          <button onclick="goTrack()"
+            style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--white);background:var(--purple);border:none;cursor:pointer;padding:14px 24px;white-space:nowrap;transition:background 0.2s"
+            onmouseover="this.style.background='var(--purple2)'" onmouseout="this.style.background='var(--purple)'">
+            Cek →
+          </button>
+        </div>
+        <div id="homeTrackError" style="display:none;font-size:13px;color:#f87171;margin-top:8px">Kode tidak ditemukan. Periksa kembali.</div>
+      </div>
+
+      <!-- Admin side -->
+      <div style="background:var(--panel);border:1px solid var(--border);padding:28px 24px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:var(--purpleB);margin-bottom:8px">Admin / Teknisi</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white);margin-bottom:8px">KELOLA PROGRESS</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">Login untuk tambah kendaraan baru, update status pengerjaan, dan generate QR code / link untuk customer.</p>
+        <a href="/progress?admin=1"
+          style="display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--white);background:var(--purple);padding:12px 28px;text-decoration:none;transition:background 0.2s"
+          onmouseover="this.style.background='var(--purple2)'" onmouseout="this.style.background='var(--purple)'">
+          Admin Login →
+        </a>
+      </div>
+
     </div>
   </div>
 </section>
@@ -770,6 +813,14 @@
   }
 
   // ── GA ──
+  function goTrack() {
+    var code = document.getElementById('homeCodeInput').value.trim().toUpperCase();
+    var err = document.getElementById('homeTrackError');
+    if (!code) { err.style.display='block'; err.textContent='Masukkan kode terlebih dahulu.'; return; }
+    err.style.display='none';
+    window.location.href = '/progress.html?code=' + encodeURIComponent(code);
+  }
+
   function trackEvent(name, params) {
     if (typeof gtag !== 'undefined') gtag('event', name, params || {})
   }
