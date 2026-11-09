@@ -521,34 +521,17 @@ function renderTrack(code, data) {
 }
 
 // ── ADMIN LOGIN ──
-window.adminLogin = async function() {
+window.adminLogin = function() {
   const user = document.getElementById('adminUser').value.trim().toLowerCase();
   const pass = document.getElementById('adminPass').value;
   document.getElementById('loginError').style.display = 'none';
 
-  try {
-    const { doc, getDoc } = window._fbFns;
-    const snap = await getDoc(doc(window._db, 'kasbon_settings', 'admin'));
-    const stored = snap.exists() ? snap.data() : {};
-    const validUser = user === 'konig';
-    const validPass = pass === (stored.password || '6406506');
-
-    if (validUser && validPass) {
-      sessionStorage.setItem('konig_admin', '1');
-      showScreen('screenAdmin');
-      loadJobs();
-    } else {
-      document.getElementById('loginError').style.display = 'block';
-    }
-  } catch(e) {
-    // fallback
-    if (user === 'konig' && pass === '6406506') {
-      sessionStorage.setItem('konig_admin', '1');
-      showScreen('screenAdmin');
-      loadJobs();
-    } else {
-      document.getElementById('loginError').style.display = 'block';
-    }
+  if (user === 'konig' && pass === '6406506') {
+    sessionStorage.setItem('konig_admin', '1');
+    showScreen('screenAdmin');
+    loadJobs();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
   }
 }
 
