@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <title>KONÏG — Vehicle Inspection</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;
+      --purple:#7B2FBE;--purpleB:#b06aff;
+      --white:#f0eeff;--text:#d4cef0;--muted:#9d93c0;
+      --success:#4cd4a0;--gold:#f59e0b;--red:#f87171;--orange:#fb923c;
+    }
+    html{overflow-x:hidden}
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:60px}
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(123,47,190,0.2)}
+    nav img{height:24px}
+    .nav-right{display:flex;align-items:center;gap:12px}
+    .nav-code{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--purpleB)}
+    .nav-back{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:6px 12px;border:1px solid var(--border)}
+
+    /* MAIN */
+    .main{max-width:600px;margin:0 auto;padding:72px 16px 32px}
+
+    /* HEADER */
+    .insp-header{margin-bottom:24px}
+    .insp-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white);margin-bottom:4px}
+    .insp-meta{font-size:13px;color:var(--muted)}
+    .insp-car{font-size:16px;font-weight:600;color:var(--white);margin-top:2px}
+
+    /* SECTION CARD */
+    .section-card{background:var(--panel);border:1px solid var(--border);margin-bottom:12px;border-radius:4px;overflow:hidden;transition:border-color 0.2s}
+    .section-card.has-defect{border-color:var(--orange)}
+    .section-card.ok{border-color:rgba(76,212,160,0.3)}
+    .section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none}
+    .section-header:hover{background:rgba(255,255,255,0.03)}
+    .section-left{display:flex;align-items:center;gap:12px}
+    .section-icon{font-size:18px;width:24px;text-align:center}
+    .section-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--white)}
+    .section-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:2px}
+    .badge-ok{background:rgba(76,212,160,0.15);color:var(--success)}
+    .badge-defect{background:rgba(251,146,60,0.15);color:var(--orange)}
+    .badge-empty{background:rgba(255,255,255,0.05);color:var(--muted)}
+    .section-chevron{color:var(--muted);font-size:12px;transition:transform 0.2s}
+    .section-card.open .section-chevron{transform:rotate(180deg)}
+
+    .section-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
+    .section-card.open .section-body{display:block}
+
+    /* STATUS BUTTONS */
+    .status-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
+    .status-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+    .status-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;border-radius:2px;transition:all 0.15s}
+    .status-btn:hover{border-color:var(--purpleB);color:var(--purpleB)}
+    .status-btn.active-ok{background:rgba(76,212,160,0.15);border-color:var(--success);color:var(--success)}
+    .status-btn.active-minor{background:rgba(251,191,36,0.15);border-color:#fbbf24;color:#fbbf24}
+    .status-btn.active-deep{background:rgba(251,146,60,0.15);border-color:var(--orange);color:var(--orange)}
+    .status-btn.active-dent{background:rgba(248,113,113,0.15);border-color:var(--red);color:var(--red)}
+    .status-btn.active-other{background:rgba(176,106,255,0.15);border-color:var(--purpleB);color:var(--purpleB)}
+
+    /* NOTES */
+    .notes-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:13px;padding:10px 12px;resize:vertical;min-height:60px;outline:none;border-radius:2px;margin-bottom:14px}
+    .notes-input:focus{border-color:var(--purple)}
+    .notes-input::placeholder{color:var(--muted)}
+
+    /* PHOTO UPLOAD */
+    .photo-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+    .photo-thumb{position:relative;width:72px;height:72px;border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+    .photo-thumb img{width:100%;height:100%;object-fit:cover}
+    .photo-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.75);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+    .photo-add{width:72px;height:72px;border:1px dashed var(--border);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:20px;transition:border-color 0.15s;background:transparent}
+    .photo-add:hover{border-color:var(--purpleB);color:var(--purpleB)}
+    .photo-add span{font-size:9px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;margin-top:2px}
+    .photo-limit{font-size:11px;color:var(--muted);margin-top:4px}
+    .upload-progress{font-size:11px;color:var(--purpleB);margin-top:4px;display:none}
+
+    /* GENERAL PHOTOS */
+    .general-section{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:16px}
+    .general-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:4px}
+    .general-desc{font-size:12px;color:var(--muted);margin-bottom:14px}
+
+    /* CAR DIAGRAM */
+    .diagram-wrap{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:16px}
+    .diagram-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;text-align:center}
+    .diagram-svg{width:100%;max-width:320px;display:block;margin:0 auto;cursor:default}
+    .diagram-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+
+    /* SVG panel styles */
+    .car-panel{fill:#1e1e35;stroke:#3a3a60;stroke-width:1.5;cursor:pointer;transition:fill 0.2s,stroke 0.2s}
+    .car-panel:hover{fill:#2a2a50;stroke:var(--purpleB)}
+    .car-panel.active{stroke:var(--purpleB);stroke-width:2.5}
+    .car-panel.status-ok{fill:rgba(76,212,160,0.15);stroke:rgba(76,212,160,0.5)}
+    .car-panel.status-minor{fill:rgba(251,191,36,0.15);stroke:rgba(251,191,36,0.5)}
+    .car-panel.status-deep{fill:rgba(251,146,60,0.15);stroke:rgba(251,146,60,0.5)}
+    .car-panel.status-dent{fill:rgba(248,113,113,0.15);stroke:rgba(248,113,113,0.5)}
+    .car-panel.status-other{fill:rgba(176,106,255,0.15);stroke:rgba(176,106,255,0.5)}
+    .car-label{font-family:'Barlow Condensed',sans-serif;font-size:7px;font-weight:700;fill:#9d93c0;text-anchor:middle;pointer-events:none;letter-spacing:0.5px}
+
+    /* SAVE BUTTON */
+    .save-wrap{position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:rgba(8,8,16,0.97);border-top:1px solid var(--border);display:flex;gap:10px;z-index:50}
+    .btn-save{flex:1;background:var(--purple);color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;border-radius:2px;transition:background 0.2s}
+    .btn-save:hover{background:var(--purpleB)}
+    .btn-save:disabled{background:#333;color:#666;cursor:not-allowed}
+
+    /* TOAST */
+    .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1a3a2a;border:1px solid var(--success);color:var(--success);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;padding:10px 20px;border-radius:4px;z-index:200;display:none;white-space:nowrap}
+    .toast.error{background:#3a1a1a;border-color:var(--red);color:var(--red)}
+
+    /* LOADING */
+    .loading-screen{display:none;position:fixed;inset:0;background:rgba(8,8,16,0.9);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+    .loading-screen.show{display:flex}
+    .loading-spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--purpleB);border-radius:50%;animation:spin 0.8s linear infinite}
+    .loading-text{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* EMPTY STATE */
+    .not-found{text-align:center;padding:80px 24px;max-width:400px;margin:0 auto}
+    .not-found h2{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);margin-bottom:8px}
+    .not-found p{color:var(--muted);font-size:14px}
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/"><img src="/konig-logo.png" alt="KONÏG"/></a>
+  <div class="nav-right">
+    <span class="nav-code" id="navCode">—</span>
+    <a href="#" class="nav-back" onclick="goBack()">← Kembali</a>
+  </div>
+</nav>
+
+<div class="main" id="mainContent" style="display:none">
+
+  <div class="insp-header">
+    <div class="insp-title">VEHICLE INSPECTION</div>
+    <div class="insp-car" id="inspCar">—</div>
+    <div class="insp-meta" id="inspMeta">—</div>
+  </div>
+
+  <!-- GENERAL PHOTOS -->
+  <div class="general-section">
+    <div class="general-title">📷 Foto General</div>
+    <div class="general-desc">Foto kondisi umum kendaraan saat tiba — unlimited foto</div>
+    <div class="photo-grid" id="generalPhotoGrid"></div>
+    <label class="photo-add" onclick="triggerUpload('general',null)">
+      <span style="font-size:22px">+</span>
+      <span>Tambah Foto</span>
+    </label>
+  </div>
+
+  <!-- DIAGRAM -->
+  <div class="diagram-wrap">
+    <div class="diagram-title">Tap panel untuk checklist kondisi</div>
+    <svg class="diagram-svg" viewBox="0 0 200 340" xmlns="http://www.w3.org/2000/svg" id="carDiagram">
+      <!-- Body car top-down view -->
+
+      <!-- Bumper Depan -->
+      <rect class="car-panel" data-panel="bumper_depan" x="62" y="8" width="76" height="22" rx="8"/>
+      <text class="car-label" x="100" y="22">BUMPER DEPAN</text>
+
+      <!-- Kap Mesin -->
+      <rect class="car-panel" data-panel="kap_mesin" x="58" y="32" width="84" height="52" rx="4"/>
+      <text class="car-label" x="100" y="61">KAP MESIN</text>
+
+      <!-- Kaca Depan -->
+      <rect class="car-panel" data-panel="kaca_depan" x="66" y="86" width="68" height="28" rx="3"/>
+      <text class="car-label" x="100" y="104">KACA DEPAN</text>
+
+      <!-- Fender kiri depan -->
+      <rect class="car-panel" data-panel="fender_kiri_depan" x="30" y="32" width="26" height="52" rx="4"/>
+      <text class="car-label" x="43" y="55">FKD</text>
+
+      <!-- Fender kanan depan -->
+      <rect class="car-panel" data-panel="fender_kanan_depan" x="144" y="32" width="26" height="52" rx="4"/>
+      <text class="car-label" x="157" y="55">FND</text>
+
+      <!-- Pintu kiri depan -->
+      <rect class="car-panel" data-panel="pintu_kiri_depan" x="22" y="116" width="34" height="52" rx="3"/>
+      <text class="car-label" x="39" y="145">PKD</text>
+
+      <!-- Pintu kanan depan -->
+      <rect class="car-panel" data-panel="pintu_kanan_depan" x="144" y="116" width="34" height="52" rx="3"/>
+      <text class="car-label" x="161" y="145">PND</text>
+
+      <!-- Atap -->
+      <rect class="car-panel" data-panel="atap" x="58" y="116" width="84" height="94" rx="3"/>
+      <text class="car-label" x="100" y="167">ATAP</text>
+
+      <!-- Pintu kiri belakang -->
+      <rect class="car-panel" data-panel="pintu_kiri_belakang" x="22" y="172" width="34" height="52" rx="3"/>
+      <text class="car-label" x="39" y="200">PKB</text>
+
+      <!-- Pintu kanan belakang -->
+      <rect class="car-panel" data-panel="pintu_kanan_belakang" x="144" y="172" width="34" height="52" rx="3"/>
+      <text class="car-label" x="161" y="200">PNB</text>
+
+      <!-- Fender kiri belakang -->
+      <rect class="car-panel" data-panel="fender_kiri_belakang" x="30" y="226" width="26" height="46" rx="4"/>
+      <text class="car-label" x="43" y="252">FKB</text>
+
+      <!-- Fender kanan belakang -->
+      <rect class="car-panel" data-panel="fender_kanan_belakang" x="144" y="226" width="26" height="46" rx="4"/>
+      <text class="car-label" x="157" y="252">FNB</text>
+
+      <!-- Kaca Belakang -->
+      <rect class="car-panel" data-panel="kaca_belakang" x="66" y="216" width="68" height="28" rx="3"/>
+      <text class="car-label" x="100" y="234">KACA BELAKANG</text>
+
+      <!-- Bagasi -->
+      <rect class="car-panel" data-panel="bagasi" x="58" y="248" width="84" height="44" rx="4"/>
+      <text class="car-label" x="100" y="273">BAGASI</text>
+
+      <!-- Bumper Belakang -->
+      <rect class="car-panel" data-panel="bumper_belakang" x="62" y="294" width="76" height="22" rx="8"/>
+      <text class="car-label" x="100" y="308">BUMPER BELAKANG</text>
+
+      <!-- Velg kiri depan -->
+      <ellipse class="car-panel" data-panel="velg_kiri_depan" cx="27" cy="88" rx="14" ry="16"/>
+      <text class="car-label" x="27" y="92">VKD</text>
+
+      <!-- Velg kanan depan -->
+      <ellipse class="car-panel" data-panel="velg_kanan_depan" cx="173" cy="88" rx="14" ry="16"/>
+      <text class="car-label" x="173" y="92">VND</text>
+
+      <!-- Velg kiri belakang -->
+      <ellipse class="car-panel" data-panel="velg_kiri_belakang" cx="27" cy="252" rx="14" ry="16"/>
+      <text class="car-label" x="27" y="256">VKB</text>
+
+      <!-- Velg kanan belakang -->
+      <ellipse class="car-panel" data-panel="velg_kanan_belakang" cx="173" cy="252" rx="14" ry="16"/>
+      <text class="car-label" x="173" y="256">VNB</text>
+
+      <!-- Interior -->
+      <rect class="car-panel" data-panel="interior" x="66" y="116" width="68" height="94" rx="3" style="fill:#111128;stroke:#2a2a40"/>
+      <text class="car-label" x="100" y="167" style="fill:#555580">INTERIOR</text>
+    </svg>
+    <div class="diagram-hint">FKD=Fender Kiri Depan · FND=Fender Kanan Depan · PKD=Pintu Kiri Depan · dll</div>
+  </div>
+
+  <!-- SECTION CARDS (generated by JS) -->
+  <div id="sectionCards"></div>
+
+</div>
+
+<!-- NOT FOUND -->
+<div class="not-found" id="notFound" style="display:none">
+  <div style="font-size:48px;margin-bottom:16px">🔍</div>
+  <h2>Kendaraan Tidak Ditemukan</h2>
+  <p>Kode tidak valid atau kendaraan belum terdaftar.</p>
+  <a href="/progress" style="display:inline-block;margin-top:24px;color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px">← Kembali ke Progress</a>
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-wrap" id="saveWrap" style="display:none">
+  <button class="btn-save" id="btnSave" onclick="saveInspection()">💾 Simpan Inspeksi</button>
+</div>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-spin"></div>
+  <div class="loading-text" id="loadingText">Memuat...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFileSelect(event)"/>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+
+const app = initializeApp({
+  apiKey: "AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es",
+  authDomain: "konig-auto-detailing.firebaseapp.com",
+  projectId: "konig-auto-detailing",
+  storageBucket: "konig-auto-detailing.firebasestorage.app",
+  messagingSenderId: "235399414542",
+  appId: "1:235399414542:web:bd9a2f3ed88f4ea36bcd5f"
+});
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ── PANEL DEFINITIONS ──
+const PANELS = [
+  { id:'bumper_depan',         label:'Bumper Depan',         icon:'🚗' },
+  { id:'kap_mesin',            label:'Kap Mesin',            icon:'🔧' },
+  { id:'kaca_depan',           label:'Kaca Depan',           icon:'🪟' },
+  { id:'fender_kiri_depan',    label:'Fender Kiri Depan',    icon:'◀' },
+  { id:'fender_kanan_depan',   label:'Fender Kanan Depan',   icon:'▶' },
+  { id:'pintu_kiri_depan',     label:'Pintu Kiri Depan',     icon:'🚪' },
+  { id:'pintu_kanan_depan',    label:'Pintu Kanan Depan',    icon:'🚪' },
+  { id:'atap',                 label:'Atap',                 icon:'🔝' },
+  { id:'pintu_kiri_belakang',  label:'Pintu Kiri Belakang',  icon:'🚪' },
+  { id:'pintu_kanan_belakang', label:'Pintu Kanan Belakang', icon:'🚪' },
+  { id:'fender_kiri_belakang', label:'Fender Kiri Belakang', icon:'◀' },
+  { id:'fender_kanan_belakang',label:'Fender Kanan Belakang',icon:'▶' },
+  { id:'kaca_belakang',        label:'Kaca Belakang',        icon:'🪟' },
+  { id:'bagasi',               label:'Bagasi',               icon:'🧳' },
+  { id:'bumper_belakang',      label:'Bumper Belakang',       icon:'🚗' },
+  { id:'velg_kiri_depan',      label:'Velg Kiri Depan',      icon:'⭕' },
+  { id:'velg_kanan_depan',     label:'Velg Kanan Depan',     icon:'⭕' },
+  { id:'velg_kiri_belakang',   label:'Velg Kiri Belakang',   icon:'⭕' },
+  { id:'velg_kanan_belakang',  label:'Velg Kanan Belakang',  icon:'⭕' },
+  { id:'interior',             label:'Interior',             icon:'💺' },
+];
+
+const STATUS_OPTS = [
+  { key:'ok',    label:'Baik',          cls:'active-ok'    },
+  { key:'minor', label:'Minor Scratch', cls:'active-minor' },
+  { key:'deep',  label:'Deep Scratch',  cls:'active-deep'  },
+  { key:'dent',  label:'Dent',          cls:'active-dent'  },
+  { key:'other', label:'Lainnya',       cls:'active-other' },
+];
+
+let jobCode = '';
+let jobData = {};
+// inspData: { general: [{url,path},...], panels: { panel_id: {status, note, photos:[{url,path}]} } }
+let inspData = { general: [], panels: {} };
+let _uploadTarget = null; // { type:'general'|'panel', panelId }
+let _uploadMax = null;
+
+// ── INIT ──
+const params = new URLSearchParams(location.search);
+jobCode = (params.get('code') || '').toUpperCase();
+
+if (!jobCode) {
+  showNotFound();
+} else {
+  document.getElementById('navCode').textContent = jobCode;
+  loadJob();
+}
+
+async function loadJob() {
+  showLoading('Memuat data...');
+  try {
+    const snap = await getDoc(doc(db, 'konig_progress', jobCode));
+    if (!snap.exists()) { hideLoading(); showNotFound(); return; }
+    jobData = snap.data();
+    // Load existing inspection if any
+    if (jobData.inspection) inspData = jobData.inspection;
+    if (!inspData.general) inspData.general = [];
+    if (!inspData.panels) inspData.panels = {};
+    renderPage();
+    hideLoading();
+  } catch(e) {
+    hideLoading(); showNotFound();
+    console.error(e);
+  }
+}
+
+function renderPage() {
+  document.getElementById('inspCar').textContent = jobData.car || '—';
+  document.getElementById('inspMeta').textContent = jobCode + ' · ' + (jobData.plate || '—') + ' · Masuk: ' + formatDate(jobData.createdAt);
+  renderGeneralPhotos();
+  renderSectionCards();
+  updateDiagram();
+  document.getElementById('mainContent').style.display = '';
+  document.getElementById('saveWrap').style.display = '';
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'});
+}
+
+// ── GENERAL PHOTOS ──
+function renderGeneralPhotos() {
+  const grid = document.getElementById('generalPhotoGrid');
+  grid.innerHTML = '';
+  (inspData.general || []).forEach((ph, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `<img src="${ph.url}" loading="lazy"/><button class="photo-del" onclick="deletePhoto('general',null,${i})">✕</button>`;
+    grid.appendChild(thumb);
+  });
+}
+
+// ── SECTION CARDS ──
+function renderSectionCards() {
+  const container = document.getElementById('sectionCards');
+  container.innerHTML = '';
+  PANELS.forEach(p => {
+    const pd = inspData.panels[p.id] || {};
+    const status = pd.status || '';
+    const photos = pd.photos || [];
+    const note = pd.note || '';
+    const hasDefect = status && status !== 'ok';
+    const card = document.createElement('div');
+    card.className = 'section-card' + (hasDefect ? ' has-defect' : (status === 'ok' ? ' ok' : ''));
+    card.id = 'card_' + p.id;
+    // Badge
+    let badgeHtml = '';
+    if (!status) badgeHtml = `<span class="section-badge badge-empty">Belum dicek</span>`;
+    else if (status === 'ok') badgeHtml = `<span class="section-badge badge-ok">✓ Baik</span>`;
+    else {
+      const opt = STATUS_OPTS.find(o => o.key === status);
+      badgeHtml = `<span class="section-badge badge-defect">⚠ ${opt ? opt.label : status}</span>`;
+    }
+    card.innerHTML = `
+      <div class="section-header" onclick="toggleSection('${p.id}')">
+        <div class="section-left">
+          <div class="section-icon">${p.icon}</div>
+          <div class="section-name">${p.label}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${badgeHtml}
+          <div class="section-chevron">▼</div>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="status-label">Kondisi</div>
+        <div class="status-btns" id="statusBtns_${p.id}">
+          ${STATUS_OPTS.map(o => `<button class="status-btn ${status === o.key ? o.cls : ''}" onclick="setStatus('${p.id}','${o.key}')">${o.label}</button>`).join('')}
+        </div>
+        <textarea class="notes-input" id="note_${p.id}" placeholder="Catatan kondisi (opsional)..." oninput="setNote('${p.id}',this.value)">${note}</textarea>
+        <div class="photo-label" id="photoLabel_${p.id}">Foto Defect ${photos.length > 0 ? '('+photos.length+'/5)' : '(maks 5 foto)'}</div>
+        <div class="photo-grid" id="photoGrid_${p.id}"></div>
+        ${photos.length < 5 ? `<label class="photo-add" onclick="triggerUpload('panel','${p.id}')"><span style="font-size:22px">+</span><span>Foto Defect</span></label>` : ''}
+        <div class="upload-progress" id="upProg_${p.id}">⏳ Mengupload foto...</div>
+      </div>`;
+    container.appendChild(card);
+    renderPanelPhotos(p.id);
+  });
+}
+
+function renderPanelPhotos(panelId) {
+  const photos = (inspData.panels[panelId] || {}).photos || [];
+  const grid = document.getElementById('photoGrid_' + panelId);
+  if (!grid) return;
+  grid.innerHTML = '';
+  photos.forEach((ph, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `<img src="${ph.url}" loading="lazy"/><button class="photo-del" onclick="deletePhoto('panel','${panelId}',${i})">✕</button>`;
+    grid.appendChild(thumb);
+  });
+}
+
+// ── TOGGLE SECTION ──
+window.toggleSection = function(panelId) {
+  const card = document.getElementById('card_' + panelId);
+  card.classList.toggle('open');
+  // Scroll to it
+  if (card.classList.contains('open')) {
+    setTimeout(() => card.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
+  }
+};
+
+// ── SET STATUS ──
+window.setStatus = function(panelId, status) {
+  if (!inspData.panels[panelId]) inspData.panels[panelId] = {};
+  inspData.panels[panelId].status = status;
+  // Update buttons
+  const btns = document.querySelectorAll(`#statusBtns_${panelId} .status-btn`);
+  btns.forEach((btn, i) => {
+    btn.className = 'status-btn';
+    if (STATUS_OPTS[i].key === status) btn.className += ' ' + STATUS_OPTS[i].cls;
+  });
+  // Update card style
+  const card = document.getElementById('card_' + panelId);
+  card.classList.remove('has-defect','ok');
+  if (status === 'ok') card.classList.add('ok');
+  else if (status) card.classList.add('has-defect');
+  // Update diagram
+  updateDiagram();
+  // Update badge
+  refreshCardBadge(panelId);
+};
+
+window.setNote = function(panelId, val) {
+  if (!inspData.panels[panelId]) inspData.panels[panelId] = {};
+  inspData.panels[panelId].note = val;
+};
+
+// ── REFRESH BADGE ──
+function refreshCardBadge(panelId) {
+  const pd = inspData.panels[panelId] || {};
+  const status = pd.status || '';
+  const header = document.querySelector(`#card_${panelId} .section-header`);
+  if (!header) return;
+  const badgeWrap = header.querySelector('[style*="display:flex"]');
+  if (!badgeWrap) return;
+  let badgeHtml = '';
+  if (!status) badgeHtml = `<span class="section-badge badge-empty">Belum dicek</span>`;
+  else if (status === 'ok') badgeHtml = `<span class="section-badge badge-ok">✓ Baik</span>`;
+  else {
+    const opt = STATUS_OPTS.find(o => o.key === status);
+    badgeHtml = `<span class="section-badge badge-defect">⚠ ${opt ? opt.label : status}</span>`;
+  }
+  const existing = badgeWrap.querySelector('.section-badge');
+  if (existing) existing.outerHTML = badgeHtml;
+}
+
+// ── UPDATE DIAGRAM ──
+function updateDiagram() {
+  document.querySelectorAll('.car-panel').forEach(el => {
+    const id = el.dataset.panel;
+    const status = (inspData.panels[id] || {}).status || '';
+    el.classList.remove('status-ok','status-minor','status-deep','status-dent','status-other','active');
+    if (status) el.classList.add('status-' + status);
+  });
+}
+
+// ── DIAGRAM CLICK ──
+document.querySelectorAll('.car-panel').forEach(el => {
+  el.addEventListener('click', () => {
+    const id = el.dataset.panel;
+    // Open & scroll to card
+    const card = document.getElementById('card_' + id);
+    if (card) {
+      if (!card.classList.contains('open')) card.classList.add('open');
+      setTimeout(() => card.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+    }
+  });
+});
+
+// ── PHOTO UPLOAD ──
+window.triggerUpload = function(type, panelId) {
+  _uploadTarget = { type, panelId };
+  if (type === 'panel') {
+    const photos = (inspData.panels[panelId] || {}).photos || [];
+    if (photos.length >= 5) { showToast('Maksimal 5 foto per panel', true); return; }
+    _uploadMax = 5 - photos.length;
+  } else {
+    _uploadMax = null;
+  }
+  const fi = document.getElementById('fileInput');
+  fi.multiple = (_uploadMax === null || _uploadMax > 1);
+  fi.value = '';
+  fi.click();
+};
+
+window.handleFileSelect = async function(e) {
+  let files = Array.from(e.target.files);
+  if (!files.length) return;
+  if (_uploadMax !== null) files = files.slice(0, _uploadMax);
+  const { type, panelId } = _uploadTarget;
+  if (type === 'panel') {
+    document.getElementById('upProg_' + panelId).style.display = 'block';
+  }
+  showLoading('Mengupload foto...');
+  try {
+    for (const file of files) {
+      const path = `inspection/${jobCode}/${type === 'general' ? 'general' : panelId}/${Date.now()}_${file.name}`;
+      const storageRef = ref(storage, path);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      if (type === 'general') {
+        inspData.general.push({ url, path });
+        renderGeneralPhotos();
+      } else {
+        if (!inspData.panels[panelId]) inspData.panels[panelId] = {};
+        if (!inspData.panels[panelId].photos) inspData.panels[panelId].photos = [];
+        inspData.panels[panelId].photos.push({ url, path });
+        renderPanelPhotos(panelId);
+        // Update add button
+        const photos = inspData.panels[panelId].photos;
+        const body = document.querySelector(`#card_${panelId} .section-body`);
+        const existing = body.querySelector('.photo-add');
+        if (photos.length >= 5 && existing) existing.remove();
+        // Update label
+        const lbl = document.getElementById('photoLabel_' + panelId);
+        if (lbl) lbl.textContent = `Foto Defect (${photos.length}/5)`;
+      }
+    }
+  } catch(err) {
+    showToast('Gagal upload foto', true);
+    console.error(err);
+  }
+  if (type === 'panel') {
+    document.getElementById('upProg_' + panelId).style.display = 'none';
+  }
+  hideLoading();
+};
+
+// ── DELETE PHOTO ──
+window.deletePhoto = function(type, panelId, idx) {
+  if (type === 'general') {
+    inspData.general.splice(idx, 1);
+    renderGeneralPhotos();
+  } else {
+    if (inspData.panels[panelId] && inspData.panels[panelId].photos) {
+      inspData.panels[panelId].photos.splice(idx, 1);
+      renderPanelPhotos(panelId);
+      const photos = inspData.panels[panelId].photos;
+      // Re-add add button if needed
+      const body = document.querySelector(`#card_${panelId} .section-body`);
+      if (photos.length < 5 && !body.querySelector('.photo-add')) {
+        const addBtn = document.createElement('label');
+        addBtn.className = 'photo-add';
+        addBtn.onclick = () => triggerUpload('panel', panelId);
+        addBtn.innerHTML = `<span style="font-size:22px">+</span><span>Foto Defect</span>`;
+        body.insertBefore(addBtn, body.querySelector('.upload-progress'));
+      }
+      const lbl = document.getElementById('photoLabel_' + panelId);
+      if (lbl) lbl.textContent = `Foto Defect (${photos.length > 0 ? photos.length+'/5' : 'maks 5 foto'})`;
+    }
+  }
+};
+
+// ── SAVE ──
+window.saveInspection = async function() {
+  const btn = document.getElementById('btnSave');
+  btn.textContent = '⏳ Menyimpan...';
+  btn.disabled = true;
+  try {
+    await updateDoc(doc(db, 'konig_progress', jobCode), {
+      inspection: inspData,
+      inspectedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    showToast('✓ Inspeksi tersimpan');
+  } catch(e) {
+    showToast('Gagal menyimpan', true);
+    console.error(e);
+  }
+  btn.textContent = '💾 Simpan Inspeksi';
+  btn.disabled = false;
+};
+
+// ── NAV BACK ──
+window.goBack = function() {
+  window.location.href = '/progress?code=' + jobCode;
+};
+
+// ── UTILS ──
+function showLoading(txt) {
+  document.getElementById('loadingText').textContent = txt || 'Memuat...';
+  document.getElementById('loadingScreen').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingScreen').classList.remove('show');
+}
+function showNotFound() {
+  document.getElementById('notFound').style.display = '';
+}
+function showToast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+</script>
+</body>
+</html>
