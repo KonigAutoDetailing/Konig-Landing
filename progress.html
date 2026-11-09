@@ -475,6 +475,14 @@ window.lookupCode = async function() {
     const { doc, getDoc } = window._fbFns;
     const snap = await getDoc(doc(window._db, 'konig_progress', code));
     if (!snap.exists()) {
+      // Kalau admin sudah login → langsung buka form kendaraan baru dengan kode ini
+      if (sessionStorage.getItem('konig_admin')) {
+        showScreen('screenAdmin');
+        loadJobs();
+        window.openNewJobModal();
+        document.getElementById('jobCode').value = code;
+        return;
+      }
       document.getElementById('codeError').style.display = 'block';
       return;
     }
