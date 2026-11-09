@@ -372,8 +372,10 @@
     </div>
     <div class="form-group" style="position:relative;">
       <label>Layanan</label>
-      <input type="text" id="jobService" placeholder="Ketik untuk cari layanan..." autocomplete="off"
-        oninput="filterService(this.value)" onblur="setTimeout(()=>document.getElementById('serviceDropdown').style.display='none',200)"/>
+      <input type="text" id="jobService" placeholder="Pilih atau ketik layanan..." autocomplete="off"
+        oninput="filterService(this.value)"
+        onfocus="filterService(this.value)"
+        onblur="setTimeout(()=>document.getElementById('serviceDropdown').style.display='none',200)"/>
       <div id="serviceDropdown" style="display:none;position:absolute;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);z-index:50;max-height:220px;overflow-y:auto;"></div>
     </div>
     <div class="form-group">
@@ -827,9 +829,8 @@ const LAYANAN_LIST = [
 
 function filterService(val) {
   const dd = document.getElementById('serviceDropdown');
-  if (!val.trim()) { dd.style.display='none'; return; }
-  const q = val.toLowerCase();
-  const matches = LAYANAN_LIST.filter(s => s.toLowerCase().includes(q));
+  const q = val.toLowerCase().trim();
+  const matches = q ? LAYANAN_LIST.filter(s => s.toLowerCase().includes(q)) : LAYANAN_LIST;
   if (!matches.length) { dd.style.display='none'; return; }
   dd.innerHTML = matches.map(s =>
     `<div onclick="document.getElementById('jobService').value='${s}';document.getElementById('serviceDropdown').style.display='none'"
