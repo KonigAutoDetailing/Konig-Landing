@@ -436,12 +436,13 @@ window._fbFns = { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, or
 
 // ── STEPS CONFIG ──
 window.STEPS = [
-  { id: 'received',   name: 'Vehicle Received',    pct: 5,   icon: '📋' },
-  { id: 'washing',    name: 'Wash & Decontam',      pct: 25,  icon: '🚿' },
-  { id: 'correction', name: 'Paint Correction',     pct: 55,  icon: '🔧' },
-  { id: 'coating',    name: 'Coating & Protection', pct: 80,  icon: '🛡️' },
-  { id: 'final',      name: 'Final Check & Polish', pct: 95,  icon: '✨' },
-  { id: 'done',       name: 'Ready for Pickup',     pct: 100, icon: '🎉' },
+  { id: 'received',   name: 'Received',              pct: 5,   icon: '📋' },
+  { id: 'washing',    name: 'Wash & Decon',          pct: 20,  icon: '🚿' },
+  { id: 'correction', name: 'Paint Correction',      pct: 40,  icon: '🔧' },
+  { id: 'finalwash',  name: 'Final Wash',            pct: 60,  icon: '💧' },
+  { id: 'coating',    name: 'Protection & Curing',   pct: 80,  icon: '🛡️' },
+  { id: 'qc',         name: 'Final QC',              pct: 95,  icon: '✨' },
+  { id: 'done',       name: 'Ready for Pickup',      pct: 100, icon: '🎉' },
 ];
 
 // ── GENERATE CODE ──
