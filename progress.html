@@ -342,8 +342,9 @@
         <div class="admin-heading">KELOLA PROGRESS</div>
         <div style="font-size:13px;color:var(--muted)" id="jobCount">0 kendaraan aktif</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn-new" onclick="openNewJobModal()">+ Kendaraan Baru</button>
+        <a href="/print-qr.html" target="_blank" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:10px 16px;text-decoration:none;white-space:nowrap">🖨️ Print QR</a>
         <button class="btn-logout" onclick="adminLogout()">Logout</button>
       </div>
     </div>
