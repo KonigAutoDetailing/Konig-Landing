@@ -96,7 +96,7 @@
   <div class="controls">
     <div class="ctrl-group">
       <label>Prefix</label>
-      <input type="text" id="ctrlPrefix" value="K" maxlength="4" style="width:80px" oninput="this.value=this.value.toUpperCase()"/>
+      <input type="text" id="ctrlPrefix" value="KNG" maxlength="4" style="width:80px" oninput="this.value=this.value.toUpperCase()"/>
     </div>
     <div class="ctrl-group">
       <label>Mulai Dari</label>
@@ -155,8 +155,7 @@ function padNum(n, len) {
 }
 
 function makeCode(prefix, num) {
-  const digits = num >= 1000 ? 4 : num >= 100 ? 3 : 3;
-  return prefix + padNum(num, digits);
+  return prefix + '-' + padNum(num, 5);
 }
 
 async function renderThumb(canvas, url, S, code) {
@@ -196,12 +195,12 @@ async function renderThumb(canvas, url, S, code) {
     ctx.fillStyle = '#3c0064';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('KNG-' + String(code).padStart(5,'0'), cx, text_y);
+    ctx.fillText(code, cx, text_y);
   }
 }
 
 async function generatePreview() {
-  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'K';
+  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
   const start = parseInt(document.getElementById('ctrlStart').value) || 1;
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 100);
 
@@ -284,7 +283,7 @@ function buildPrintSheet(prefix, start, count) {
 }
 
 function doPrint() {
-  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'K';
+  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
   const start = parseInt(document.getElementById('ctrlStart').value) || 1;
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 100);
   buildPrintSheet(prefix, start, count);
@@ -391,7 +390,7 @@ async function downloadSticker(code) {
     ctx.fillStyle = '#3c0064';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('KNG-' + String(code).padStart(5,'0'), cx, text_y);
+    ctx.fillText(code, cx, text_y);
 
     // Download
     canvas.toBlob(blob => {
