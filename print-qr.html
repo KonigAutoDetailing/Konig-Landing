@@ -306,7 +306,7 @@ async function downloadSticker(code) {
   if (btn) { btn.textContent = '⏳ Generating...'; btn.disabled = true; }
 
   const url = BASE_URL + '?code=' + code;
-  const SCALE = 3;
+  const SCALE = 4;  // 4K output: 4488x5608px
   const TW = 1122 * SCALE, TH = 1402 * SCALE;
 
   // White box in template: x=137-984, y=282-1081
