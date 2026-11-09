@@ -309,15 +309,15 @@ async function downloadSticker(code) {
   const SCALE = 3;
   const TW = 1122 * SCALE, TH = 1402 * SCALE;
 
-  // White box in original template: x=162-959, y=260-1229
-  const box_x1 = 162 * SCALE, box_x2 = 959 * SCALE;
-  const box_y1 = 260 * SCALE, box_y2 = 1229 * SCALE;
-  const box_w = box_x2 - box_x1;  // 2391
-  const box_h = box_y2 - box_y1;  // 2907
+  // White box in template: x=137-984, y=282-1081
+  const box_x1 = 137 * SCALE, box_x2 = 984 * SCALE;
+  const box_y1 = 282 * SCALE, box_y2 = 1081 * SCALE;
+  const box_w = box_x2 - box_x1;
+  const box_h = box_y2 - box_y1;
 
-  // QR = 55% of shorter dimension so it fits with breathing room
-  const qSize = Math.floor(Math.min(box_w, box_h) * 0.55);  // ~1315
-  const margin = Math.floor(qSize * 0.08);
+  // QR = 92% of shorter dimension, 4% margin
+  const qSize = Math.floor(Math.min(box_w, box_h) * 0.92);
+  const margin = Math.floor(qSize * 0.04);
   const inner = qSize - margin * 2;
 
   try {
