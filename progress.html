@@ -372,10 +372,15 @@
     </div>
     <div class="form-group" style="position:relative;">
       <label>Layanan</label>
-      <input type="text" id="jobService" placeholder="Pilih atau ketik layanan..." autocomplete="off"
+      <!-- Tags -->
+      <div id="serviceTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
+      <!-- Input -->
+      <input type="text" id="jobServiceInput" placeholder="Tambah layanan..." autocomplete="off"
         oninput="filterService(this.value)"
         onfocus="filterService(this.value)"
         onblur="setTimeout(()=>document.getElementById('serviceDropdown').style.display='none',200)"/>
+      <!-- Hidden combined value -->
+      <input type="hidden" id="jobService"/>
       <div id="serviceDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);border-top:none;z-index:50;max-height:220px;overflow-y:auto;"></div>
     </div>
     <div class="form-group">
@@ -591,7 +596,9 @@ window.openNewJobModal = function() {
   document.getElementById('jobCar').value = '';
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
-  document.getElementById('jobService').value = '';
+  selectedServices = [];
+  renderServiceTags();
+  document.getElementById('jobServiceInput').value = '';
   document.getElementById('jobNote').value = '';
   renderStepsEditor([], null);
   openModal('modalJob');
@@ -608,7 +615,9 @@ window.openEditJobModal = async function(id) {
   document.getElementById('jobCar').value = d.car || '';
   document.getElementById('jobPlate').value = d.plate || '';
   document.getElementById('jobWa').value = d.wa || '';
-  document.getElementById('jobService').value = d.service || '';
+  selectedServices = d.service ? d.service.split(', ').filter(Boolean) : [];
+  renderServiceTags();
+  document.getElementById('jobServiceInput').value = '';
   document.getElementById('jobNote').value = d.note || '';
   renderStepsEditor(d.doneSteps || [], d.activeStep || null);
   openModal('modalJob');
@@ -821,16 +830,47 @@ const LAYANAN_LIST = [
   'Window Coating — Semua Kaca',
 ];
 
+let selectedServices = [];
+
+function renderServiceTags() {
+  const container = document.getElementById('serviceTags');
+  container.innerHTML = selectedServices.map((s,i) =>
+    `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--purple);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 10px;">
+      ${s}
+      <span onclick="removeService(${i})" style="cursor:pointer;opacity:0.7;font-size:14px;line-height:1;">×</span>
+    </span>`
+  ).join('');
+  document.getElementById('jobService').value = selectedServices.join(', ');
+}
+
+function removeService(i) {
+  selectedServices.splice(i,1);
+  renderServiceTags();
+}
+
+function addService(s) {
+  if (!selectedServices.includes(s)) {
+    selectedServices.push(s);
+    renderServiceTags();
+  }
+  document.getElementById('jobServiceInput').value = '';
+  document.getElementById('serviceDropdown').style.display = 'none';
+  document.getElementById('jobServiceInput').focus();
+}
+
 function filterService(val) {
   const dd = document.getElementById('serviceDropdown');
   const q = val.toLowerCase().trim();
   const matches = q ? LAYANAN_LIST.filter(s => s.toLowerCase().includes(q)) : LAYANAN_LIST;
   if (!matches.length) { dd.style.display='none'; return; }
-  dd.innerHTML = matches.map(s =>
-    `<div onclick="document.getElementById('jobService').value='${s}';document.getElementById('serviceDropdown').style.display='none'"
-      style="padding:10px 14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--white);border-bottom:1px solid var(--border);"
-      onmouseover="this.style.background='var(--purple)'" onmouseout="this.style.background=''">${s}</div>`
-  ).join('');
+  dd.innerHTML = matches.map(s => {
+    const selected = selectedServices.includes(s);
+    return `<div onclick="addService('${s.replace(/'/g,"&#39;")}')"
+      style="padding:10px 14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:${selected?'var(--purpleB)':'var(--white)'};border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"
+      onmouseover="this.style.background='rgba(123,47,190,0.3)'" onmouseout="this.style.background=''">
+      ${s}${selected?' <span style="font-size:16px;">✓</span>':''}
+    </div>`;
+  }).join('');
   dd.style.display='block';
 }
 </script>
