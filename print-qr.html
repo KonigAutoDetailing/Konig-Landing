@@ -159,7 +159,7 @@ function makeCode(prefix, num) {
   return prefix + padNum(num, digits);
 }
 
-async function renderThumb(canvas, url, S) {
+async function renderThumb(canvas, url, S, code) {
   const TW = 1122 * S, TH = 1402 * S;
   const box_x1 = 137*S, box_x2 = 984*S;
   const box_y1 = 282*S, box_y2 = 1081*S;
@@ -183,6 +183,19 @@ async function renderThumb(canvas, url, S) {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(tmpl, 0, 0, TW, TH);
   ctx.drawImage(qBg, cx-Math.floor(qSize/2), cy-Math.floor(qSize/2), qSize, qSize);
+
+  // Draw code text below QR, nudged up 30px from center of gap
+  if (code) {
+    const qr_bottom = cy + Math.floor(qSize/2);
+    const gap = box_y2 - qr_bottom;
+    const text_y = qr_bottom + Math.floor(gap/2) - 30;
+    const font_size = Math.floor(gap * 0.68);
+    ctx.font = `bold ${font_size}px sans-serif`;
+    ctx.fillStyle = '#3c0064';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('KNG-' + String(code).padStart(5,'0'), cx, text_y);
+  }
 }
 
 async function generatePreview() {
@@ -231,7 +244,7 @@ async function generatePreview() {
     grid.appendChild(wrap);
 
     // Render thumbnail async
-    renderThumb(thumbCanvas, url, PS);
+    renderThumb(thumbCanvas, url, PS, code);
   }
 
   // Show status bar
@@ -365,6 +378,17 @@ async function downloadSticker(code) {
     const cx = Math.floor((box_x1 + box_x2) / 2);
     const cy = Math.floor((box_y1 + box_y2) / 2);
     ctx.drawImage(qBg, cx - Math.floor(qSize/2), cy - Math.floor(qSize/2), qSize, qSize);
+
+    // 3. Draw code text below QR, nudged up 30px from center of gap
+    const qr_bottom = cy + Math.floor(qSize/2);
+    const gap = box_y2 - qr_bottom;
+    const text_y = qr_bottom + Math.floor(gap/2) - 30;
+    const font_size = Math.floor(gap * 0.68);
+    ctx.font = `bold ${font_size}px sans-serif`;
+    ctx.fillStyle = '#3c0064';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('KNG-' + String(code).padStart(5,'0'), cx, text_y);
 
     // Download
     canvas.toBlob(blob => {
