@@ -384,9 +384,11 @@
         <input type="text" id="jobWa" placeholder="0812xxxx"/>
       </div>
     </div>
-    <div class="form-group">
+    <div class="form-group" style="position:relative;">
       <label>Layanan</label>
-      <input type="text" id="jobService" placeholder="Graphene Coating — Eternity"/>
+      <input type="text" id="jobService" placeholder="Ketik untuk cari layanan..." autocomplete="off"
+        oninput="filterService(this.value)" onblur="setTimeout(()=>document.getElementById('serviceDropdown').style.display='none',200)"/>
+      <div id="serviceDropdown" style="display:none;position:absolute;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);z-index:50;max-height:220px;overflow-y:auto;"></div>
     </div>
     <div class="form-group">
       <label>Catatan (opsional)</label>
@@ -796,6 +798,47 @@ if (urlCode) {
   }
 }
 
+</script>
+
+<script>
+const LAYANAN_LIST = [
+  // Graphene Series
+  'Graphene Coating — Eternity (8 Tahun)',
+  'Graphene Coating — Shield (7 Tahun)',
+  'Graphene Coating — Armor (3 Tahun)',
+  // Ceramic Series
+  'Ceramic Coating — Sapphire (5 Tahun)',
+  'Ceramic Coating — Crystal (3 Tahun)',
+  'Ceramic Coating — Pearl (2 Tahun)',
+  // Paint Correction
+  'Paint Correction — Full',
+  'Paint Correction — Stage 1',
+  'Paint Correction — Stage 2',
+  'Paint Correction — Stage 3',
+  // Wash
+  'Premium Wash',
+  'Premium Wash + Decontaminasi',
+  // Combo
+  'Paint Correction + Graphene Eternity',
+  'Paint Correction + Graphene Shield',
+  'Paint Correction + Graphene Armor',
+  'Paint Correction + Ceramic Sapphire',
+  'Paint Correction + Ceramic Crystal',
+];
+
+function filterService(val) {
+  const dd = document.getElementById('serviceDropdown');
+  if (!val.trim()) { dd.style.display='none'; return; }
+  const q = val.toLowerCase();
+  const matches = LAYANAN_LIST.filter(s => s.toLowerCase().includes(q));
+  if (!matches.length) { dd.style.display='none'; return; }
+  dd.innerHTML = matches.map(s =>
+    `<div onclick="document.getElementById('jobService').value='${s}';document.getElementById('serviceDropdown').style.display='none'"
+      style="padding:10px 14px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:var(--white);border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='var(--purple)'" onmouseout="this.style.background=''">${s}</div>`
+  ).join('');
+  dd.style.display='block';
+}
 </script>
 </body>
 </html>
