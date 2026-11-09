@@ -24,6 +24,8 @@
     /* ── PROMO BAR ── */
     .promo-bar{background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;position:fixed;top:0;left:0;right:0;z-index:200;border-bottom:1px solid rgba(123,47,190,0.4);}
     @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    .promo-bar-inner{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
+    .promo-cta{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);border:1px solid var(--purpleB);padding:3px 12px;}
 
     /* ── NAV ── */
     nav{
@@ -263,10 +265,10 @@
 <body>
 
 <!-- PROMO BAR -->
-<div class="promo-bar">
-  <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto">
-    <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Graphene Campaign — Eternity 20% Off</span>
-    <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);border:1px solid var(--purpleB);padding:3px 12px;">Tanya Sekarang →</span>
+<div class="promo-bar" onclick="window.location.href='/'" style="cursor:pointer;">
+  <div class="promo-bar-inner">
+    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Graphene Campaign — Eternity 20% Off</span>
+    <span class="promo-cta">Tanya Sekarang →</span>
   </div>
 </div>
 
