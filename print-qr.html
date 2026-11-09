@@ -198,7 +198,7 @@ async function generatePreview() {
       dlBtn.disabled = true;
     } else {
       dlBtn.textContent = '⬇ Download 4K';
-      dlBtn.setAttribute('onclick', `downloadSticker('${code}')`);
+      dlBtn.addEventListener('click', () => downloadSticker(code));
     }
     wrap.appendChild(dlBtn);
     grid.appendChild(wrap);
@@ -291,10 +291,10 @@ async function downloadSticker(code) {
   const SCALE = 3;
   const TW = 1122 * SCALE, TH = 1402 * SCALE;
 
-  // QR area in original: x=161-959, y=247-1103
-  const PAD = 50 * SCALE;
-  const qx1 = 161 * SCALE + PAD, qy1 = 247 * SCALE + PAD;
-  const qx2 = 959 * SCALE - PAD, qy2 = 1103 * SCALE - PAD;
+  // QR area in original: x=162-959, y=260-1229
+  const PAD = 30 * SCALE;
+  const qx1 = 162 * SCALE + PAD, qy1 = 260 * SCALE + PAD;
+  const qx2 = 959 * SCALE - PAD, qy2 = 1229 * SCALE - PAD;
   const qSize = Math.min(qx2 - qx1, qy2 - qy1);
 
   try {
