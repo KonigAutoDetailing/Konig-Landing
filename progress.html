@@ -438,9 +438,9 @@ window._fbFns = { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, or
 window.STEPS = [
   { id: 'received',   name: 'Kendaraan Diterima',  pct: 5,  icon: '📋' },
   { id: 'washing',    name: 'Cuci & Decontam',      pct: 25, icon: '🚿' },
-  { id: 'correction', name: 'Paint Correction',     pct: 55, icon: '🔧' },
-  { id: 'coating',    name: 'Coating / Protection', pct: 80, icon: '🛡️' },
-  { id: 'final',      name: 'Final Check & Poles',  pct: 95, icon: '✨' },
+  { id: 'correction', name: 'Paint Correction',       pct: 55, icon: '🔧' },
+  { id: 'coating',    name: 'Coating & Perlindungan', pct: 80, icon: '🛡️' },
+  { id: 'final',      name: 'Final Check & Poles',    pct: 95, icon: '✨' },
   { id: 'done',       name: 'Selesai & Siap Ambil', pct: 100, icon: '🎉' },
 ];
 
@@ -611,7 +611,7 @@ window.openEditJobModal = async function(id) {
   const d = snap.data();
 
   document.getElementById('editJobId').value = id;
-  document.getElementById('modalJobTitle').textContent = 'UPDATE PROGRESS';
+  document.getElementById('modalJobTitle').textContent = 'UPDATE PROGRESS KENDARAAN';
   document.getElementById('jobCar').value = d.car || '';
   document.getElementById('jobPlate').value = d.plate || '';
   document.getElementById('jobWa').value = d.wa || '';
@@ -628,8 +628,8 @@ function renderStepsEditor(doneSteps, activeStep) {
   el.innerHTML = window.STEPS.map(s => {
     const isDone = doneSteps.includes(s.id);
     const isActive = s.id === activeStep && !isDone;
-    return `<div class="step-row ${isDone ? 'done-row' : isActive ? 'active-row' : ''}" id="srow_${s.id}">
-      <button class="step-toggle ${isDone ? 'done' : isActive ? 'active-btn' : ''}" onclick="toggleStep('${s.id}')" id="stbtn_${s.id}">
+    return `<div class="step-row ${isDone ? 'done-row' : isActive ? 'active-row' : ''}" id="srow_${s.id}" onclick="toggleStep('${s.id}')" style="cursor:pointer;">
+      <button class="step-toggle ${isDone ? 'done' : isActive ? 'active-btn' : ''}" id="stbtn_${s.id}" style="pointer-events:none;">
         ${isDone ? '✓' : isActive ? '▶' : s.icon}
       </button>
       <span class="step-label">${s.name}</span>
