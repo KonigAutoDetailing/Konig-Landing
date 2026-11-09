@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>KONÏG — Print QR Sticker Stock</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --black:#080810;--dark:#0f0f1a;--panel:#161625;--border:#2a2a45;
+      --purple:#7B2FBE;--purpleB:#b06aff;--white:#f0eeff;--text:#d4cef0;--muted:#9d93c0;
+    }
+    body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;padding:24px}
+
+    /* ── SCREEN UI ── */
+    .screen-ui{max-width:600px;margin:0 auto}
+    .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--white);margin-bottom:4px}
+    .logo span{color:var(--purpleB)}
+    .subtitle{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:32px}
+    h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--white);margin-bottom:20px}
+
+    .controls{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px;align-items:flex-end}
+    .ctrl-group{display:flex;flex-direction:column;gap:6px}
+    .ctrl-group label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+    .ctrl-group input{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;padding:10px 14px;width:120px;outline:none}
+    .ctrl-group input:focus{border-color:var(--purple)}
+    .btn{background:var(--purple);color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:12px 24px;cursor:pointer;transition:background 0.2s}
+    .btn:hover{background:var(--purpleB)}
+    .btn-outline{background:transparent;border:1px solid var(--purple);color:var(--purpleB)}
+    .btn-outline:hover{background:rgba(123,47,190,0.15)}
+    .btn-print{background:#1a3a1a;border:1px solid #4cd4a0;color:#4cd4a0}
+    .btn-print:hover{background:#1f4a1f}
+
+    .preview-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+    #previewGrid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px}
+
+    /* ── STICKER CARD (screen preview) ── */
+    .sticker-preview{
+      background:#0f0f1a;border:1px solid var(--border);
+      width:140px;padding:10px;text-align:center;
+    }
+    .sticker-preview .s-brand{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--purpleB);margin-bottom:4px}
+    .sticker-preview .s-code{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--white);margin:4px 0}
+    .sticker-preview .s-qr{display:flex;justify-content:center;margin:4px 0}
+    .sticker-preview .s-qr img,.sticker-preview .s-qr canvas{display:block}
+    .sticker-preview .s-url{font-size:7px;color:var(--muted);word-break:break-all;margin-top:4px;line-height:1.3}
+
+    /* ── PRINT STYLES ── */
+    @media print {
+      body{background:#fff;padding:0;margin:0}
+      .screen-ui{display:none}
+      #printSheet{display:block!important}
+    }
+
+    #printSheet{display:none}
+    .print-page{
+      width:210mm;min-height:297mm;padding:10mm;
+      display:flex;flex-wrap:wrap;gap:4mm;align-content:flex-start;
+      background:#fff;
+    }
+
+    /* ── PRINT STICKER ── */
+    .sticker-print{
+      width:44mm;height:44mm;
+      border:0.5mm solid #ccc;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:2mm;text-align:center;background:#fff;
+      page-break-inside:avoid;
+    }
+    .sticker-print .p-brand{font-family:'Bebas Neue',sans-serif;font-size:7pt;letter-spacing:1.5pt;color:#7B2FBE;margin-bottom:1mm}
+    .sticker-print .p-code{font-family:'Bebas Neue',sans-serif;font-size:11pt;letter-spacing:2pt;color:#111;margin:1mm 0}
+    .sticker-print .p-qr{display:flex;justify-content:center;margin:1mm 0}
+    .sticker-print .p-qr img,.sticker-print .p-qr canvas{display:block}
+    .sticker-print .p-url{font-size:5pt;color:#666;word-break:break-all;margin-top:1mm;line-height:1.3;font-family:sans-serif}
+  </style>
+</head>
+<body>
+
+<!-- SCREEN UI -->
+<div class="screen-ui">
+  <div class="logo">KONÏG <span>Auto Detailing</span></div>
+  <div class="subtitle">QR Sticker Stock Generator</div>
+
+  <h2>Generate QR Stickers</h2>
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <label>Prefix</label>
+      <input type="text" id="ctrlPrefix" value="K" maxlength="4" style="width:80px" oninput="this.value=this.value.toUpperCase()"/>
+    </div>
+    <div class="ctrl-group">
+      <label>Mulai Dari</label>
+      <input type="number" id="ctrlStart" value="1" min="1" max="9999"/>
+    </div>
+    <div class="ctrl-group">
+      <label>Jumlah</label>
+      <input type="number" id="ctrlCount" value="20" min="1" max="100"/>
+    </div>
+    <button class="btn" onclick="generatePreview()">Generate</button>
+    <button class="btn btn-print" onclick="doPrint()">🖨️ Print</button>
+  </div>
+
+  <div class="preview-label">Preview</div>
+  <div id="previewGrid"></div>
+</div>
+
+<!-- PRINT SHEET (hidden, shown on print) -->
+<div id="printSheet">
+  <div class="print-page" id="printPage"></div>
+</div>
+
+<script>
+const BASE_URL = 'https://www.konigautodetailing.com/progress';
+
+function padNum(n, len) {
+  return String(n).padStart(len, '0');
+}
+
+function makeCode(prefix, num) {
+  const digits = num >= 1000 ? 4 : num >= 100 ? 3 : 3;
+  return prefix + padNum(num, digits);
+}
+
+function generatePreview() {
+  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'K';
+  const start = parseInt(document.getElementById('ctrlStart').value) || 1;
+  const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 100);
+
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < count; i++) {
+    const code = makeCode(prefix, start + i);
+    const url = BASE_URL + '?code=' + code;
+
+    const card = document.createElement('div');
+    card.className = 'sticker-preview';
+    card.innerHTML = `
+      <div class="s-brand">KONÏG</div>
+      <div class="s-code">${code}</div>
+      <div class="s-qr" id="prev_${code}"></div>
+      <div class="s-url">${url}</div>
+    `;
+    grid.appendChild(card);
+
+    setTimeout(() => {
+      const el = document.getElementById('prev_' + code);
+      if (!el) return;
+      new QRCode(el, { text: url, width: 80, height: 80, colorDark: '#7B2FBE', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    }, 0);
+  }
+
+  // Also build print sheet
+  buildPrintSheet(prefix, start, count);
+}
+
+function buildPrintSheet(prefix, start, count) {
+  const page = document.getElementById('printPage');
+  page.innerHTML = '';
+
+  for (let i = 0; i < count; i++) {
+    const code = makeCode(prefix, start + i);
+    const url = BASE_URL + '?code=' + code;
+
+    const sticker = document.createElement('div');
+    sticker.className = 'sticker-print';
+    sticker.innerHTML = `
+      <div class="p-brand">KONÏG Auto Detailing</div>
+      <div class="p-code">${code}</div>
+      <div class="p-qr" id="print_${code}"></div>
+      <div class="p-url">konigautodetailing.com/progress</div>
+    `;
+    page.appendChild(sticker);
+
+    setTimeout(() => {
+      const el = document.getElementById('print_' + code);
+      if (!el) return;
+      new QRCode(el, { text: url, width: 100, height: 100, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    }, 0);
+  }
+}
+
+function doPrint() {
+  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'K';
+  const start = parseInt(document.getElementById('ctrlStart').value) || 1;
+  const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 100);
+  buildPrintSheet(prefix, start, count);
+  setTimeout(() => window.print(), 600);
+}
+
+// Auto generate on load
+window.onload = generatePreview;
+</script>
+</body>
+</html>

@@ -357,6 +357,15 @@
     <button class="modal-close" onclick="closeModal('modalJob')">×</button>
     <div class="modal-title" id="modalJobTitle">KENDARAAN BARU</div>
     <input type="hidden" id="editJobId"/>
+    <div class="form-group" id="jobCodeGroup">
+      <label>Kode QR (dari stiker)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="jobCode" placeholder="K001" maxlength="10"
+          style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;text-transform:uppercase;flex:1"
+          oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div id="jobCodeError" style="display:none;color:var(--red);font-size:12px;margin-top:4px">Kode sudah dipakai atau tidak valid</div>
+    </div>
     <div class="form-group">
       <label>Merk & Model Mobil</label>
       <input type="text" id="jobCar" placeholder="Toyota Camry 2022"/>
@@ -595,6 +604,9 @@ window.loadJobs = async function() {
 window.openNewJobModal = function() {
   document.getElementById('editJobId').value = '';
   document.getElementById('modalJobTitle').textContent = 'KENDARAAN BARU';
+  document.getElementById('jobCode').value = '';
+  document.getElementById('jobCodeError').style.display = 'none';
+  document.getElementById('jobCodeGroup').style.display = '';
   document.getElementById('jobCar').value = '';
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
@@ -614,6 +626,7 @@ window.openEditJobModal = async function(id) {
 
   document.getElementById('editJobId').value = id;
   document.getElementById('modalJobTitle').textContent = 'UPDATE PROGRESS KENDARAAN';
+  document.getElementById('jobCodeGroup').style.display = 'none';
   document.getElementById('jobCar').value = d.car || '';
   document.getElementById('jobPlate').value = d.plate || '';
   document.getElementById('jobWa').value = d.wa || '';
@@ -680,7 +693,15 @@ window.saveJob = async function() {
     if (editId) {
       await updateDoc(doc(window._db, 'konig_progress', editId), { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() });
     } else {
-      const code = genCode();
+      const code = document.getElementById('jobCode').value.trim().toUpperCase();
+      if (!code) { alert('Masukkan kode QR dari stiker'); btn.textContent = 'Simpan →'; btn.disabled = false; return; }
+      // Check if code already used
+      const { getDoc: gd } = window._fbFns;
+      const existing = await gd(doc(window._db, 'konig_progress', code));
+      if (existing.exists()) {
+        document.getElementById('jobCodeError').style.display = 'block';
+        btn.textContent = 'Simpan →'; btn.disabled = false; return;
+      }
       await setDoc(doc(window._db, 'konig_progress', code), { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
     }
     closeModal('modalJob');
