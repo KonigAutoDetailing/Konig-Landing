@@ -270,8 +270,11 @@
 <!-- GRAPHENE BANNER — full width above hero -->
 <div style="position:relative;z-index:1;cursor:pointer;margin-top:126px;overflow:hidden;"
   onclick="openGrapheneBanner();trackEvent('hero_banner_click')">
-  <img src="graphene-banner.png" alt="KONIG Graphene Coating — Next Gen Protection"
-    style="width:100%;display:block;border-bottom:2px solid rgba(123,47,190,0.5);box-shadow:0 4px 40px rgba(123,47,190,0.25);" />
+  <picture>
+    <source media="(max-width:768px)" srcset="graphene-campaign-mobile.png" />
+    <img src="graphene-campaign-desktop.png" alt="KONIG Graphene Coating — Next Gen Protection"
+      style="width:100%;display:block;border-bottom:2px solid rgba(123,47,190,0.5);box-shadow:0 4px 40px rgba(123,47,190,0.25);" />
+  </picture>
   <div style="position:absolute;bottom:12px;right:16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;background:rgba(0,0,0,0.5);padding:4px 12px;">
     Tap untuk detail →
   </div>
