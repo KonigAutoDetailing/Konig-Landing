@@ -50,6 +50,12 @@
     .sticker-preview .s-url{font-size:7px;color:var(--muted);word-break:break-all;margin-top:4px;line-height:1.3}
     .btn-dl{display:block;width:100%;margin-top:6px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px;cursor:pointer;text-align:center}
     .btn-dl:hover{border-color:var(--purpleB);color:var(--purpleB)}
+    .btn-dl:disabled{opacity:0.3;cursor:not-allowed;border-color:var(--border);color:var(--muted)}
+    .sticker-preview.used{opacity:0.45;position:relative}
+    .sticker-preview.used::after{content:'🔒 TERPAKAI';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(248,113,113,0.9);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;padding:4px 8px;white-space:nowrap}
+    .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+    .dot-free{background:#4cd4a0}.dot-used{background:#f87171}
+    #statusBar{font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;gap:16px;align-items:center}
 
     /* ── PRINT STYLES ── */
     @media print {
@@ -108,6 +114,11 @@
   </div>
 
   <div class="preview-label">Preview</div>
+  <div id="statusBar" style="display:none">
+    <span><span class="status-dot dot-free"></span>Tersedia</span>
+    <span><span class="status-dot dot-used"></span>Terpakai / Terkunci</span>
+    <span id="statusCount" style="color:var(--purpleB)"></span>
+  </div>
   <div id="previewGrid"></div>
 </div>
 
@@ -116,7 +127,29 @@
   <div class="print-page" id="printPage"></div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey: "AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es",
+  authDomain: "konig-auto-detailing.firebaseapp.com",
+  projectId: "konig-auto-detailing",
+  storageBucket: "konig-auto-detailing.firebasestorage.app",
+  messagingSenderId: "235399414542",
+  appId: "1:235399414542:web:bd9a2f3ed88f4ea36bcd5f"
+});
+const db = getFirestore(app);
+
+// Load all used codes from Firestore
+let usedCodes = new Set();
+async function loadUsedCodes() {
+  try {
+    const snap = await getDocs(collection(db, 'konig_progress'));
+    snap.forEach(d => usedCodes.add(d.id));
+  } catch(e) { console.warn('Firebase:', e); }
+}
+
 const BASE_URL = 'https://www.konigautodetailing.com/progress';
 
 function padNum(n, len) {
@@ -128,20 +161,26 @@ function makeCode(prefix, num) {
   return prefix + padNum(num, digits);
 }
 
-function generatePreview() {
+async function generatePreview() {
   const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'K';
   const start = parseInt(document.getElementById('ctrlStart').value) || 1;
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 100);
 
+  await loadUsedCodes();
+
   const grid = document.getElementById('previewGrid');
   grid.innerHTML = '';
+
+  let freeCount = 0, usedCount = 0;
 
   for (let i = 0; i < count; i++) {
     const code = makeCode(prefix, start + i);
     const url = BASE_URL + '?code=' + code;
+    const isUsed = usedCodes.has(code);
+    if (isUsed) usedCount++; else freeCount++;
 
     const card = document.createElement('div');
-    card.className = 'sticker-preview';
+    card.className = 'sticker-preview' + (isUsed ? ' used' : '');
     card.id = 'card_' + code;
     card.innerHTML = `
       <div class="s-brand">KONÏG</div>
@@ -149,25 +188,33 @@ function generatePreview() {
       <div class="s-qr" id="prev_${code}"></div>
       <div class="s-url">${url}</div>
     `;
-    // download button outside card (not captured in screenshot)
     const wrap = document.createElement('div');
     wrap.style.cssText = 'width:140px';
     wrap.appendChild(card);
     const dlBtn = document.createElement('button');
     dlBtn.className = 'btn-dl';
-    dlBtn.textContent = '⬇ Download JPEG';
-    dlBtn.onclick = () => downloadSticker(code);
+    if (isUsed) {
+      dlBtn.textContent = '🔒 Terkunci';
+      dlBtn.disabled = true;
+    } else {
+      dlBtn.textContent = '⬇ Download JPEG';
+      dlBtn.onclick = () => downloadSticker(code);
+    }
     wrap.appendChild(dlBtn);
     grid.appendChild(wrap);
 
     setTimeout(() => {
       const el = document.getElementById('prev_' + code);
       if (!el) return;
-      new QRCode(el, { text: url, width: 80, height: 80, colorDark: '#7B2FBE', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(el, { text: url, width: 80, height: 80, colorDark: isUsed ? '#555' : '#7B2FBE', colorLight: '#0f0f1a', correctLevel: QRCode.CorrectLevel.H });
     }, 0);
   }
 
-  // Also build print sheet
+  // Show status bar
+  const bar = document.getElementById('statusBar');
+  bar.style.display = 'flex';
+  document.getElementById('statusCount').textContent = `${freeCount} tersedia · ${usedCount} terkunci`;
+
   buildPrintSheet(prefix, start, count);
 }
 
@@ -234,8 +281,13 @@ function downloadAll() {
   next();
 }
 
+// expose untuk onclick di HTML
+window.generatePreview = generatePreview;
+window.doPrint = doPrint;
+window.downloadAll = downloadAll;
+
 // Auto generate on load
-window.onload = generatePreview;
+generatePreview();
 </script>
 </body>
 </html>
