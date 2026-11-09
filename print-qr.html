@@ -164,11 +164,13 @@ async function renderThumb(canvas, url, S, code) {
   const box_x1 = 137*S, box_x2 = 984*S;
   const box_y1 = 282*S, box_y2 = 1081*S;
   const bw = box_x2-box_x1, bh = box_y2-box_y1;
-  const qSize = Math.floor(Math.min(bw,bh)*0.92);
+  // QR 85% — geser ke atas 40% gap, teks di bawah 60% gap
+  const qSize = Math.floor(Math.min(bw,bh)*0.85);
   const margin = Math.floor(qSize*0.04);
   const inner = qSize - margin*2;
   const cx = Math.floor((box_x1+box_x2)/2);
-  const cy = Math.floor((box_y1+box_y2)/2);
+  const gap_total = bh - qSize;
+  const qr_top = box_y1 + Math.floor(gap_total * 0.40);
 
   const tmpl = await loadTemplate();
   const qrCanvas = await makeQRCanvas(url, inner);
@@ -182,14 +184,14 @@ async function renderThumb(canvas, url, S, code) {
 
   const ctx = canvas.getContext('2d');
   ctx.drawImage(tmpl, 0, 0, TW, TH);
-  ctx.drawImage(qBg, cx-Math.floor(qSize/2), cy-Math.floor(qSize/2), qSize, qSize);
+  ctx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
 
-  // Draw code text below QR, nudged up 30px from center of gap
+  // Draw code text below QR
   if (code) {
-    const qr_bottom = cy + Math.floor(qSize/2);
-    const gap = box_y2 - qr_bottom;
-    const text_y = qr_bottom + Math.floor(gap/2) - 30;
-    const font_size = Math.floor(gap * 0.68);
+    const qr_bottom = qr_top + qSize;
+    const gap_below = box_y2 - qr_bottom;
+    const font_size = Math.floor(gap_below * 0.55);
+    const text_y = qr_bottom + Math.floor(gap_below / 2);
     ctx.font = `bold ${font_size}px sans-serif`;
     ctx.fillStyle = '#3c0064';
     ctx.textAlign = 'center';
@@ -350,10 +352,13 @@ async function downloadSticker(code) {
   const box_w = box_x2 - box_x1;
   const box_h = box_y2 - box_y1;
 
-  // QR = 92% of shorter dimension, 4% margin
-  const qSize = Math.floor(Math.min(box_w, box_h) * 0.92);
+  // QR = 85% of shorter dimension, geser atas 40%, teks di bawah
+  const qSize = Math.floor(Math.min(box_w, box_h) * 0.85);
   const margin = Math.floor(qSize * 0.04);
   const inner = qSize - margin * 2;
+  const cx = Math.floor((box_x1 + box_x2) / 2);
+  const gap_total = box_h - qSize;
+  const qr_top = box_y1 + Math.floor(gap_total * 0.40);
 
   try {
     const tmpl = await loadTemplate();
@@ -365,7 +370,7 @@ async function downloadSticker(code) {
     const qCtx = qBg.getContext('2d');
     qCtx.fillStyle = '#ffffff';
     qCtx.fillRect(0, 0, qSize, qSize);
-    qCtx.drawImage(qrCanvas, margin, margin);  // already exact inner size
+    qCtx.drawImage(qrCanvas, margin, margin);
 
     const canvas = document.createElement('canvas');
     canvas.width = TW; canvas.height = TH;
@@ -374,16 +379,14 @@ async function downloadSticker(code) {
     // 1. Draw template
     ctx.drawImage(tmpl, 0, 0, TW, TH);
 
-    // 2. Draw QR centered in white box (once only)
-    const cx = Math.floor((box_x1 + box_x2) / 2);
-    const cy = Math.floor((box_y1 + box_y2) / 2);
-    ctx.drawImage(qBg, cx - Math.floor(qSize/2), cy - Math.floor(qSize/2), qSize, qSize);
+    // 2. Draw QR (shifted up 40%)
+    ctx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
 
-    // 3. Draw code text below QR, nudged up 30px from center of gap
-    const qr_bottom = cy + Math.floor(qSize/2);
-    const gap = box_y2 - qr_bottom;
-    const text_y = qr_bottom + Math.floor(gap/2) - 30;
-    const font_size = Math.floor(gap * 0.68);
+    // 3. Draw code text below QR
+    const qr_bottom = qr_top + qSize;
+    const gap_below = box_y2 - qr_bottom;
+    const font_size = Math.floor(gap_below * 0.55);
+    const text_y = qr_bottom + Math.floor(gap_below / 2);
     ctx.font = `bold ${font_size}px sans-serif`;
     ctx.fillStyle = '#3c0064';
     ctx.textAlign = 'center';
