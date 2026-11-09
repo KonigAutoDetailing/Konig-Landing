@@ -193,6 +193,7 @@ async function generatePreview() {
     wrap.appendChild(card);
     const dlBtn = document.createElement('button');
     dlBtn.className = 'btn-dl';
+    dlBtn.dataset.code = code;
     if (isUsed) {
       dlBtn.textContent = '🔒 Terkunci';
       dlBtn.disabled = true;
@@ -284,21 +285,35 @@ function makeQRCanvas(url, size) {
 }
 
 async function downloadSticker(code) {
-  const btn = document.querySelector(`[onclick="downloadSticker('${code}')"]`);
+  // Find button by data-code attribute
+  const btn = document.querySelector(`.btn-dl[data-code="${code}"]`);
   if (btn) { btn.textContent = '⏳ Generating...'; btn.disabled = true; }
 
   const url = BASE_URL + '?code=' + code;
   const SCALE = 3;
   const TW = 1122 * SCALE, TH = 1402 * SCALE;
 
-  // QR area in original: x=162-959, y=260-1229
-  const PAD = 30 * SCALE;
-  const qx1 = 162 * SCALE + PAD, qy1 = 260 * SCALE + PAD;
-  const qx2 = 959 * SCALE - PAD, qy2 = 1229 * SCALE - PAD;
-  const qSize = Math.min(qx2 - qx1, qy2 - qy1);
+  // White box in original template: x=162-959, y=260-1229
+  const box_x1 = 162 * SCALE, box_x2 = 959 * SCALE;
+  const box_y1 = 260 * SCALE, box_y2 = 1229 * SCALE;
+  const box_w = box_x2 - box_x1;  // 2391
+  const box_h = box_y2 - box_y1;  // 2907
+
+  // QR = 60% of shorter dimension, centered in white box
+  const qSize = Math.floor(Math.min(box_w, box_h) * 0.60);  // 1434
+  const margin = Math.floor(qSize * 0.05);
+  const inner = qSize - margin * 2;
 
   try {
-    const [tmpl, qrCanvas] = await Promise.all([loadTemplate(), makeQRCanvas(url, qSize)]);
+    const [tmpl, qrCanvas] = await Promise.all([loadTemplate(), makeQRCanvas(url, inner)]);
+
+    // Composite: white bg square + QR in center
+    const qBg = document.createElement('canvas');
+    qBg.width = qSize; qBg.height = qSize;
+    const qCtx = qBg.getContext('2d');
+    qCtx.fillStyle = '#ffffff';
+    qCtx.fillRect(0, 0, qSize, qSize);
+    qCtx.drawImage(qrCanvas, margin, margin, inner, inner);
 
     const canvas = document.createElement('canvas');
     canvas.width = TW; canvas.height = TH;
@@ -308,8 +323,9 @@ async function downloadSticker(code) {
     ctx.drawImage(tmpl, 0, 0, TW, TH);
 
     // Center QR in white area
-    const cx = (qx1 + qx2) / 2, cy = (qy1 + qy2) / 2;
-    ctx.drawImage(qrCanvas, cx - qSize/2, cy - qSize/2, qSize, qSize);
+    const cx = (box_x1 + box_x2) / 2;
+    const cy = (box_y1 + box_y2) / 2;
+    ctx.drawImage(qBg, cx - qSize/2, cy - qSize/2, qSize, qSize);
 
     // Download
     canvas.toBlob(blob => {
