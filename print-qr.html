@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/qr-template-b64.js"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{
@@ -251,16 +252,15 @@ function doPrint() {
   setTimeout(() => window.print(), 600);
 }
 
-// Load template image once
+// Load template image once (from inline base64 — no CORS)
 let _templateImg = null;
 function loadTemplate() {
   if (_templateImg) return Promise.resolve(_templateImg);
   return new Promise((res, rej) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = () => { _templateImg = img; res(img); };
     img.onerror = rej;
-    img.src = '/qr-sticker-template.png';
+    img.src = typeof QR_TEMPLATE_B64 !== 'undefined' ? QR_TEMPLATE_B64 : '/qr-sticker-template.png';
   });
 }
 
