@@ -21,15 +21,9 @@
     html{scroll-behavior:smooth;overflow-x:hidden}
     body{background:var(--black);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 
-    /* ── PROMO BAR ── */
-    .promo-bar{background:linear-gradient(90deg,#0a0020,#1a0840,#7B2FBE,#1a0840,#0a0020);background-size:300% 100%;animation:promoShimmer 6s ease-in-out infinite;padding:10px 24px;text-align:center;position:fixed;top:0;left:0;right:0;z-index:200;border-bottom:1px solid rgba(123,47,190,0.4);}
-    @keyframes promoShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-    .promo-bar-inner{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:1100px;margin:0 auto}
-    .promo-cta{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);border:1px solid var(--purpleB);padding:3px 12px;}
-
     /* ── NAV ── */
     nav{
-      position:fixed;top:42px;left:0;right:0;z-index:100;
+      position:fixed;top:0;left:0;right:0;z-index:100;
       display:flex;align-items:center;justify-content:space-between;
       padding:14px 24px;
       background:rgba(8,8,16,0.97);backdrop-filter:blur(16px);
@@ -40,7 +34,7 @@
     .nav-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
 
     /* ── SCREENS ── */
-    .screen{display:none;min-height:100vh;padding:126px 24px 48px}
+    .screen{display:none;min-height:100vh;padding:80px 24px 48px}
     .screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center}
 
     /* ── SCAN / ENTER CODE ── */
@@ -141,7 +135,7 @@
     .login-error{font-size:13px;color:var(--red);text-align:center;margin-top:8px;display:none}
 
     /* ── ADMIN DASHBOARD ── */
-    #screenAdmin{align-items:stretch;padding-top:126px}
+    #screenAdmin{align-items:stretch;padding-top:72px}
     .admin-wrap{max-width:900px;width:100%;margin:0 auto}
     .admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
     .admin-heading{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--white)}
@@ -263,14 +257,6 @@
   </style>
 </head>
 <body>
-
-<!-- PROMO BAR -->
-<div class="promo-bar" onclick="window.location.href='/'" style="cursor:pointer;">
-  <div class="promo-bar-inner">
-    <span id="promoTextShort" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:1px;color:#fff;">🔥 Graphene Campaign — Eternity 20% Off</span>
-    <span class="promo-cta">Tanya Sekarang →</span>
-  </div>
-</div>
 
 <!-- NAV -->
 <nav>
