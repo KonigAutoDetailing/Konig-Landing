@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-  <script src="/qr-template-b64.js?v=3"></script>
+  <script src="/qr-template-b64.js?v=4"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{
@@ -239,7 +239,7 @@ async function generatePreview() {
       dlBtn.textContent = '🔒 Terkunci';
       dlBtn.disabled = true;
     } else {
-      dlBtn.textContent = '⬇ Download 4K';
+      dlBtn.textContent = '⬇ Download PNG';
       dlBtn.addEventListener('click', () => downloadSticker(code));
     }
     wrap.appendChild(dlBtn);
@@ -386,14 +386,14 @@ async function downloadSticker(code) {
     // Download
     canvas.toBlob(blob => {
       const a = document.createElement('a');
-      a.download = 'KONIG-QR-' + code + '.jpg';
+      a.download = 'KONIG-QR-' + code + '.png';
       a.href = URL.createObjectURL(blob);
       a.click();
-      if (btn) { btn.textContent = '⬇ Download JPEG'; btn.disabled = false; }
-    }, 'image/jpeg', 0.95);
+      if (btn) { btn.textContent = '⬇ Download PNG'; btn.disabled = false; }
+    }, 'image/png');
   } catch(e) {
     alert('Error: ' + e.message);
-    if (btn) { btn.textContent = '⬇ Download JPEG'; btn.disabled = false; }
+    if (btn) { btn.textContent = '⬇ Download PNG'; btn.disabled = false; }
   }
 }
 
