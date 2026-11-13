@@ -2,7 +2,7 @@
   "name": "KONIG Progress",
   "short_name": "KONIG Progress",
   "description": "Tracker pengerjaan kendaraan KONIG Auto Detailing",
-  "id": "/progress",
+  "id": "/konig-progress-app",
   "start_url": "/progress?admin=1",
   "scope": "/",
   "display": "standalone",
