@@ -346,6 +346,7 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn-new" onclick="openNewJobModal()">+ Kendaraan Baru</button>
+        <button class="btn-new" style="background:#25D366" onclick="openWaUpdate()">📲 Update Sore</button>
         <a href="/print-qr.html" target="_blank" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:10px 16px;text-decoration:none;white-space:nowrap">🖨️ Print QR</a>
         <button class="btn-logout" onclick="adminLogout()">Logout</button>
       </div>
@@ -411,6 +412,14 @@
 </div>
 
 <!-- MODAL: QR Code -->
+<div class="modal-overlay" id="modalWa">
+  <div class="modal-box" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('modalWa')">×</button>
+    <div class="modal-title">UPDATE SORE KE CUSTOMER</div>
+    <div style="font-size:13px;color:var(--muted);margin:-6px 0 14px">Tap <b>Kirim via WA</b> untuk tiap customer. Pesan bisa diedit dulu di kotak teks.</div>
+    <div id="waList"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalQR">
   <div class="modal-box" style="max-width:380px;text-align:center">
     <button class="modal-close" onclick="closeModal('modalQR')">×</button>
@@ -609,6 +618,77 @@ window.loadJobs = async function() {
   }).join('');
 }
 
+
+// ── UPDATE SORE VIA WA ──
+const STEP_ID = { received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'Paint correction (poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
+function waNumber(raw){
+  let n = String(raw||'').replace(/[^0-9]/g,'');
+  if(n.startsWith('0')) n = '62' + n.slice(1);
+  else if(n.startsWith('8')) n = '62' + n;
+  return n;
+}
+function todayWIB(){ return new Date(Date.now()+7*3600e3).toISOString().slice(0,10); }
+function tsDay(t){ try{ const d = t && t.toDate ? t.toDate() : (t ? new Date(t) : null); return d ? new Date(d.getTime()+7*3600e3).toISOString().slice(0,10) : ''; }catch(e){ return ''; } }
+function waMessage(j){
+  const steps = window.STEPS, done = (j.doneSteps||[]).includes('done');
+  const s = steps.find(x => x.id === j.activeStep);
+  const pct = done ? 100 : (s ? s.pct : 0);
+  const url = location.origin + '/progress?code=' + j.id;
+  const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
+  if(done){
+    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\nWorkshop buka sampai jam 17.00 ya (Senin–Sabtu). Detailnya bisa dicek di sini:\n' + url + '\n\n— KONIG Auto Detailing';
+  }
+  const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrian';
+  let msg = 'Halo Kak, update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
+  if(j.note) msg += '\nCatatan: ' + j.note;
+  msg += '\n\nCek progresnya kapan aja di sini:\n' + url + '\n\n— KONIG Auto Detailing';
+  return msg;
+}
+window.openWaUpdate = async function(){
+  const { collection, getDocs, query, orderBy } = window._fbFns;
+  const list = document.getElementById('waList');
+  list.textContent = 'Memuat…';
+  openModal('modalWa');
+  const snap = await getDocs(query(collection(window._db, 'konig_progress'), orderBy('createdAt','desc')));
+  const today = todayWIB();
+  const jobs = [];
+  snap.forEach(d => { const j = { id: d.id, ...d.data() }; const done = (j.doneSteps||[]).includes('done'); if(!done || tsDay(j.updatedAt) === today) jobs.push(j); });
+  list.textContent = '';
+  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada kendaraan aktif hari ini.</div>'; return; }
+  jobs.forEach(j => {
+    const sent = j.lastWaUpdate === today;
+    const box = document.createElement('div');
+    box.style.cssText = 'border:1px solid var(--border);padding:14px;margin-bottom:12px;' + (sent ? 'opacity:.55' : '');
+    const head = document.createElement('div');
+    head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
+    head.textContent = (j.car || '-') + ' ' + (j.plate || '') + (sent ? '  ✓ sudah dikirim hari ini' : '');
+    const ta = document.createElement('textarea');
+    ta.value = waMessage(j); ta.rows = 7;
+    ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
+    const nomor = waNumber(j.wa);
+    const btn = document.createElement('a');
+    btn.className = 'btn-sm'; btn.style.cssText = 'background:#25D366;color:#fff;text-decoration:none;border:none';
+    btn.textContent = nomor ? '💬 Kirim via WA' : 'Nomor WA kosong';
+    btn.target = '_blank'; btn.rel = 'noopener';
+    if(nomor){
+      btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+      ta.oninput = () => { btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value); };
+      btn.onclick = async () => {
+        box.style.opacity = '.55'; head.textContent = (j.car || '-') + ' ' + (j.plate || '') + '  ✓ sudah dikirim hari ini';
+        try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { lastWaUpdate: today }); } catch(e) {}
+      };
+    }
+    const info = document.createElement('span'); info.style.cssText = 'font-size:12px;color:var(--muted)'; info.textContent = j.wa ? 'WA: ' + j.wa : '';
+    row.appendChild(btn); row.appendChild(info);
+    box.appendChild(head); box.appendChild(ta); box.appendChild(row);
+    list.appendChild(box);
+  });
+};
+// Buka otomatis lewat link ?update=sore (dari notifikasi jam 16:00)
+if (new URLSearchParams(location.search).get('update') === 'sore') {
+  window.addEventListener('load', () => setTimeout(() => { if (sessionStorage.getItem('konig_admin')) window.openWaUpdate(); }, 1500));
+}
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
   document.getElementById('editJobId').value = '';
