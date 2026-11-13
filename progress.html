@@ -364,7 +364,7 @@
     </div>
 
     <div id="trackHistory" style="display:none">
-      <div class="hist-badge">📁 RIWAYAT PENGERJAAN</div>
+      <div class="hist-badge">RIWAYAT PENGERJAAN</div>
       <div class="hist-grid">
         <div class="hist-item"><div class="hist-k">Mobil masuk</div><div class="hist-v" id="histIn">-</div></div>
         <div class="hist-item"><div class="hist-k">Selesai</div><div class="hist-v" id="histOut">-</div></div>
@@ -374,11 +374,11 @@
       <div class="hist-k" style="margin-top:18px">Layanan & produk</div>
       <div class="hist-tags" id="histServices"></div>
       <div class="hist-review">
-        <div class="hist-review-t">Gimana hasilnya? 😊</div>
+        <div class="hist-review-t">Bagaimana hasilnya?</div>
         <div class="hist-review-d">Setiap review sangat berharga buat perkembangan KONIG.</div>
-        <a id="histReviewBtn" class="hist-review-btn" target="_blank" rel="noopener">⭐ Tulis Review di Google</a>
+        <a id="histReviewBtn" class="hist-review-btn" target="_blank" rel="noopener">Tulis Review di Google</a>
       </div>
-      <a class="hist-wa" href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20mau%20booking%20lagi" target="_blank" rel="noopener">💬 Booking lagi via WhatsApp</a>
+      <a class="hist-wa" href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20mau%20booking%20lagi" target="_blank" rel="noopener">Booking Lagi via WhatsApp</a>
     </div>
 
     <div class="photos-section" id="photosSection" style="display:none">
@@ -661,7 +661,7 @@ function renderTrack(code, data) {
   document.getElementById('trackService').textContent = data.service || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
   const isHist = renderHistory(data);
-  document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa + '\u00a0👋' : 'Welcome to KONIG\u00a0👋';
+  document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
   document.getElementById('trackHelloSub').textContent = isHist ? 'Terima kasih sudah mempercayakan mobil Anda ke KONIG.' : 'Mobil Anda ada di tangan yang tepat. Pantau progresnya di sini.';
   if (isHist) { showScreen('screenTrack'); return; }
   document.getElementById('trackLive').style.display = ''; document.getElementById('trackHistory').style.display = 'none';
