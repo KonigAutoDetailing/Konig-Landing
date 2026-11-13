@@ -574,6 +574,7 @@ window.loadJobs = async function() {
   const snap = await getDocs(query(collection(window._db, 'konig_progress'), orderBy('createdAt','desc')));
   const jobs = [];
   snap.forEach(d => jobs.push({ id: d.id, ...d.data() }));
+  if (window.autoCloseWashJobs) await window.autoCloseWashJobs(jobs);
 
   const active = jobs.filter(j => !j.doneSteps?.includes('done'));
   document.getElementById('jobCount').textContent = active.length + ' kendaraan aktif · ' + jobs.length + ' total';
@@ -651,6 +652,103 @@ function waMessage(j){
   msg += '\n\nCek progresnya kapan aja di sini:\n' + url + '\n\n— KONIG Auto Detailing';
   return msg;
 }
+// ── REMINDER CUCI (Premium Wash) ──
+// Jadwal setelah cuci terakhir: 14 hari, lalu 1, 2, 3, 4, 5, 6 bulan. Kalau customer cuci lagi, hitungan mulai ulang dari cuci terbaru.
+const WASH_STAGES = [14, 30, 60, 90, 120, 150, 180];
+function isWashJob(j){ return isQuick(j) && /Wash|Interior/i.test(String(j.service||'')); }
+// Premium Wash / Interior Detailing yang tidak ditandai selesai dianggap selesai jam 17:00 di hari mobil masuk
+function autoWashDone(j){
+  if (!isWashJob(j) || (j.doneSteps||[]).includes('done')) return false;
+  const created = tsDay(j.createdAt); if (!created) return false;
+  const now = new Date(Date.now()+7*3600e3), today = now.toISOString().slice(0,10);
+  return created < today || (created === today && now.getUTCHours() >= 17);
+}
+window.autoCloseWashJobs = async function(jobs){
+  const { doc, updateDoc } = window._fbFns;
+  const allSteps = window.STEPS.map(s => s.id);
+  let n = 0;
+  for (const j of jobs) {
+    if (!autoWashDone(j)) continue;
+    const doneAt = new Date(tsDay(j.createdAt) + 'T17:00:00+07:00');
+    try { await updateDoc(doc(window._db, 'konig_progress', j.id), { doneSteps: allSteps, activeStep: 'done', doneAt, autoDone: true }); n++;
+      j.doneSteps = allSteps; j.activeStep = 'done'; j.doneAt = doneAt; } catch(e) {}
+  }
+  return n;
+};
+function dayDiff(a, b){ return Math.floor((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z')) / 864e5); }
+function washReminders(jobs, today){
+  const byCust = {};
+  jobs.forEach(j => {
+    if (!isWashJob(j) || !((j.doneSteps||[]).includes('done') || autoWashDone(j))) return;
+    const key = waNumber(j.wa) || String(j.plate||'').replace(/\s+/g,'').toUpperCase();
+    if (!key) return;
+    const d = tsDay(j.doneAt) || (autoWashDone(j) ? tsDay(j.createdAt) : tsDay(j.updatedAt));
+    if (!d) return;
+    if (!byCust[key] || d > byCust[key].d) byCust[key] = { j, d, visits: 0 };
+    byCust[key].visits = (byCust[key].visits || 0) + 1;
+  });
+  // customer yang punya pekerjaan aktif (sedang di workshop) tidak diingatkan
+  const aktif = new Set(jobs.filter(j => !(j.doneSteps||[]).includes('done') && !autoWashDone(j)).map(j => waNumber(j.wa) || String(j.plate||'').replace(/\s+/g,'').toUpperCase()));
+  const due = [];
+  Object.entries(byCust).forEach(([key, c]) => {
+    if (aktif.has(key)) return;
+    const age = dayDiff(c.d, today);
+    const sent = c.j.washReminders || {};
+    const stage = WASH_STAGES.filter(x => x <= age).pop();
+    if (stage && !sent[String(stage)]) due.push({ j: c.j, stage, age, visits: c.visits });
+  });
+  return due.sort((a, b) => b.age - a.age);
+}
+function washMessage(r){
+  const mobil = (r.j.car || 'mobilnya') + (r.j.plate ? ' (' + r.j.plate + ')' : '');
+  const sv = String(r.j.service||'');
+  const kerja = /Wash/i.test(sv) ? 'dicuci' : 'dibersihkan interiornya';
+  const ajak = /Wash/i.test(sv) ? 'dicuci lagi' : 'dibersihkan lagi';
+  if (r.stage === 14) {
+    return 'Halo Kak, udah 2 minggu nih sejak mobil ' + mobil + ' ' + kerja + ' di KONIG 😊\n\nKalau mau dijadwalkan lagi minggu ini, kabari aja ya, nanti kami siapin slotnya.\n\n— KONIG Auto Detailing';
+  }
+  const bln = Math.round(r.stage / 30);
+  return 'Halo Kak, udah sekitar ' + bln + ' bulan mobil ' + mobil + ' belum mampir ke KONIG nih 🙏\n\nKalau mau ' + ajak + ', tinggal balas chat ini ya, nanti kami atur jadwalnya.\n\n— KONIG Auto Detailing';
+}
+async function markWashReminder(j, stage, today){
+  try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { ['washReminders.' + stage]: today }); } catch(e) {}
+}
+function renderWashSection(list, due, today){
+  const h = document.createElement('div');
+  h.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin:22px 0 4px";
+  h.textContent = '🔔 REMINDER CUCI & INTERIOR (' + due.length + ')';
+  const d = document.createElement('div'); d.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:10px';
+  d.textContent = 'Customer Premium Wash / Interior Detailing yang sudah waktunya diingatkan: 2 minggu setelah datang, lalu tiap bulan kalau belum datang lagi.';
+  list.appendChild(h); list.appendChild(d);
+  if (!due.length) { const e = document.createElement('div'); e.style.cssText='color:var(--muted);font-size:13px;padding:6px 0 4px'; e.textContent = 'Tidak ada reminder hari ini.'; list.appendChild(e); return; }
+  due.forEach(r => {
+    const j = r.j;
+    const box = document.createElement('div');
+    box.style.cssText = 'border:1px solid var(--border);border-left:3px solid #f59e0b;padding:14px;margin-bottom:12px';
+    const head = document.createElement('div');
+    head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
+    head.textContent = (j.car || '-') + ' ' + (j.plate || '') + ' · ' + (r.stage === 14 ? '2 minggu' : Math.round(r.stage/30) + ' bulan') + ' sejak kunjungan terakhir';
+    const ta = document.createElement('textarea'); ta.value = washMessage(r); ta.rows = 6;
+    ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
+    const nomor = waNumber(j.wa);
+    const done = (txt) => { box.style.opacity = '.5'; head.textContent += '  ✓ ' + txt; row.remove(); };
+    const btn = document.createElement('a');
+    btn.className = 'btn-sm'; btn.style.cssText = 'background:#25D366;color:#fff;text-decoration:none;border:none';
+    btn.textContent = nomor ? '💬 Kirim via WA' : 'Nomor WA kosong'; btn.target = '_blank'; btn.rel = 'noopener';
+    if (nomor) {
+      btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+      ta.oninput = () => { btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value); };
+      btn.onclick = () => { markWashReminder(j, r.stage, today); done('terkirim'); };
+    }
+    const skip = document.createElement('button'); skip.className = 'btn-sm'; skip.textContent = 'Lewati';
+    skip.onclick = () => { markWashReminder(j, r.stage, today); done('dilewati'); };
+    row.appendChild(btn); row.appendChild(skip);
+    box.appendChild(head); box.appendChild(ta); box.appendChild(row);
+    list.appendChild(box);
+  });
+}
+
 window.openWaUpdate = async function(onlyId){
   const { collection, getDocs, query, orderBy } = window._fbFns;
   const list = document.getElementById('waList');
@@ -659,11 +757,13 @@ window.openWaUpdate = async function(onlyId){
   const snap = await getDocs(query(collection(window._db, 'konig_progress'), orderBy('createdAt','desc')));
   const today = todayWIB();
   const jobs = [];
-  snap.forEach(d => { const j = { id: d.id, ...d.data() }; const done = (j.doneSteps||[]).includes('done');
+  const allJobs = [];
+  snap.forEach(d => { const j = { id: d.id, ...d.data() }; allJobs.push(j); const done = (j.doneSteps||[]).includes('done');
     if(onlyId){ if(j.id === onlyId) jobs.push(j); return; }
     if(done ? tsDay(j.updatedAt) === today : !isQuick(j)) jobs.push(j); });
   list.textContent = '';
-  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada kendaraan aktif hari ini.</div>'; return; }
+  const washDue = onlyId ? [] : washReminders(allJobs, today);
+  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada kendaraan aktif hari ini.</div>'; if(!onlyId) renderWashSection(list, washDue, today); return; }
   jobs.forEach(j => {
     const sent = j.lastWaUpdate === today;
     const box = document.createElement('div');
@@ -693,6 +793,7 @@ window.openWaUpdate = async function(onlyId){
     box.appendChild(head); box.appendChild(ta); box.appendChild(row);
     list.appendChild(box);
   });
+  if(!onlyId) renderWashSection(list, washDue, today);
 };
 // Buka otomatis lewat link ?update=sore (dari notifikasi jam 16:00)
 if (new URLSearchParams(location.search).get('update') === 'sore') {
@@ -816,7 +917,7 @@ window.markDone = async function(id) {
   const { doc, updateDoc, serverTimestamp } = window._fbFns;
   const allSteps = window.STEPS.map(s => s.id);
   await updateDoc(doc(window._db, 'konig_progress', id), {
-    doneSteps: allSteps, activeStep: 'done', updatedAt: serverTimestamp()
+    doneSteps: allSteps, activeStep: 'done', updatedAt: serverTimestamp(), doneAt: serverTimestamp()
   });
   loadJobs();
   window.openWaUpdate(id);
