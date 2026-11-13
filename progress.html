@@ -879,6 +879,42 @@ function renderReviewSection(list, due, today){
   });
 }
 
+// ── WELCOME MESSAGE (khusus Coating, saat kendaraan baru dibuat) ──
+function isCoatingJob(service){ return String(service||'').split(', ').some(x => /Coating/i.test(x) && !/Window/i.test(x)); }
+function welcomeMessage(j){
+  const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
+  const url = location.origin + '/progress?code=' + j.id;
+  return 'Halo Kak, selamat datang di KONIG Auto Detailing 🙏\n\nMakasih sudah mempercayakan ' + mobil + ' ke kami. Tenang aja, mobilnya ada di tangan yang tepat — tim kami kerjakan dengan teliti sesuai standar KONIG.\n\nProgres pengerjaannya bisa Kakak pantau kapan aja di sini:\n' + url + '\n\nKami juga akan kirim update setiap beberapa hari ya.\n\n— KONIG Auto Detailing';
+}
+window.openWelcome = function(j){
+  const list = document.getElementById('waList');
+  list.textContent = '';
+  const box = document.createElement('div');
+  box.style.cssText = 'border:1px solid var(--border);border-left:3px solid var(--purpleB);padding:14px';
+  const head = document.createElement('div');
+  head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
+  head.textContent = '👋 Pesan selamat datang · ' + (j.car || '-') + ' ' + (j.plate || '');
+  const ta = document.createElement('textarea'); ta.value = welcomeMessage(j); ta.rows = 9;
+  ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
+  const nomor = waNumber(j.wa);
+  const btn = document.createElement('a');
+  btn.className = 'btn-sm'; btn.style.cssText = 'background:#25D366;color:#fff;text-decoration:none;border:none';
+  btn.textContent = nomor ? '💬 Kirim via WA' : 'Nomor WA kosong'; btn.target = '_blank'; btn.rel = 'noopener';
+  if (nomor) {
+    btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+    ta.oninput = () => { btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value); };
+    btn.onclick = async () => { head.textContent += '  ✓ terkirim'; box.style.opacity = '.6';
+      try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { welcomeSent: todayWIB() }); } catch(e) {} };
+  }
+  const later = document.createElement('button'); later.className = 'btn-sm'; later.textContent = 'Nanti saja';
+  later.onclick = () => closeModal('modalWa');
+  row.appendChild(btn); row.appendChild(later);
+  box.appendChild(head); box.appendChild(ta); box.appendChild(row);
+  list.appendChild(box);
+  openModal('modalWa');
+};
+
 window.openWaUpdate = async function(onlyId){
   const { collection, getDocs, query, orderBy } = window._fbFns;
   const list = document.getElementById('waList');
@@ -1158,10 +1194,12 @@ window.saveJob = async function() {
       }
       await setDoc(doc(window._db, 'konig_progress', code), { car, brand, model, color, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       if (nowDone) justDone = code;
+      else if (isCoatingJob(service)) window._welcomeJob = { id: code, car, plate, wa, service };
     }
     closeModal('modalJob');
     loadJobs();
     if (justDone) window.openWaUpdate(justDone);
+    else if (window._welcomeJob) { const wj = window._welcomeJob; window._welcomeJob = null; window.openWelcome(wj); }
   } catch(e) {
     alert('Gagal simpan: ' + e.message);
   }
