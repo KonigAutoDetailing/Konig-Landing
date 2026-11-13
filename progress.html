@@ -760,10 +760,14 @@ window.openWaUpdate = async function(onlyId){
   const allJobs = [];
   snap.forEach(d => { const j = { id: d.id, ...d.data() }; allJobs.push(j); const done = (j.doneSteps||[]).includes('done');
     if(onlyId){ if(j.id === onlyId) jobs.push(j); return; }
-    if(done ? tsDay(j.updatedAt) === today : !isQuick(j)) jobs.push(j); });
+    if(done){ if((tsDay(j.doneAt) || tsDay(j.updatedAt)) === today) jobs.push(j); return; }
+    if(isQuick(j) || autoWashDone(j)) return;
+    // Coating/poles: update tiap 3 hari sejak mobil masuk / sejak update terakhir
+    const base = j.lastWaUpdate || tsDay(j.createdAt);
+    if (j.lastWaUpdate === today || (base && dayDiff(base, today) >= 3)) jobs.push(j); });
   list.textContent = '';
   const washDue = onlyId ? [] : washReminders(allJobs, today);
-  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada kendaraan aktif hari ini.</div>'; if(!onlyId) renderWashSection(list, washDue, today); return; }
+  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada update progres yang perlu dikirim hari ini.</div>'; if(!onlyId) renderWashSection(list, washDue, today); return; }
   jobs.forEach(j => {
     const sent = j.lastWaUpdate === today;
     const box = document.createElement('div');
