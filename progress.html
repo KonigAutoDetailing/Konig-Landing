@@ -67,6 +67,11 @@
     /* ── CUSTOMER VIEW ── */
     .track-wrap{width:100%;max-width:520px}
     .track-header{text-align:center;margin-bottom:32px}
+    .track-hello{margin-bottom:22px;animation:helloIn .7s ease both}
+    .track-hello-main{font-size:24px;font-weight:700;color:#fff;letter-spacing:.5px}
+    .track-hello-sub{font-size:13px;color:var(--muted);margin-top:4px}
+    @keyframes helloIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+    @media (prefers-reduced-motion:reduce){.track-hello{animation:none}}
     .track-code{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:4px;color:var(--purpleB);margin-bottom:4px}
     .track-car{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:var(--white);line-height:1}
     .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--muted);margin-top:4px}
@@ -340,6 +345,7 @@
 <div class="screen" id="screenTrack">
   <div class="track-wrap">
     <div class="track-header">
+      <div class="track-hello" id="trackHello"><div class="track-hello-main" id="trackHelloMain"></div><div class="track-hello-sub" id="trackHelloSub"></div></div>
       <div class="track-code" id="trackCode">-</div>
       <div class="track-car" id="trackCar">-</div>
       <div class="track-plate" id="trackPlate">-</div>
@@ -653,7 +659,11 @@ function renderTrack(code, data) {
   document.getElementById('trackCar').textContent = data.car || '-';
   document.getElementById('trackPlate').textContent = data.plate || '-';
   document.getElementById('trackService').textContent = data.service || '-';
-  if (renderHistory(data)) { showScreen('screenTrack'); return; }
+  const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
+  const isHist = renderHistory(data);
+  document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa + '\u00a0👋' : 'Welcome to KONIG\u00a0👋';
+  document.getElementById('trackHelloSub').textContent = isHist ? 'Terima kasih sudah mempercayakan mobil Anda ke KONIG.' : 'Mobil Anda ada di tangan yang tepat. Pantau progresnya di sini.';
+  if (isHist) { showScreen('screenTrack'); return; }
   document.getElementById('trackLive').style.display = ''; document.getElementById('trackHistory').style.display = 'none';
 
   // Find current step
