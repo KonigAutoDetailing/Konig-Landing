@@ -132,6 +132,13 @@
       padding:12px 14px;outline:none;transition:border-color 0.2s;
     }
     .form-group input:focus{border-color:var(--purple)}
+    .modal-box, .modal-box *{box-sizing:border-box}
+    .modal-box{overflow-x:hidden}
+    .form-group input{width:100%;min-width:0}
+    #modalJob input[type=text]{text-transform:uppercase}
+    #modalJob input[type=text]::placeholder{text-transform:none}
+    .form-row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+    @media(max-width:640px){ .modal-box{padding:20px 16px} }
     .btn-login{
       width:100%;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;
       letter-spacing:3px;text-transform:uppercase;color:var(--white);background:var(--purple);
@@ -396,18 +403,30 @@
       <button type="button" class="btn-new" style="width:100%;margin-top:8px;padding:12px" onclick="openScanner()">📷 Scan QR Stiker</button>
       <div id="jobCodeError" style="display:none;color:var(--red);font-size:12px;margin-top:4px">Kode sudah dipakai atau tidak valid</div>
     </div>
+    <input type="hidden" id="jobCar"/>
     <div class="form-group">
-      <label>Merk & Model Mobil</label>
-      <input type="text" id="jobCar" placeholder="Toyota Camry 2022"/>
+      <label>Merk Mobil</label>
+      <input type="text" id="jobBrand" list="brandList" placeholder="Toyota" autocomplete="off" oninput="updateModelList()"/>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="form-row2">
+      <div class="form-group">
+        <label>Tipe / Model</label>
+        <input type="text" id="jobModel" list="modelList" placeholder="Fortuner" autocomplete="off"/>
+      </div>
+      <div class="form-group">
+        <label>Warna</label>
+        <input type="text" id="jobColor" list="colorList" placeholder="Hitam" autocomplete="off"/>
+      </div>
+    </div>
+    <datalist id="brandList"></datalist><datalist id="modelList"></datalist><datalist id="colorList"></datalist>
+    <div class="form-row2">
       <div class="form-group">
         <label>Plat Nomor</label>
         <input type="text" id="jobPlate" placeholder="B 1234 ABC" style="text-transform:uppercase"/>
       </div>
       <div class="form-group">
-        <label>No. WhatsApp Customer</label>
-        <input type="text" id="jobWa" placeholder="0812xxxx"/>
+        <label>No. WhatsApp</label>
+        <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel"/>
       </div>
     </div>
     <div class="form-group" style="position:relative;">
@@ -425,7 +444,7 @@
     </div>
     <div class="form-group">
       <label>Catatan (opsional)</label>
-      <input type="text" id="jobNote" placeholder="Warna silver, ada minor scratch di kap"/>
+      <input type="text" id="jobNote" placeholder="Ada minor scratch di kap"/>
     </div>
 
     <div style="margin-top:20px">
@@ -643,7 +662,7 @@ window.loadJobs = async function() {
     return `<div class="job-card">
       <div>
         <div class="job-code">${j.id}</div>
-        <div class="job-car">${j.car || '-'} <span style="font-size:13px;color:var(--muted);font-family:'Barlow',sans-serif">${j.plate || ''}</span></div>
+        <div class="job-car">${j.car || '-'}${j.color ? ' · ' + j.color : ''} <span style="font-size:13px;color:var(--muted);font-family:'Barlow',sans-serif">${j.plate || ''}</span></div>
         <div class="job-service">${j.service || '-'}</div>
         <div class="job-date">WA: ${j.wa || '-'}</div>
         <div class="job-progress-mini">
@@ -968,6 +987,61 @@ async function handleScannedCode(code){
     if (err) err.style.display = snap.exists() ? 'block' : 'none';
   } catch(e) {}
 }
+// ── DATA MOBIL (autocomplete) ──
+const CAR_MODELS = {
+  'TOYOTA':['AVANZA','VELOZ','INNOVA','INNOVA ZENIX','FORTUNER','RUSH','RAIZE','YARIS','YARIS CROSS','VIOS','CAMRY','COROLLA ALTIS','COROLLA CROSS','C-HR','RAV4','ALPHARD','VELLFIRE','VOXY','HILUX','LAND CRUISER','AGYA','CALYA','SIENTA','HIACE','GR86','SUPRA','BZ4X'],
+  'HONDA':['BRIO','AMAZE','CITY','CITY HATCHBACK','CIVIC','CIVIC TYPE R','ACCORD','HR-V','WR-V','BR-V','CR-V','MOBILIO','ODYSSEY','JAZZ'],
+  'DAIHATSU':['AYLA','SIGRA','XENIA','TERIOS','ROCKY','GRAN MAX','LUXIO','SIRION'],
+  'SUZUKI':['ERTIGA','XL7','BALENO','IGNIS','S-PRESSO','JIMNY','GRAND VITARA','FRONX','APV','CARRY','SWIFT'],
+  'MITSUBISHI':['XPANDER','XPANDER CROSS','PAJERO SPORT','XFORCE','OUTLANDER','TRITON','L300','DESTINATOR'],
+  'NISSAN':['LIVINA','MAGNITE','KICKS','X-TRAIL','SERENA','NAVARA','TERRA'],
+  'MAZDA':['MAZDA2','MAZDA3','CX-3','CX-30','CX-5','CX-60','CX-8','CX-9','MX-5'],
+  'HYUNDAI':['CRETA','STARGAZER','SANTA FE','PALISADE','IONIQ 5','IONIQ 6','KONA','STARIA','TUCSON'],
+  'KIA':['SONET','SELTOS','CARENS','CARNIVAL','EV6','EV9','SPORTAGE'],
+  'WULING':['AIR EV','BINGUO EV','CLOUD EV','ALMAZ','CORTEZ','CONFERO','FORMO'],
+  'BYD':['ATTO 1','ATTO 3','DOLPHIN','SEAL','SEALION 7','M6','DENZA D9'],
+  'CHERY':['TIGGO 2','TIGGO 5X','TIGGO 7','TIGGO 8','OMODA 5','J6'],
+  'JAECOO':['J5','J7','J8'],
+  'MG':['ZS','HS','4 EV','5','CYBERSTER','VS'],
+  'BMW':['SERI 2','SERI 3','SERI 5','SERI 7','X1','X3','X5','X7','IX','I4','I7','M3','M4','Z4'],
+  'MERCEDES-BENZ':['A-CLASS','C-CLASS','E-CLASS','S-CLASS','GLA','GLB','GLC','GLE','GLS','G-CLASS','EQE','EQS','V-CLASS'],
+  'LEXUS':['UX','NX','RX','LX','LM','ES','IS'],
+  'AUDI':['A3','A4','A6','Q3','Q5','Q7','Q8','E-TRON'],
+  'VOLKSWAGEN':['GOLF','POLO','TIGUAN','ID.4'],
+  'PORSCHE':['MACAN','CAYENNE','911','TAYCAN','PANAMERA'],
+  'VOLVO':['XC40','XC60','XC90','EX30'],
+  'MINI':['COOPER','COUNTRYMAN','CLUBMAN'],
+  'SUBARU':['XV','FORESTER','BRZ','WRX'],
+  'ISUZU':['MU-X','D-MAX','PANTHER'],
+  'FORD':['RANGER','EVEREST','MUSTANG'],
+  'LAND ROVER':['DEFENDER','RANGE ROVER','RANGE ROVER SPORT','RANGE ROVER EVOQUE','DISCOVERY'],
+  'TESLA':['MODEL 3','MODEL Y'],
+  'GEELY':['EX5','STARRAY'],
+  'HAVAL':['H6','JOLION'],
+  'GWM':['TANK 300','TANK 500','ORA 03'],
+  'NETA':['V','X'],
+  'AION':['Y PLUS','V'],
+  'VINFAST':['VF 3','VF 5','VF 6','VF E34'],
+  'POLYTRON':['G3'],
+  'DFSK':['GLORY 560','SERES E1'],
+  'JEEP':['WRANGLER','GLADIATOR'],
+};
+const CAR_COLORS = ['HITAM','PUTIH','PEARL WHITE','SILVER','ABU-ABU','ABU-ABU GELAP','MERAH','MAROON','BIRU','NAVY','HIJAU','KUNING','ORANYE','COKLAT','GOLD','CHAMPAGNE','UNGU','HITAM DOFF','ABU-ABU DOFF','TWO TONE'];
+function fillList(id, arr){ const dl = document.getElementById(id); if (dl) dl.innerHTML = arr.map(x => '<option value="' + x + '"></option>').join(''); }
+window.updateModelList = function(){
+  const b = document.getElementById('jobBrand').value.trim().toUpperCase();
+  const key = Object.keys(CAR_MODELS).find(k => k === b) || Object.keys(CAR_MODELS).find(k => b && k.startsWith(b));
+  fillList('modelList', key ? CAR_MODELS[key] : []);
+};
+fillList('brandList', Object.keys(CAR_MODELS));
+fillList('colorList', CAR_COLORS);
+function setCarFields(d){
+  document.getElementById('jobBrand').value = d.brand || '';
+  document.getElementById('jobModel').value = d.brand ? (d.model || '') : (d.model || d.car || '');
+  document.getElementById('jobColor').value = d.color || '';
+  window.updateModelList();
+}
+
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
   document.getElementById('editJobId').value = '';
@@ -976,6 +1050,7 @@ window.openNewJobModal = function() {
   document.getElementById('jobCodeError').style.display = 'none';
   document.getElementById('jobCodeGroup').style.display = '';
   document.getElementById('jobCar').value = '';
+  setCarFields({});
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
   selectedServices = [];
@@ -996,6 +1071,7 @@ window.openEditJobModal = async function(id) {
   document.getElementById('modalJobTitle').textContent = 'UPDATE PROGRESS KENDARAAN';
   document.getElementById('jobCodeGroup').style.display = 'none';
   document.getElementById('jobCar').value = d.car || '';
+  setCarFields(d);
   document.getElementById('jobPlate').value = d.plate || '';
   document.getElementById('jobWa').value = d.wa || '';
   selectedServices = d.service ? d.service.split(', ').filter(Boolean) : [];
@@ -1038,14 +1114,17 @@ window.toggleStep = function(id) {
 // ── SAVE JOB ──
 window.saveJob = async function() {
   const { doc, setDoc, updateDoc, serverTimestamp } = window._fbFns;
-  const car = document.getElementById('jobCar').value.trim();
+  const brand = document.getElementById('jobBrand').value.trim().toUpperCase();
+  const model = document.getElementById('jobModel').value.trim().toUpperCase();
+  const color = document.getElementById('jobColor').value.trim().toUpperCase();
+  const car = [brand, model].filter(Boolean).join(' ');
   const plate = document.getElementById('jobPlate').value.trim().toUpperCase();
   const wa = document.getElementById('jobWa').value.trim();
   const service = document.getElementById('jobService').value.trim();
-  const note = document.getElementById('jobNote').value.trim();
+  const note = document.getElementById('jobNote').value.trim().toUpperCase();
   const editId = document.getElementById('editJobId').value;
 
-  if (!car) { alert('Isi nama kendaraan'); return; }
+  if (!car) { alert('Isi merk atau tipe mobil'); return; }
 
   const btn = document.getElementById('btnSaveJob');
   btn.textContent = 'Menyimpan...'; btn.disabled = true;
@@ -1064,7 +1143,7 @@ window.saveJob = async function() {
     if (editId) {
       let wasDone = false;
       try { const prev = await window._fbFns.getDoc(doc(window._db, 'konig_progress', editId)); const pd = prev.exists() ? prev.data() : {}; wasDone = (pd.doneSteps || []).includes('done') || pd.activeStep === 'done'; } catch(e) {}
-      const upd = { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
+      const upd = { car, brand, model, color, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
       if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); justDone = editId; }
       await updateDoc(doc(window._db, 'konig_progress', editId), upd);
     } else {
@@ -1077,7 +1156,7 @@ window.saveJob = async function() {
         document.getElementById('jobCodeError').style.display = 'block';
         btn.textContent = 'Simpan →'; btn.disabled = false; return;
       }
-      await setDoc(doc(window._db, 'konig_progress', code), { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
+      await setDoc(doc(window._db, 'konig_progress', code), { car, brand, model, color, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       if (nowDone) justDone = code;
     }
     closeModal('modalJob');
