@@ -664,6 +664,8 @@ function isQuick(j){
   const sv = String(j.service||'').split(', ').filter(Boolean);
   return sv.length > 0 && sv.every(x => /Wash|Interior|Engine|Window|Express Polish/i.test(x));
 }
+const REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
+const REVIEW_TEXT = '\n\nKalau berkenan, boleh minta tolong kasih review Google buat KONIG di sini ya 🙏\n' + REVIEW_URL + '\nSetiap review dari Kakak sangat berharga buat perkembangan KONIG.';
 // Link tracking hanya untuk Coating (bukan Window Coating) & Premium Polish
 function needsTrackLink(j){
   return String(j.service||'').split(', ').some(x => (/Coating/i.test(x) && !/Window/i.test(x)) || /Premium Polish/i.test(x));
@@ -675,10 +677,10 @@ function waMessage(j){
   const url = location.origin + '/progress?code=' + j.id;
   const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
   if(done && isQuick(j)){
-    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + (j.service ? 'Layanan: ' + j.service + '\n' : '') + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + (needsTrackLink(j) ? '\n\nDetailnya: ' + url : '') + '\n\n— KONIG Auto Detailing';
+    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + (j.service ? 'Layanan: ' + j.service + '\n' : '') + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + (needsTrackLink(j) ? '\n\nDetailnya: ' + url : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   if(done){
-    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\n' + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + (needsTrackLink(j) ? ' Detailnya bisa dicek di sini:\n' + url : '') + '\n\n— KONIG Auto Detailing';
+    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\n' + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + (needsTrackLink(j) ? ' Detailnya bisa dicek di sini:\n' + url : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrian';
   let msg = 'Halo Kak, update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
