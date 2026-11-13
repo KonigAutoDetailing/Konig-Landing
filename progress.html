@@ -74,6 +74,7 @@
     @media (prefers-reduced-motion:reduce){.track-hello{animation:none}}
     .track-code{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:4px;color:var(--purpleB);margin-bottom:4px}
     .track-car{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:var(--white);line-height:1}
+    .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
     .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--muted);margin-top:4px}
     .track-service{font-size:13px;color:var(--muted);margin-top:8px}
 
@@ -348,6 +349,7 @@
       <div class="track-hello" id="trackHello"><div class="track-hello-main" id="trackHelloMain"></div><div class="track-hello-sub" id="trackHelloSub"></div></div>
       <div class="track-code" id="trackCode">-</div>
       <div class="track-car" id="trackCar">-</div>
+      <div class="track-color" id="trackColor" style="display:none"></div>
       <div class="track-plate" id="trackPlate">-</div>
       <div class="track-service" id="trackService">-</div>
     </div>
@@ -658,6 +660,10 @@ function renderHistory(data){
 function renderTrack(code, data) {
   document.getElementById('trackCode').textContent = 'Kode: ' + code;
   document.getElementById('trackCar').textContent = data.car || '-';
+  const tc = document.getElementById('trackColor');
+  const warna = String(data.color||'').trim();
+  tc.textContent = warna ? 'Warna: ' + titleCase(warna) : '';
+  tc.style.display = warna ? 'block' : 'none';
   document.getElementById('trackPlate').textContent = data.plate || '-';
   document.getElementById('trackService').textContent = data.service || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
