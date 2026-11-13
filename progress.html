@@ -368,7 +368,6 @@
         <div style="font-size:13px;color:var(--muted)" id="jobCount">0 kendaraan aktif</div>
       </div>
       <div class="admin-actions">
-        <button class="btn-new scan-btn" onclick="openScanner()">📷 Scan QR Kendaraan</button>
         <div class="action-row">
           <button class="btn-new act-btn" onclick="openNewJobModal()">+ Kendaraan Baru</button>
           <button class="btn-new act-btn" style="background:#25D366" onclick="openWaUpdate()">📲 Update Sore</button>
@@ -394,6 +393,7 @@
           style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;text-transform:uppercase;flex:1"
           oninput="this.value=this.value.toUpperCase()"/>
       </div>
+      <button type="button" class="btn-new" style="width:100%;margin-top:8px;padding:12px" onclick="openScanner()">📷 Scan QR Stiker</button>
       <div id="jobCodeError" style="display:none;color:var(--red);font-size:12px;margin-top:4px">Kode sudah dipakai atau tidak valid</div>
     </div>
     <div class="form-group">
@@ -959,10 +959,14 @@ window.closeScanner = function(){
   document.getElementById('scanOverlay').classList.remove('open');
 };
 async function handleScannedCode(code){
-  const { doc, getDoc } = window._fbFns;
-  const snap = await getDoc(doc(window._db, 'konig_progress', code));
-  if (snap.exists()) { window.openEditJobModal(code); }
-  else { window.openNewJobModal(); document.getElementById('jobCode').value = code; }
+  const inp = document.getElementById('jobCode');
+  inp.value = code;
+  const err = document.getElementById('jobCodeError');
+  try {
+    const { doc, getDoc } = window._fbFns;
+    const snap = await getDoc(doc(window._db, 'konig_progress', code));
+    if (err) err.style.display = snap.exists() ? 'block' : 'none';
+  } catch(e) {}
 }
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
