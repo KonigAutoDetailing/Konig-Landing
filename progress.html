@@ -74,8 +74,18 @@
 
     /* Progress bar */
     .prog-bar-wrap{margin:28px 0 8px}
-    .prog-bar-bg{background:var(--panel);border:1px solid var(--border);height:12px;border-radius:6px;overflow:hidden}
-    .prog-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--purple),var(--purpleB));transition:width 1s ease;width:0%}
+    .prog-bar-bg{background:var(--panel);border:1px solid var(--border);height:16px;border-radius:8px;overflow:hidden;position:relative}
+    .prog-bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--purple),var(--purpleB));transition:width 1.8s cubic-bezier(.22,1,.36,1);width:0%;position:relative;overflow:hidden}
+    .prog-bar-fill.working{background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.18) 0 10px,transparent 10px 20px),linear-gradient(90deg,var(--purple),var(--purpleB));background-size:28px 100%,100% 100%;animation:barStripes 1s linear infinite}
+    .prog-bar-fill.working::after{content:'';position:absolute;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:barShine 2.2s ease-in-out infinite}
+    .prog-bar-fill.finished{background:linear-gradient(90deg,#22c55e,#4ade80)}
+    @keyframes barStripes{from{background-position:0 0,0 0}to{background-position:28px 0,0 0}}
+    @keyframes barShine{0%{left:-40%}100%{left:110%}}
+    .step.active .step-dot{animation:dotPulse 1.6s ease-in-out infinite}
+    @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(176,106,255,.55)}50%{box-shadow:0 0 0 10px rgba(176,106,255,0)}}
+    .step{opacity:0;transform:translateY(8px);animation:stepIn .5s ease forwards}
+    @keyframes stepIn{to{opacity:1;transform:none}}
+    @media (prefers-reduced-motion: reduce){.prog-bar-fill,.prog-bar-fill::after,.step,.step.active .step-dot{animation:none!important;transition:none!important;opacity:1;transform:none}}
     .prog-pct{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;color:var(--purpleB);text-align:center;margin-top:12px}
     .prog-status{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--white);text-align:center;margin-bottom:4px}
     .prog-note{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px;line-height:1.6}
@@ -603,8 +613,13 @@ function renderTrack(code, data) {
   }
   if (doneSteps.includes('done')) { pct = 100; statusName = 'Selesai & Siap Diambil'; }
 
-  document.getElementById('progBarFill').style.width = pct + '%';
-  document.getElementById('progPct').textContent = pct + '%';
+  const bar = document.getElementById('progBarFill');
+  bar.classList.toggle('working', pct < 100); bar.classList.toggle('finished', pct >= 100);
+  bar.style.width = '0%';
+  requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.width = pct + '%'; }));
+  const pctEl = document.getElementById('progPct'), t0 = performance.now(), dur = 1600;
+  const countUp = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); pctEl.textContent = Math.round(pct * e) + '%'; if (k < 1) requestAnimationFrame(countUp); };
+  requestAnimationFrame(countUp);
   document.getElementById('progStatus').textContent = statusName;
   document.getElementById('progNote').textContent = note || (pct === 100 ? 'Kendaraan sudah selesai dan siap untuk diambil. 🎉' : 'Kendaraan sedang dalam proses pengerjaan.');
 
@@ -616,6 +631,7 @@ function renderTrack(code, data) {
     const isActive = s.id === activeStep && !isDone;
     const div = document.createElement('div');
     div.className = 'step ' + (isDone ? 'done' : isActive ? 'active' : 'pending');
+    div.style.animationDelay = (stepsEl.children.length * 0.08) + 's';
     div.innerHTML = `
       <div class="step-dot">${isDone ? '✓' : isActive ? s.icon : s.icon}</div>
       <div class="step-info">
