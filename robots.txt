@@ -4,4 +4,4 @@ Disallow: /inspection
 Disallow: /print-qr
 Allow: /
 
-Sitemap: https://konigautodetailing.com/sitemap.xml
+Sitemap: https://www.konigautodetailing.com/sitemap.xml
