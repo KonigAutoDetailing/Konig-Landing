@@ -74,6 +74,18 @@
 
     /* Progress bar */
     .prog-bar-wrap{margin:28px 0 8px}
+    .hist-badge{display:inline-block;margin:26px 0 16px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:3px;color:var(--success);border:1px solid var(--success);padding:6px 12px}
+    .hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .hist-item{background:var(--panel);border:1px solid var(--border);padding:14px}
+    .hist-k{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .hist-v{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;color:var(--white)}
+    .hist-tags{display:flex;flex-wrap:wrap;gap:6px}
+    .hist-tags span{background:var(--purple);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;padding:6px 10px}
+    .hist-review{margin-top:24px;padding:20px;border:1px solid rgba(250,204,21,.35);background:rgba(250,204,21,.06);text-align:center}
+    .hist-review-t{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--white)}
+    .hist-review-d{font-size:13px;color:var(--text);margin:4px 0 14px}
+    .hist-review-btn{display:inline-block;background:#facc15;color:#111;text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;font-size:15px;padding:12px 20px}
+    .hist-wa{display:block;text-align:center;margin-top:14px;color:#25D366;text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1px;font-size:14px;border:1px solid rgba(37,211,102,.4);padding:12px}
     .prog-bar-bg{background:var(--panel);border:1px solid var(--border);height:16px;border-radius:8px;overflow:hidden;position:relative}
     .prog-bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--purple),var(--purpleB));transition:width 1.8s cubic-bezier(.22,1,.36,1);width:0%;position:relative;overflow:hidden}
     .prog-bar-fill.working{background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.18) 0 10px,transparent 10px 20px),linear-gradient(90deg,var(--purple),var(--purpleB));background-size:28px 100%,100% 100%;animation:barStripes 1s linear infinite}
@@ -334,6 +346,7 @@
       <div class="track-service" id="trackService">-</div>
     </div>
 
+    <div id="trackLive">
     <div class="prog-bar-wrap">
       <div class="prog-bar-bg"><div class="prog-bar-fill" id="progBarFill"></div></div>
     </div>
@@ -342,6 +355,25 @@
     <div class="prog-note" id="progNote">Memuat data...</div>
 
     <div class="steps" id="trackSteps"></div>
+    </div>
+
+    <div id="trackHistory" style="display:none">
+      <div class="hist-badge">📁 RIWAYAT PENGERJAAN</div>
+      <div class="hist-grid">
+        <div class="hist-item"><div class="hist-k">Mobil masuk</div><div class="hist-v" id="histIn">-</div></div>
+        <div class="hist-item"><div class="hist-k">Selesai</div><div class="hist-v" id="histOut">-</div></div>
+        <div class="hist-item"><div class="hist-k">Lama pengerjaan</div><div class="hist-v" id="histDur">-</div></div>
+        <div class="hist-item"><div class="hist-k">Warna</div><div class="hist-v" id="histColor">-</div></div>
+      </div>
+      <div class="hist-k" style="margin-top:18px">Layanan & produk</div>
+      <div class="hist-tags" id="histServices"></div>
+      <div class="hist-review">
+        <div class="hist-review-t">Gimana hasilnya? 😊</div>
+        <div class="hist-review-d">Setiap review sangat berharga buat perkembangan KONIG.</div>
+        <a id="histReviewBtn" class="hist-review-btn" target="_blank" rel="noopener">⭐ Tulis Review di Google</a>
+      </div>
+      <a class="hist-wa" href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20mau%20booking%20lagi" target="_blank" rel="noopener">💬 Booking lagi via WhatsApp</a>
+    </div>
 
     <div class="photos-section" id="photosSection" style="display:none">
       <div class="photos-title">Dokumentasi</div>
@@ -592,11 +624,37 @@ window.lookupCode = async function() {
   }
 }
 
+// Setelah 5 hari sejak selesai, halaman customer berubah jadi riwayat
+function toDateObj(t){ try { return t && t.toDate ? t.toDate() : (t ? new Date(t) : null); } catch(e) { return null; } }
+function fmtTgl(d){ return d ? d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta' }) : '-'; }
+function renderHistory(data){
+  const done = (data.doneSteps||[]).includes('done');
+  const out = toDateObj(data.doneAt) || (done ? toDateObj(data.updatedAt) : null);
+  if (!done || !out || (Date.now() - out.getTime()) < 5 * 864e5) return false;
+  const inn = toDateObj(data.createdAt);
+  document.getElementById('trackLive').style.display = 'none';
+  document.getElementById('trackHistory').style.display = '';
+  document.getElementById('histIn').textContent = fmtTgl(inn);
+  document.getElementById('histOut').textContent = fmtTgl(out);
+  let dur = '-';
+  if (inn) { const days = Math.max(0, Math.round((out - inn) / 864e5)); dur = days < 1 ? 'Selesai di hari yang sama' : days + ' hari'; }
+  document.getElementById('histDur').textContent = dur;
+  document.getElementById('histColor').textContent = data.color || '-';
+  const tags = document.getElementById('histServices'); tags.textContent = '';
+  String(data.service||'').split(', ').filter(Boolean).forEach(x => { const sp = document.createElement('span'); sp.textContent = x; tags.appendChild(sp); });
+  if (!tags.children.length) tags.textContent = '-';
+  document.getElementById('histReviewBtn').href = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
+  const ph = document.getElementById('photosSection'); if (ph) ph.style.display = 'none';
+  return true;
+}
+
 function renderTrack(code, data) {
   document.getElementById('trackCode').textContent = 'Kode: ' + code;
   document.getElementById('trackCar').textContent = data.car || '-';
   document.getElementById('trackPlate').textContent = data.plate || '-';
   document.getElementById('trackService').textContent = data.service || '-';
+  if (renderHistory(data)) { showScreen('screenTrack'); return; }
+  document.getElementById('trackLive').style.display = ''; document.getElementById('trackHistory').style.display = 'none';
 
   // Find current step
   const steps = window.stepsFor(data.service);
