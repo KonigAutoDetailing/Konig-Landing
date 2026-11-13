@@ -418,15 +418,36 @@ window.deleteGeneralPhoto = function(i) {
   renderGeneralPhotos();
 };
 
+// ── KOMPRESI FOTO (maks 1600px, JPEG ~75%) ──
+async function compressImage(file, maxSide = 1600, quality = 0.75) {
+  try {
+    if (!file.type || !file.type.startsWith('image/')) return file;
+    let src;
+    if (window.createImageBitmap) {
+      try { src = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch(e) { src = await createImageBitmap(file); }
+    } else {
+      src = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
+    }
+    const w0 = src.width, h0 = src.height, scale = Math.min(1, maxSide / Math.max(w0, h0));
+    const w = Math.round(w0 * scale), h = Math.round(h0 * scale);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    c.getContext('2d').drawImage(src, 0, 0, w, h);
+    const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', quality));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } catch(e) { return file; }
+}
+
 window.handleGeneralFiles = async function(e) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
   showLoading('Mengupload foto...');
   try {
     for (const file of files) {
-      const path = `inspection/${jobCode}/general/${Date.now()}_${file.name}`;
+      const small = await compressImage(file);
+      const path = `inspection/${jobCode}/general/${Date.now()}_${small.name}`;
       const storRef = ref(storage, path);
-      await uploadBytes(storRef, file);
+      await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
       const url = await getDownloadURL(storRef);
       inspData.general.push({ url, path });
     }
@@ -630,9 +651,10 @@ window.handlePanelFiles = async function(e) {
   row.appendChild(spinner);
   try {
     for (const file of files) {
-      const path = `inspection/${jobCode}/${activePanel}/${Date.now()}_${file.name}`;
+      const small = await compressImage(file);
+      const path = `inspection/${jobCode}/${activePanel}/${Date.now()}_${small.name}`;
       const storRef = ref(storage, path);
-      await uploadBytes(storRef, file);
+      await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
       const url = await getDownloadURL(storRef);
       if (!inspData.panels[activePanel]) inspData.panels[activePanel] = {};
       if (!inspData.panels[activePanel].photos) inspData.panels[activePanel].photos = [];
