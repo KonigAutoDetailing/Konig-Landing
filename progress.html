@@ -483,6 +483,18 @@ window.STEPS = [
   { id: 'qc',         name: 'Final QC',              pct: 95,  icon: '✨' },
   { id: 'done',       name: 'Ready for Pickup',      pct: 100, icon: '🎉' },
 ];
+// Layanan cepat (Premium Wash, Interior, Window Coating, Engine) cukup 3 tahap
+window.SIMPLE_STEPS = [
+  { id: 'received', name: 'Diterima',   pct: 5,   icon: '📋' },
+  { id: 'working',  name: 'Pengerjaan', pct: 50,  icon: '🧽' },
+  { id: 'done',     name: 'Selesai',    pct: 100, icon: '🎉' },
+];
+window.isSimpleService = function(service){
+  const sv = String(service||'').split(', ').filter(Boolean);
+  return sv.length > 0 && sv.every(x => /Wash|Interior|Window|Engine/i.test(x));
+};
+window.stepsFor = function(service){ return window.isSimpleService(service) ? window.SIMPLE_STEPS : window.STEPS; };
+window.ALL_STEP_IDS = [...new Set([...window.STEPS, ...window.SIMPLE_STEPS].map(x => x.id))];
 
 // ── GENERATE CODE ──
 function genCode() {
@@ -524,7 +536,7 @@ function renderTrack(code, data) {
   document.getElementById('trackService').textContent = data.service || '-';
 
   // Find current step
-  const steps = window.STEPS;
+  const steps = window.stepsFor(data.service);
   const doneSteps = data.doneSteps || [];
   const activeStep = data.activeStep || null;
 
@@ -604,7 +616,7 @@ window.loadJobs = async function() {
   }
 
   list.innerHTML = jobs.map(j => {
-    const steps = window.STEPS;
+    const steps = window.stepsFor(j.service);
     const doneSteps = j.doneSteps || [];
     const activeStep = j.activeStep || null;
     const s = steps.find(x => x.id === activeStep);
@@ -639,7 +651,7 @@ window.loadJobs = async function() {
 
 
 // ── UPDATE SORE VIA WA ──
-const STEP_ID = { received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'Paint correction (poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
+const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'Paint correction (poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
 function waNumber(raw){
   let n = String(raw||'').replace(/[^0-9]/g,'');
   if(n.startsWith('0')) n = '62' + n.slice(1);
@@ -653,7 +665,7 @@ function isQuick(j){
   return sv.length > 0 && sv.every(x => /Wash|Interior|Engine|Window|Express Polish/i.test(x));
 }
 function waMessage(j){
-  const steps = window.STEPS, done = (j.doneSteps||[]).includes('done');
+  const steps = window.stepsFor(j.service), done = (j.doneSteps||[]).includes('done');
   const s = steps.find(x => x.id === j.activeStep);
   const pct = done ? 100 : (s ? s.pct : 0);
   const url = location.origin + '/progress?code=' + j.id;
@@ -683,7 +695,7 @@ function autoWashDone(j){
 }
 window.autoCloseWashJobs = async function(jobs){
   const { doc, updateDoc } = window._fbFns;
-  const allSteps = window.STEPS.map(s => s.id);
+  const allSteps = window.ALL_STEP_IDS;
   let n = 0;
   for (const j of jobs) {
     if (!autoWashDone(j)) continue;
@@ -861,7 +873,7 @@ window.openEditJobModal = async function(id) {
 
 function renderStepsEditor(doneSteps, activeStep) {
   const el = document.getElementById('stepsEditor');
-  el.innerHTML = window.STEPS.map(s => {
+  el.innerHTML = window.stepsFor(document.getElementById('jobService').value).map(s => {
     const isDone = doneSteps.includes(s.id);
     const isActive = s.id === activeStep && !isDone;
     return `<div class="step-row ${isDone ? 'done-row' : isActive ? 'active-row' : ''}" id="srow_${s.id}" onclick="toggleStep('${s.id}')" style="cursor:pointer;">
@@ -876,8 +888,9 @@ function renderStepsEditor(doneSteps, activeStep) {
   window._editorActiveStep = activeStep;
 }
 
+window.refreshStepsEditor = function(){ const ids = window.stepsFor(document.getElementById('jobService').value).map(x=>x.id); const a = ids.includes(window._editorActiveStep) ? window._editorActiveStep : null; renderStepsEditor((window._editorDoneSteps||[]).filter(x => ids.includes(x)), a); };
 window.toggleStep = function(id) {
-  const steps = window.STEPS;
+  const steps = window.stepsFor(document.getElementById('jobService').value);
   const idx = steps.findIndex(s => s.id === id);
 
   // Mark all up to this step as done, this as active
@@ -945,7 +958,7 @@ window.saveJob = async function() {
 window.markDone = async function(id) {
   if (!confirm('Tandai kendaraan ini sudah selesai?')) return;
   const { doc, updateDoc, serverTimestamp } = window._fbFns;
-  const allSteps = window.STEPS.map(s => s.id);
+  const allSteps = window.ALL_STEP_IDS;
   await updateDoc(doc(window._db, 'konig_progress', id), {
     doneSteps: allSteps, activeStep: 'done', updatedAt: serverTimestamp(), doneAt: serverTimestamp()
   });
@@ -1094,6 +1107,7 @@ function renderServiceTags() {
     </span>`
   ).join('');
   document.getElementById('jobService').value = selectedServices.join(', ');
+  if (window.refreshStepsEditor) window.refreshStepsEditor();
 }
 
 function removeService(i) {
