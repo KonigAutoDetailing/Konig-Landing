@@ -786,6 +786,65 @@ function renderWashSection(list, due, today){
   });
 }
 
+// ── REMINDER REVIEW GOOGLE (1x per customer, 3–14 hari setelah selesai) ──
+function custKey(j){ return waNumber(j.wa) || String(j.plate||'').replace(/\s+/g,'').toUpperCase(); }
+function reviewReminders(jobs, today){
+  const asked = new Set(), latest = {};
+  jobs.forEach(j => {
+    const k = custKey(j); if (!k) return;
+    if (j.reviewed || j.reviewReminder) asked.add(k);
+    const done = (j.doneSteps||[]).includes('done') || autoWashDone(j);
+    if (!done) return;
+    const d = tsDay(j.doneAt) || (autoWashDone(j) ? tsDay(j.createdAt) : tsDay(j.updatedAt));
+    if (d && (!latest[k] || d > latest[k].d)) latest[k] = { j, d };
+  });
+  return Object.entries(latest)
+    .filter(([k, x]) => !asked.has(k) && dayDiff(x.d, today) >= 3 && dayDiff(x.d, today) <= 14)
+    .map(([k, x]) => ({ j: x.j, age: dayDiff(x.d, today) }))
+    .sort((a, b) => b.age - a.age);
+}
+function reviewMessage(r){
+  return 'Halo Kak, semoga mobil ' + (r.j.car || '') + ' masih kinclong ya 😊\n\nKalau sempat dan berkenan, boleh share pengalamannya di Google di sini:\n' + REVIEW_URL + '\n\nKalau sudah, makasih banyak ya Kak 🙏\n\n— KONIG Auto Detailing';
+}
+function renderReviewSection(list, due, today){
+  const h = document.createElement('div');
+  h.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin:22px 0 4px";
+  h.textContent = '⭐ REMINDER REVIEW GOOGLE (' + due.length + ')';
+  const d = document.createElement('div'); d.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:10px';
+  d.textContent = 'Dikirim 1x saja per customer, 3 hari setelah mobil selesai. Kalau customer sudah kasih review, tap "Sudah review".';
+  list.appendChild(h); list.appendChild(d);
+  if (!due.length) { const e = document.createElement('div'); e.style.cssText='color:var(--muted);font-size:13px;padding:6px 0 4px'; e.textContent = 'Tidak ada reminder review hari ini.'; list.appendChild(e); return; }
+  due.forEach(r => {
+    const j = r.j;
+    const box = document.createElement('div');
+    box.style.cssText = 'border:1px solid var(--border);border-left:3px solid #facc15;padding:14px;margin-bottom:12px';
+    const head = document.createElement('div');
+    head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
+    head.textContent = (j.car || '-') + ' ' + (j.plate || '') + ' · selesai ' + r.age + ' hari lalu';
+    const ta = document.createElement('textarea'); ta.value = reviewMessage(r); ta.rows = 6;
+    ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
+    const nomor = waNumber(j.wa);
+    const mark = async (fields, txt) => { box.style.opacity = '.5'; head.textContent += '  ✓ ' + txt; row.remove();
+      try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), fields); } catch(e) {} };
+    const btn = document.createElement('a');
+    btn.className = 'btn-sm'; btn.style.cssText = 'background:#25D366;color:#fff;text-decoration:none;border:none';
+    btn.textContent = nomor ? '💬 Kirim via WA' : 'Nomor WA kosong'; btn.target = '_blank'; btn.rel = 'noopener';
+    if (nomor) {
+      btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+      ta.oninput = () => { btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value); };
+      btn.onclick = () => mark({ reviewReminder: today }, 'terkirim');
+    }
+    const rev = document.createElement('button'); rev.className = 'btn-sm'; rev.textContent = 'Sudah review';
+    rev.onclick = () => mark({ reviewed: true, reviewReminder: today }, 'sudah review');
+    const skip = document.createElement('button'); skip.className = 'btn-sm'; skip.textContent = 'Lewati';
+    skip.onclick = () => mark({ reviewReminder: today }, 'dilewati');
+    row.appendChild(btn); row.appendChild(rev); row.appendChild(skip);
+    box.appendChild(head); box.appendChild(ta); box.appendChild(row);
+    list.appendChild(box);
+  });
+}
+
 window.openWaUpdate = async function(onlyId){
   const { collection, getDocs, query, orderBy } = window._fbFns;
   const list = document.getElementById('waList');
@@ -804,7 +863,8 @@ window.openWaUpdate = async function(onlyId){
     if (j.lastWaUpdate === today || (base && dayDiff(base, today) >= 3)) jobs.push(j); });
   list.textContent = '';
   const washDue = onlyId ? [] : washReminders(allJobs, today);
-  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada update progres yang perlu dikirim hari ini.</div>'; if(!onlyId) renderWashSection(list, washDue, today); return; }
+  const reviewDue = onlyId ? [] : reviewReminders(allJobs, today);
+  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada update progres yang perlu dikirim hari ini.</div>'; if(!onlyId){ renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); } return; }
   jobs.forEach(j => {
     const sent = j.lastWaUpdate === today;
     const box = document.createElement('div');
@@ -834,7 +894,7 @@ window.openWaUpdate = async function(onlyId){
     box.appendChild(head); box.appendChild(ta); box.appendChild(row);
     list.appendChild(box);
   });
-  if(!onlyId) renderWashSection(list, washDue, today);
+  if(!onlyId){ renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); }
 };
 // Buka otomatis lewat link ?update=sore (dari notifikasi jam 16:00)
 if (new URLSearchParams(location.search).get('update') === 'sore') {
