@@ -261,9 +261,17 @@
 
     .admin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .action-row{display:flex;gap:8px;align-items:stretch}
+    .scan-btn{background:#fff !important;color:#080810 !important}
+    #scanOverlay{position:fixed;inset:0;background:#000;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center}
+    #scanOverlay.open{display:flex}
+    #scanVideo{width:100%;max-width:520px;max-height:70vh;object-fit:cover}
+    .scan-frame{position:absolute;width:62vmin;height:62vmin;max-width:320px;max-height:320px;border:3px solid #b06aff;border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.45);pointer-events:none}
+    .scan-hint{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:1px;margin-top:16px;text-align:center;padding:0 20px}
+    .scan-close{position:absolute;top:18px;right:18px;background:rgba(255,255,255,.15);color:#fff;border:none;font-size:26px;width:44px;height:44px;border-radius:50%;cursor:pointer}
     .act-qr{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:10px 16px;text-decoration:none;white-space:nowrap;display:flex;align-items:center;justify-content:center}
     @media(max-width:640px){
       .admin-actions{width:100%;flex-direction:column;align-items:stretch}
+      .scan-btn{width:100%;padding:13px !important;font-size:13px !important}
       .action-row{display:grid;grid-template-columns:1.25fr 1.15fr .9fr;gap:6px;width:100%}
       .act-btn{padding:11px 4px !important;font-size:11px !important;letter-spacing:.5px !important;white-space:nowrap;text-align:center;justify-content:center}
       .admin-actions .btn-logout{align-self:flex-end;padding:6px 12px;font-size:10px}
@@ -360,6 +368,7 @@
         <div style="font-size:13px;color:var(--muted)" id="jobCount">0 kendaraan aktif</div>
       </div>
       <div class="admin-actions">
+        <button class="btn-new scan-btn" onclick="openScanner()">📷 Scan QR Kendaraan</button>
         <div class="action-row">
           <button class="btn-new act-btn" onclick="openNewJobModal()">+ Kendaraan Baru</button>
           <button class="btn-new act-btn" style="background:#25D366" onclick="openWaUpdate()">📲 Update Sore</button>
@@ -429,6 +438,12 @@
 </div>
 
 <!-- MODAL: QR Code -->
+<div id="scanOverlay">
+  <button class="scan-close" onclick="closeScanner()">×</button>
+  <video id="scanVideo" playsinline muted></video>
+  <div class="scan-frame"></div>
+  <div class="scan-hint" id="scanHint">Arahkan kamera ke stiker QR KONIG</div>
+</div>
 <div class="modal-overlay" id="modalWa">
   <div class="modal-box" style="max-width:560px">
     <button class="modal-close" onclick="closeModal('modalWa')">×</button>
@@ -899,6 +914,55 @@ window.openWaUpdate = async function(onlyId){
 // Buka otomatis lewat link ?update=sore (dari notifikasi jam 16:00)
 if (new URLSearchParams(location.search).get('update') === 'sore') {
   window.addEventListener('load', () => setTimeout(() => { if (localStorage.getItem('konig_admin')) window.openWaUpdate(); }, 1500));
+}
+
+// ── SCAN QR DI DALAM APP ──
+let _scanStream = null, _scanTimer = null, _detector = null;
+function loadJsQR(){ return new Promise((res, rej) => { if (window.jsQR) return res(); const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+function codeFromText(t){
+  t = String(t||'').trim();
+  try { const u = new URL(t); const c = u.searchParams.get('code'); if (c) return c.toUpperCase(); } catch(e) {}
+  return /^[A-Z0-9]{4,8}$/i.test(t) ? t.toUpperCase() : null;
+}
+window.openScanner = async function(){
+  const ov = document.getElementById('scanOverlay'), video = document.getElementById('scanVideo'), hint = document.getElementById('scanHint');
+  hint.textContent = 'Arahkan kamera ke stiker QR KONIG';
+  ov.classList.add('open');
+  try {
+    _scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+  } catch(e) { hint.textContent = 'Kamera tidak bisa dibuka. Izinkan akses kamera untuk app ini di pengaturan HP.'; return; }
+  video.srcObject = _scanStream; await video.play();
+  if ('BarcodeDetector' in window) { try { _detector = new BarcodeDetector({ formats: ['qr_code'] }); } catch(e) { _detector = null; } }
+  if (!_detector) { try { await loadJsQR(); } catch(e) { hint.textContent = 'Gagal memuat pemindai. Cek koneksi internet.'; return; } }
+  const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const tick = async () => {
+    if (!_scanStream) return;
+    let text = null;
+    try {
+      if (_detector) { const r = await _detector.detect(video); if (r && r[0]) text = r[0].rawValue; }
+      else if (video.videoWidth) {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0); const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const r = window.jsQR(img.data, img.width, img.height); if (r) text = r.data;
+      }
+    } catch(e) {}
+    const code = text && codeFromText(text);
+    if (code) { if (navigator.vibrate) navigator.vibrate(80); window.closeScanner(); handleScannedCode(code); return; }
+    if (text) hint.textContent = 'Ini bukan QR KONIG, coba stiker lain.';
+    _scanTimer = setTimeout(tick, 250);
+  };
+  tick();
+};
+window.closeScanner = function(){
+  clearTimeout(_scanTimer);
+  if (_scanStream) { _scanStream.getTracks().forEach(t => t.stop()); _scanStream = null; }
+  document.getElementById('scanOverlay').classList.remove('open');
+};
+async function handleScannedCode(code){
+  const { doc, getDoc } = window._fbFns;
+  const snap = await getDoc(doc(window._db, 'konig_progress', code));
+  if (snap.exists()) { window.openEditJobModal(code); }
+  else { window.openNewJobModal(); document.getElementById('jobCode').value = code; }
 }
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
