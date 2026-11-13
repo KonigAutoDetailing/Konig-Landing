@@ -3,7 +3,7 @@
   "short_name": "KONIG Progress",
   "description": "Tracker pengerjaan kendaraan KONIG Auto Detailing",
   "id": "/progress",
-  "start_url": "/progress",
+  "start_url": "/progress?admin=1",
   "scope": "/",
   "display": "standalone",
   "background_color": "#080810",

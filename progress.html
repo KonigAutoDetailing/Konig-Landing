@@ -492,8 +492,8 @@ window.lookupCode = async function() {
     const { doc, getDoc } = window._fbFns;
     const snap = await getDoc(doc(window._db, 'konig_progress', code));
     if (!snap.exists()) {
-      // QR belum terpakai → langsung buka form kendaraan baru
-      sessionStorage.setItem('konig_admin', '1');
+      // QR belum terpakai → form kendaraan baru (wajib login admin dulu)
+      if (!localStorage.getItem('konig_admin')) { window._pendingNewCode = code; showScreen('screenAdminLogin'); return; }
       showScreen('screenAdmin');
       loadJobs();
       window.openNewJobModal();
@@ -561,16 +561,17 @@ window.adminLogin = function() {
   document.getElementById('loginError').style.display = 'none';
 
   if (user === 'konig' && pass === '6406506') {
-    sessionStorage.setItem('konig_admin', '1');
+    localStorage.setItem('konig_admin', '1');
     showScreen('screenAdmin');
     loadJobs();
+    if (window._pendingNewCode) { const c = window._pendingNewCode; window._pendingNewCode = null; window.openNewJobModal(); document.getElementById('jobCode').value = c; }
   } else {
     document.getElementById('loginError').style.display = 'block';
   }
 }
 
 window.adminLogout = function() {
-  sessionStorage.removeItem('konig_admin');
+  localStorage.removeItem('konig_admin');
   showScreen('screenEnter');
 }
 
@@ -807,7 +808,7 @@ window.openWaUpdate = async function(onlyId){
 };
 // Buka otomatis lewat link ?update=sore (dari notifikasi jam 16:00)
 if (new URLSearchParams(location.search).get('update') === 'sore') {
-  window.addEventListener('load', () => setTimeout(() => { if (sessionStorage.getItem('konig_admin')) window.openWaUpdate(); }, 1500));
+  window.addEventListener('load', () => setTimeout(() => { if (localStorage.getItem('konig_admin')) window.openWaUpdate(); }, 1500));
 }
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
@@ -1008,7 +1009,7 @@ window.showScreen = function(id) {
 
 window.showAdmin = function(e) {
   e.preventDefault();
-  if (sessionStorage.getItem('konig_admin')) {
+  if (localStorage.getItem('konig_admin')) {
     showScreen('screenAdmin');
     loadJobs();
   } else {
@@ -1027,8 +1028,8 @@ const isAdmin = params.get('admin');
 if (urlCode) {
   document.getElementById('codeInput').value = urlCode;
   window.lookupCode();
-} else if (isAdmin || sessionStorage.getItem('konig_admin')) {
-  if (sessionStorage.getItem('konig_admin')) {
+} else if (isAdmin || localStorage.getItem('konig_admin')) {
+  if (localStorage.getItem('konig_admin')) {
     showScreen('screenAdmin');
     loadJobs();
   } else {
