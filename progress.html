@@ -259,6 +259,15 @@
     .empty-state{text-align:center;padding:48px 24px;color:var(--muted);font-size:14px}
     .empty-state .empty-icon{font-size:40px;margin-bottom:12px}
 
+    .admin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .action-row{display:flex;gap:8px;align-items:stretch}
+    .act-qr{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:10px 16px;text-decoration:none;white-space:nowrap;display:flex;align-items:center;justify-content:center}
+    @media(max-width:640px){
+      .admin-actions{width:100%;flex-direction:column;align-items:stretch}
+      .action-row{display:grid;grid-template-columns:1.25fr 1.15fr .9fr;gap:6px;width:100%}
+      .act-btn{padding:11px 4px !important;font-size:11px !important;letter-spacing:.5px !important;white-space:nowrap;text-align:center;justify-content:center}
+      .admin-actions .btn-logout{align-self:flex-end;padding:6px 12px;font-size:10px}
+    }
     @media(max-width:640px){
       .admin-header{flex-direction:column;align-items:flex-start}
       .job-card{grid-template-columns:1fr}
@@ -350,10 +359,12 @@
         <div class="admin-heading">KELOLA PROGRESS</div>
         <div style="font-size:13px;color:var(--muted)" id="jobCount">0 kendaraan aktif</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn-new" onclick="openNewJobModal()">+ Kendaraan Baru</button>
-        <button class="btn-new" style="background:#25D366" onclick="openWaUpdate()">📲 Update Sore</button>
-        <a href="/print-qr.html" target="_blank" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:10px 16px;text-decoration:none;white-space:nowrap">🖨️ Print QR</a>
+      <div class="admin-actions">
+        <div class="action-row">
+          <button class="btn-new act-btn" onclick="openNewJobModal()">+ Kendaraan Baru</button>
+          <button class="btn-new act-btn" style="background:#25D366" onclick="openWaUpdate()">📲 Update Sore</button>
+          <a href="/print-qr.html" target="_blank" class="act-btn act-qr">🖨️ Print QR</a>
+        </div>
         <button class="btn-logout" onclick="adminLogout()">Logout</button>
       </div>
     </div>
