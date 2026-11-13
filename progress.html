@@ -453,6 +453,7 @@
     </div>
 
     <button class="btn-save" id="btnSaveJob" onclick="saveJob()">Simpan →</button>
+    <button type="button" id="btnDeleteJob" onclick="deleteJob()" style="display:none;width:100%;margin-top:10px;background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.4);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer">🗑️ Hapus Mobil Ini</button>
   </div>
 </div>
 
@@ -491,7 +492,8 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getStorage, ref as sRef, listAll, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es",
@@ -505,7 +507,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window._db = db;
-window._fbFns = { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, orderBy, serverTimestamp };
+window._fbFns = { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp };
+window._storage = getStorage(app);
+window._stFns = { sRef, listAll, deleteObject };
 
 // ── STEPS CONFIG ──
 window.STEPS = [
@@ -1078,8 +1082,33 @@ function setCarFields(d){
   window.updateModelList();
 }
 
+// ── HAPUS MOBIL (data + semua foto inspeksi) ──
+async function deleteFolder(path){
+  const { sRef, listAll, deleteObject } = window._stFns;
+  const res = await listAll(sRef(window._storage, path));
+  await Promise.all(res.items.map(it => deleteObject(it).catch(() => {})));
+  for (const p of res.prefixes) await deleteFolder(p.fullPath);
+}
+window.deleteJob = async function(){
+  const id = document.getElementById('editJobId').value;
+  if (!id) return;
+  const car = document.getElementById('jobCar').value || [document.getElementById('jobBrand').value, document.getElementById('jobModel').value].join(' ');
+  if (!confirm('Hapus ' + (car.trim() || 'mobil ini') + ' (kode ' + id + ')?\n\nSemua data, progres, catatan, dan foto inspeksi mobil ini akan terhapus PERMANEN dan tidak bisa dikembalikan.')) return;
+  const btn = document.getElementById('btnDeleteJob');
+  btn.textContent = 'Menghapus...'; btn.disabled = true;
+  try {
+    try { await deleteFolder('inspection/' + id); } catch(e) { console.warn('hapus foto', e); }
+    const { doc, deleteDoc } = window._fbFns;
+    await deleteDoc(doc(window._db, 'konig_progress', id));
+    closeModal('modalJob');
+    loadJobs();
+  } catch(e) { alert('Gagal menghapus: ' + e.message); }
+  btn.textContent = '🗑️ Hapus Mobil Ini'; btn.disabled = false;
+};
+
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
+  document.getElementById('btnDeleteJob').style.display = 'none';
   document.getElementById('editJobId').value = '';
   document.getElementById('modalJobTitle').textContent = 'KENDARAAN BARU';
   document.getElementById('jobCode').value = '';
@@ -1098,6 +1127,7 @@ window.openNewJobModal = function() {
 }
 
 window.openEditJobModal = async function(id) {
+  document.getElementById('btnDeleteJob').style.display = 'block';
   const { doc, getDoc } = window._fbFns;
   const snap = await getDoc(doc(window._db, 'konig_progress', id));
   if (!snap.exists()) return;
