@@ -570,6 +570,7 @@ const db = getFirestore(app);
 window._db = db;
 window._fbFns = { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp };
 window._storage = getStorage(app);
+try { window._storage.maxOperationRetryTime = 10000; window._storage.maxUploadRetryTime = 60000; } catch(e) {}
 window._stFns = { sRef, listAll, deleteObject };
 
 // ── STEPS CONFIG ──
@@ -1202,11 +1203,16 @@ window.deleteJob = async function(){
   const btn = document.getElementById('btnDeleteJob');
   btn.textContent = 'Menghapus...'; btn.disabled = true;
   try {
-    try { await deleteFolder('inspection/' + id); } catch(e) { console.warn('hapus foto', e); }
     const { doc, deleteDoc } = window._fbFns;
-    await deleteDoc(doc(window._db, 'konig_progress', id));
+    // Hapus data dulu (cepat), foto inspeksi dihapus di belakang supaya tidak bikin nunggu
+    await Promise.race([
+      deleteDoc(doc(window._db, 'konig_progress', id)),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('koneksi lambat, coba lagi')), 15000))
+    ]);
+    window._jobsCache && (window._jobsCache = window._jobsCache.filter(j => j.id !== id));
     closeModal('modalJob');
     loadJobs();
+    Promise.race([deleteFolder('inspection/' + id), new Promise(r => setTimeout(r, 60000))]).catch(e => console.warn('hapus foto', e));
   } catch(e) { alert('Gagal menghapus: ' + e.message); }
   btn.textContent = '🗑️ Hapus Mobil Ini'; btn.disabled = false;
 };
