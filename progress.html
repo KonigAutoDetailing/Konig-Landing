@@ -888,9 +888,15 @@ window.saveJob = async function() {
   const now = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
   if (activeStep) stepTimes[activeStep] = now;
 
+  const nowDone = doneSteps.includes('done') || activeStep === 'done';
+  let justDone = null;
   try {
     if (editId) {
-      await updateDoc(doc(window._db, 'konig_progress', editId), { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() });
+      let wasDone = false;
+      try { const prev = await window._fbFns.getDoc(doc(window._db, 'konig_progress', editId)); const pd = prev.exists() ? prev.data() : {}; wasDone = (pd.doneSteps || []).includes('done') || pd.activeStep === 'done'; } catch(e) {}
+      const upd = { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
+      if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); justDone = editId; }
+      await updateDoc(doc(window._db, 'konig_progress', editId), upd);
     } else {
       const code = document.getElementById('jobCode').value.trim().toUpperCase();
       if (!code) { alert('Masukkan kode QR dari stiker'); btn.textContent = 'Simpan →'; btn.disabled = false; return; }
@@ -901,10 +907,12 @@ window.saveJob = async function() {
         document.getElementById('jobCodeError').style.display = 'block';
         btn.textContent = 'Simpan →'; btn.disabled = false; return;
       }
-      await setDoc(doc(window._db, 'konig_progress', code), { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      await setDoc(doc(window._db, 'konig_progress', code), { car, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
+      if (nowDone) justDone = code;
     }
     closeModal('modalJob');
     loadJobs();
+    if (justDone) window.openWaUpdate(justDone);
   } catch(e) {
     alert('Gagal simpan: ' + e.message);
   }
