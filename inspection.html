@@ -131,6 +131,11 @@
     .save-wrap{position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:rgba(8,8,16,0.97);border-top:1px solid var(--border);display:flex;gap:10px;z-index:50}
     .btn-save{flex:1;background:var(--purple);color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;border-radius:2px;transition:background 0.2s}
     .btn-save:hover{background:var(--purpleB)}
+    .picker-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+    .picker-btn{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;padding:12px 10px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;border-radius:3px;text-align:left}
+    .picker-btn:hover,.picker-btn.has{border-color:var(--purpleB);color:var(--white)}
+    .no-findings{text-align:center;color:var(--muted);font-size:14px;padding:18px 0}
+    .bs-remove{width:100%;background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.4);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer;border-radius:3px;margin-top:8px}
     .btn-save:disabled{background:#333;color:#666;cursor:not-allowed}
 
     /* ── TOAST ── */
@@ -165,8 +170,8 @@
 
   <!-- GENERAL PHOTOS -->
   <div class="general-section">
-    <div class="general-title">📷 Foto General</div>
-    <div class="general-desc">Foto kondisi umum kendaraan saat tiba — unlimited</div>
+    <div class="general-title">📷 Foto General <span style="font-size:13px;color:var(--muted);letter-spacing:1px">(opsional)</span></div>
+    <div class="general-desc">Boleh dilewati. Isi kalau perlu foto kondisi umum saat mobil tiba.</div>
     <div class="photo-row" id="generalPhotoRow">
       <button class="photo-add-btn" onclick="triggerUpload('general',null)">
         <span style="font-size:22px">+</span>
@@ -175,8 +180,16 @@
     </div>
   </div>
 
-  <!-- CAR DIAGRAM -->
-  <div class="diagram-wrap">
+  <!-- TEMUAN KONDISI -->
+  <div class="general-section">
+    <div class="general-title">⚠️ Temuan Kondisi</div>
+    <div class="general-desc">Isi HANYA kalau ada kondisi khusus (baret dalam, penyok, cat rusak, velg baret, dll). Pilih bagiannya, lalu foto.</div>
+    <button class="btn-save" style="width:100%;margin-top:6px" onclick="togglePicker()">+ Tambah Temuan</button>
+    <div class="picker-grid" id="pickerGrid" style="display:none"></div>
+  </div>
+
+  <!-- CAR DIAGRAM (disembunyikan, versi sederhana) -->
+  <div class="diagram-wrap" style="display:none">
     <div class="diagram-title">Tap panel untuk isi kondisi</div>
     <svg class="diagram-svg" viewBox="0 0 200 340" xmlns="http://www.w3.org/2000/svg" id="carDiagram">
       <rect class="car-panel" data-panel="bumper_depan" x="62" y="8" width="76" height="22" rx="8"/>
@@ -252,12 +265,12 @@
   </div>
   <div class="bs-body" id="bsBody">
     <!-- nav -->
-    <div class="bs-nav">
+    <div class="bs-nav" style="display:none">
       <button class="bs-nav-btn" id="bsPrev" onclick="navPanel(-1)">← Prev</button>
       <button class="bs-nav-btn" id="bsNext" onclick="navPanel(1)">Next →</button>
     </div>
     <!-- status -->
-    <div class="bs-label">Kondisi Panel</div>
+    <div class="bs-label">Jenis Kondisi</div>
     <div class="bs-status-btns" id="bsStatusBtns"></div>
     <!-- notes -->
     <div class="bs-label">Catatan</div>
@@ -267,7 +280,8 @@
     <div class="bs-photo-row" id="bsPhotoRow"></div>
     <div class="bs-photo-limit" id="bsPhotoStatus"></div>
     <!-- done -->
-    <button class="bs-done" onclick="closeSheet()">✓ Selesai</button>
+    <button class="bs-done" onclick="closeSheet()">✓ Simpan Temuan</button>
+    <button class="bs-remove" onclick="removeFinding()">Hapus temuan ini</button>
   </div>
 </div>
 
@@ -425,28 +439,23 @@ window.handleGeneralFiles = async function(e) {
   hideLoading();
 };
 
-// ── SUMMARY LIST ──
+// ── SUMMARY LIST (hanya temuan) ──
+function isFinding(pd) { return pd && ((pd.status && pd.status !== 'ok') || (pd.photos || []).length || (pd.note || '').trim()); }
 function renderSummaryList() {
   const list = document.getElementById('summaryList');
   list.innerHTML = '';
-  PANELS.forEach(p => {
+  const found = PANELS.filter(p => isFinding(inspData.panels[p.id]));
+  if (!found.length) {
+    list.innerHTML = '<div class="no-findings">Belum ada temuan. Kalau kondisi normal, tidak perlu isi apa-apa 👍</div>';
+  }
+  found.forEach(p => {
     const pd = inspData.panels[p.id] || {};
-    const status = pd.status || '';
     const photos = (pd.photos || []).length;
-    let badgeHtml, rowCls = '';
-    if (!status) {
-      badgeHtml = `<span class="sum-badge badge-empty">Belum dicek</span>`;
-    } else if (status === 'ok') {
-      badgeHtml = `<span class="sum-badge badge-ok">✓ Baik</span>`;
-      rowCls = ' is-ok';
-    } else {
-      const opt = STATUS_OPTS.find(o => o.key === status);
-      badgeHtml = `<span class="sum-badge badge-defect">⚠ ${opt ? opt.label : status}</span>`;
-      rowCls = ' has-defect';
-    }
+    const opt = STATUS_OPTS.find(o => o.key === pd.status);
+    const badgeHtml = `<span class="sum-badge badge-defect">⚠ ${opt ? opt.label : 'Temuan'}</span>`;
     const photoHint = photos > 0 ? `<span class="sum-photos">📷 ${photos}</span>` : '';
     const row = document.createElement('div');
-    row.className = 'summary-row' + rowCls;
+    row.className = 'summary-row has-defect';
     row.id = 'sum_' + p.id;
     row.innerHTML = `
       <div class="summary-left">
@@ -457,31 +466,34 @@ function renderSummaryList() {
     row.onclick = () => openSheet(p.id);
     list.appendChild(row);
   });
+  renderPicker();
 }
+function refreshSummaryRow() { renderSummaryList(); }
 
-function refreshSummaryRow(panelId) {
-  const p = PANELS.find(x => x.id === panelId);
-  if (!p) return;
-  const pd = inspData.panels[panelId] || {};
-  const status = pd.status || '';
-  const photos = (pd.photos || []).length;
-  let badgeHtml, rowCls = '';
-  if (!status) {
-    badgeHtml = `<span class="sum-badge badge-empty">Belum dicek</span>`;
-  } else if (status === 'ok') {
-    badgeHtml = `<span class="sum-badge badge-ok">✓ Baik</span>`;
-    rowCls = ' is-ok';
-  } else {
-    const opt = STATUS_OPTS.find(o => o.key === status);
-    badgeHtml = `<span class="sum-badge badge-defect">⚠ ${opt ? opt.label : status}</span>`;
-    rowCls = ' has-defect';
-  }
-  const photoHint = photos > 0 ? `<span class="sum-photos">📷 ${photos}</span>` : '';
-  const row = document.getElementById('sum_' + panelId);
-  if (!row) return;
-  row.className = 'summary-row' + rowCls;
-  row.querySelector('[style*="display:flex"]').innerHTML = `${badgeHtml}${photoHint}<span style="color:var(--muted);font-size:12px">›</span>`;
+function renderPicker() {
+  const g = document.getElementById('pickerGrid');
+  if (!g) return;
+  g.innerHTML = '';
+  PANELS.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'picker-btn' + (isFinding(inspData.panels[p.id]) ? ' has' : '');
+    b.textContent = p.icon + '  ' + p.label;
+    b.onclick = () => { document.getElementById('pickerGrid').style.display = 'none'; openSheet(p.id); };
+    g.appendChild(b);
+  });
 }
+window.togglePicker = function() {
+  const g = document.getElementById('pickerGrid');
+  g.style.display = g.style.display === 'none' ? 'grid' : 'none';
+};
+window.removeFinding = function() {
+  if (!activePanel) return;
+  if (!confirm('Hapus temuan di bagian ini?')) return;
+  delete inspData.panels[activePanel];
+  const id = activePanel;
+  closeSheet();
+  renderSummaryList();
+};
 
 // ── DIAGRAM ──
 function updateDiagram() {
@@ -511,7 +523,7 @@ window.openSheet = function(panelId) {
   const pd = inspData.panels[panelId] || {};
   const status = pd.status || '';
   const btnsEl = document.getElementById('bsStatusBtns');
-  btnsEl.innerHTML = STATUS_OPTS.map(o =>
+  btnsEl.innerHTML = STATUS_OPTS.filter(o => o.key !== 'ok').map(o =>
     `<button class="status-btn ${status === o.key ? o.cls : ''}" onclick="bsSetStatus('${o.key}')">${o.label}</button>`
   ).join('');
   // notes
@@ -529,10 +541,12 @@ window.openSheet = function(panelId) {
 };
 
 window.closeSheet = function() {
+  const wasOpen = !!activePanel;
   document.getElementById('bsOverlay').classList.remove('open');
   document.getElementById('bottomSheet').classList.remove('open');
   document.querySelectorAll('.car-panel').forEach(el => el.classList.remove('hovered'));
   activePanel = null;
+  if (wasOpen) { renderSummaryList(); window.saveInspection(); }
 };
 
 window.navPanel = function(dir) {
@@ -548,9 +562,10 @@ window.bsSetStatus = function(status) {
   if (!inspData.panels[activePanel]) inspData.panels[activePanel] = {};
   inspData.panels[activePanel].status = status;
   // refresh buttons
+  const opts = STATUS_OPTS.filter(o => o.key !== 'ok');
   document.querySelectorAll('#bsStatusBtns .status-btn').forEach((btn, i) => {
     btn.className = 'status-btn';
-    if (STATUS_OPTS[i].key === status) btn.className += ' ' + STATUS_OPTS[i].cls;
+    if (opts[i].key === status) btn.className += ' ' + opts[i].cls;
   });
   updateDiagram();
   refreshSummaryRow(activePanel);
@@ -623,6 +638,7 @@ window.handlePanelFiles = async function(e) {
       if (!inspData.panels[activePanel].photos) inspData.panels[activePanel].photos = [];
       inspData.panels[activePanel].photos.push({ url, path });
     }
+    if (!inspData.panels[activePanel].status) inspData.panels[activePanel].status = 'other';
     renderSheetPhotos(activePanel);
     refreshSummaryRow(activePanel);
   } catch(err) {
