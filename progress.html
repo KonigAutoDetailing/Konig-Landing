@@ -415,7 +415,7 @@
 <div class="modal-overlay" id="modalWa">
   <div class="modal-box" style="max-width:560px">
     <button class="modal-close" onclick="closeModal('modalWa')">×</button>
-    <div class="modal-title">UPDATE SORE KE CUSTOMER</div>
+    <div class="modal-title">KIRIM UPDATE KE CUSTOMER</div>
     <div style="font-size:13px;color:var(--muted);margin:-6px 0 14px">Tap <b>Kirim via WA</b> untuk tiap customer. Pesan bisa diedit dulu di kotak teks.</div>
     <div id="waList"></div>
   </div>
@@ -629,12 +629,19 @@ function waNumber(raw){
 }
 function todayWIB(){ return new Date(Date.now()+7*3600e3).toISOString().slice(0,10); }
 function tsDay(t){ try{ const d = t && t.toDate ? t.toDate() : (t ? new Date(t) : null); return d ? new Date(d.getTime()+7*3600e3).toISOString().slice(0,10) : ''; }catch(e){ return ''; } }
+function isQuick(j){
+  const sv = String(j.service||'').split(', ').filter(Boolean);
+  return sv.length > 0 && sv.every(x => /Wash|Interior|Engine|Window|Express Polish/i.test(x));
+}
 function waMessage(j){
   const steps = window.STEPS, done = (j.doneSteps||[]).includes('done');
   const s = steps.find(x => x.id === j.activeStep);
   const pct = done ? 100 : (s ? s.pct : 0);
   const url = location.origin + '/progress?code=' + j.id;
   const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
+  if(done && isQuick(j)){
+    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + (j.service ? 'Layanan: ' + j.service + '\n' : '') + 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu). Makasih udah percayain mobilnya ke kami 🙏\n\n— KONIG Auto Detailing';
+  }
   if(done){
     return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\nWorkshop buka sampai jam 17.00 ya (Senin–Sabtu). Detailnya bisa dicek di sini:\n' + url + '\n\n— KONIG Auto Detailing';
   }
@@ -644,7 +651,7 @@ function waMessage(j){
   msg += '\n\nCek progresnya kapan aja di sini:\n' + url + '\n\n— KONIG Auto Detailing';
   return msg;
 }
-window.openWaUpdate = async function(){
+window.openWaUpdate = async function(onlyId){
   const { collection, getDocs, query, orderBy } = window._fbFns;
   const list = document.getElementById('waList');
   list.textContent = 'Memuat…';
@@ -652,7 +659,9 @@ window.openWaUpdate = async function(){
   const snap = await getDocs(query(collection(window._db, 'konig_progress'), orderBy('createdAt','desc')));
   const today = todayWIB();
   const jobs = [];
-  snap.forEach(d => { const j = { id: d.id, ...d.data() }; const done = (j.doneSteps||[]).includes('done'); if(!done || tsDay(j.updatedAt) === today) jobs.push(j); });
+  snap.forEach(d => { const j = { id: d.id, ...d.data() }; const done = (j.doneSteps||[]).includes('done');
+    if(onlyId){ if(j.id === onlyId) jobs.push(j); return; }
+    if(done ? tsDay(j.updatedAt) === today : !isQuick(j)) jobs.push(j); });
   list.textContent = '';
   if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada kendaraan aktif hari ini.</div>'; return; }
   jobs.forEach(j => {
@@ -810,6 +819,7 @@ window.markDone = async function(id) {
     doneSteps: allSteps, activeStep: 'done', updatedAt: serverTimestamp()
   });
   loadJobs();
+  window.openWaUpdate(id);
 }
 
 // ── QR CODE ──
