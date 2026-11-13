@@ -646,7 +646,7 @@ function renderHistory(data){
   document.getElementById('histIn').textContent = fmtTgl(inn);
   document.getElementById('histOut').textContent = fmtTgl(out);
   let dur = '-';
-  if (inn) { const days = Math.max(0, Math.round((out - inn) / 864e5)); dur = days < 1 ? 'Selesai di hari yang sama' : days + ' hari'; }
+  if (inn) { const l = lamaKerja({ createdAt: inn, doneAt: out }); dur = l.charAt(0).toUpperCase() + l.slice(1); }
   document.getElementById('histDur').textContent = dur;
   document.getElementById('histColor').textContent = data.color || '-';
   const tags = document.getElementById('histServices'); tags.textContent = '';
@@ -816,6 +816,17 @@ const REVIEW_TEXT = '\n\nKalau berkenan, boleh minta tolong kasih review Google 
 function needsTrackLink(j){
   return String(j.service||'').split(', ').some(x => (/Coating/i.test(x) && !/Window/i.test(x)) || /Premium Polish/i.test(x));
 }
+function lamaKerja(j){
+  const a = toDateObj(j.createdAt); if(!a) return '';
+  const b = toDateObj(j.doneAt) || new Date();
+  const d0 = new Date(a.getFullYear(), a.getMonth(), a.getDate()), d1 = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  const n = Math.round((d1 - d0) / 864e5);
+  return n <= 0 ? 'selesai di hari yang sama' : n + ' hari';
+}
+function infoPaket(j){
+  const lama = lamaKerja(j);
+  return (j.service ? 'Paket: ' + j.service + '\n' : '') + (lama ? 'Lama pengerjaan: ' + lama + '\n' : '') + '\n';
+}
 function waMessage(j){
   const steps = window.stepsFor(j.service), done = (j.doneSteps||[]).includes('done');
   const s = steps.find(x => x.id === j.activeStep);
@@ -823,10 +834,10 @@ function waMessage(j){
   const url = location.origin + '/progress?code=' + j.id;
   const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
   if(done && isQuick(j)){
-    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + (j.service ? 'Layanan: ' + j.service + '\n' : '') + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   if(done){
-    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\n' + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrian';
   let msg = 'Halo ' + sapa(j) + ', update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
