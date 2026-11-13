@@ -419,7 +419,7 @@ window.deleteGeneralPhoto = function(i) {
 };
 
 // ── KOMPRESI FOTO (maks 1600px, JPEG ~75%) ──
-async function compressImage(file, maxSide = 1600, quality = 0.75) {
+async function compressImage(file, maxSide = 1400, quality = 0.72) {
   try {
     if (!file.type || !file.type.startsWith('image/')) return file;
     let src;
@@ -443,14 +443,14 @@ window.handleGeneralFiles = async function(e) {
   if (!files.length) return;
   showLoading('Mengupload foto...');
   try {
-    for (const file of files) {
+    const results = await Promise.all(files.map(async (file, i) => {
       const small = await compressImage(file);
-      const path = `inspection/${jobCode}/general/${Date.now()}_${small.name}`;
+      const path = `inspection/${jobCode}/general/${Date.now()}_${i}_${small.name}`;
       const storRef = ref(storage, path);
       await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
-      const url = await getDownloadURL(storRef);
-      inspData.general.push({ url, path });
-    }
+      return { url: await getDownloadURL(storRef), path };
+    }));
+    results.forEach(r => inspData.general.push(r));
     renderGeneralPhotos();
   } catch(err) {
     showToast('Gagal upload foto', true);
@@ -650,16 +650,17 @@ window.handlePanelFiles = async function(e) {
   spinner.style.cssText = 'color:var(--muted);font-size:12px;align-self:center;padding:8px 0';
   row.appendChild(spinner);
   try {
-    for (const file of files) {
+    const panel = activePanel;
+    const results = await Promise.all(files.map(async (file, i) => {
       const small = await compressImage(file);
-      const path = `inspection/${jobCode}/${activePanel}/${Date.now()}_${small.name}`;
+      const path = `inspection/${jobCode}/${panel}/${Date.now()}_${i}_${small.name}`;
       const storRef = ref(storage, path);
       await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
-      const url = await getDownloadURL(storRef);
-      if (!inspData.panels[activePanel]) inspData.panels[activePanel] = {};
-      if (!inspData.panels[activePanel].photos) inspData.panels[activePanel].photos = [];
-      inspData.panels[activePanel].photos.push({ url, path });
-    }
+      return { url: await getDownloadURL(storRef), path };
+    }));
+    if (!inspData.panels[panel]) inspData.panels[panel] = {};
+    if (!inspData.panels[panel].photos) inspData.panels[panel].photos = [];
+    results.forEach(r => inspData.panels[panel].photos.push(r));
     if (!inspData.panels[activePanel].status) inspData.panels[activePanel].status = 'other';
     renderSheetPhotos(activePanel);
     refreshSummaryRow(activePanel);
