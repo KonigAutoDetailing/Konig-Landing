@@ -405,6 +405,15 @@
     </div>
     <input type="hidden" id="jobCar"/>
     <div class="form-group">
+      <label>Nama Customer</label>
+      <div style="display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px">
+        <select id="jobCustTitle" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;padding:12px 8px;outline:none">
+          <option value="Mr.">Mr.</option><option value="Ms.">Ms.</option>
+        </select>
+        <input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off"/>
+      </div>
+    </div>
+    <div class="form-group">
       <label>Merk Mobil</label>
       <input type="text" id="jobBrand" list="brandList" placeholder="Toyota" autocomplete="off" oninput="updateModelList()"/>
     </div>
@@ -426,8 +435,12 @@
       </div>
       <div class="form-group">
         <label>No. WhatsApp</label>
-        <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel"/>
+        <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel" oninput="window._waPicked=false; updateContactBtns()"/>
       </div>
+    </div>
+    <div style="display:flex;gap:8px;margin:-6px 0 14px;flex-wrap:wrap">
+      <button type="button" id="btnPickContact" style="display:none;background:transparent;border:1px solid var(--border);color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:9px 12px;cursor:pointer" onclick="pickContact()">📇 Ambil dari Kontak HP</button>
+      <button type="button" id="btnSaveContact" style="display:none;background:transparent;border:1px solid var(--border);color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:9px 12px;cursor:pointer" onclick="saveToContacts()">💾 Simpan ke Kontak HP</button>
     </div>
     <div class="form-group" style="position:relative;">
       <label>Layanan</label>
@@ -667,7 +680,7 @@ window.loadJobs = async function() {
     return `<div class="job-card">
       <div>
         <div class="job-code">${j.id}</div>
-        <div class="job-car">${j.car || '-'}${j.color ? ' · ' + j.color : ''} <span style="font-size:13px;color:var(--muted);font-family:'Barlow',sans-serif">${j.plate || ''}</span></div>
+        ${j.custName ? `<div style="font-size:12px;color:var(--muted);letter-spacing:1px">${j.custTitle || ''} ${j.custName}</div>` : ''}<div class="job-car">${j.car || '-'}${j.color ? ' · ' + j.color : ''} <span style="font-size:13px;color:var(--muted);font-family:'Barlow',sans-serif">${j.plate || ''}</span></div>
         <div class="job-service">${j.service || '-'}</div>
         <div class="job-date">WA: ${j.wa || '-'}</div>
         <div class="job-progress-mini">
@@ -703,8 +716,10 @@ function isQuick(j){
   const sv = String(j.service||'').split(', ').filter(Boolean);
   return sv.length > 0 && sv.every(x => /Wash|Interior|Engine|Window|Express Polish/i.test(x));
 }
+function titleCase(t){ return String(t||'').toLowerCase().replace(/(^|[\s\-'])(\S)/g, (m,a,b) => a + b.toUpperCase()); }
+function sapa(j){ const n = String(j.custName||'').trim(); return n ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(n)) : 'Kak'; }
 const REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
-const REVIEW_TEXT = '\n\nKalau berkenan, boleh minta tolong kasih review Google buat KONIG di sini ya 🙏\n' + REVIEW_URL + '\nSetiap review dari Kakak sangat berharga buat perkembangan KONIG.';
+const REVIEW_TEXT = '\n\nKalau berkenan, boleh minta tolong kasih review Google buat KONIG di sini ya 🙏\n' + REVIEW_URL + '\nSetiap review sangat berharga buat perkembangan KONIG.';
 // Link tracking hanya untuk Coating (bukan Window Coating) & Premium Polish
 function needsTrackLink(j){
   return String(j.service||'').split(', ').some(x => (/Coating/i.test(x) && !/Window/i.test(x)) || /Premium Polish/i.test(x));
@@ -716,13 +731,13 @@ function waMessage(j){
   const url = location.origin + '/progress?code=' + j.id;
   const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
   if(done && isQuick(j)){
-    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + (j.service ? 'Layanan: ' + j.service + '\n' : '') + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + (needsTrackLink(j) ? '\n\nDetailnya: ' + url : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + (j.service ? 'Layanan: ' + j.service + '\n' : '') + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + (needsTrackLink(j) ? '\n\nDetailnya: ' + url : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   if(done){
-    return 'Halo Kak, mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\n' + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + (needsTrackLink(j) ? ' Detailnya bisa dicek di sini:\n' + url : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\n' + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + (needsTrackLink(j) ? ' Detailnya bisa dicek di sini:\n' + url : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrian';
-  let msg = 'Halo Kak, update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
+  let msg = 'Halo ' + sapa(j) + ', update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
   if(j.note) msg += '\nCatatan: ' + j.note;
   if (needsTrackLink(j)) msg += '\n\nCek progresnya kapan aja di sini:\n' + url;
   msg += '\n\n— KONIG Auto Detailing';
@@ -781,10 +796,10 @@ function washMessage(r){
   const kerja = /Wash/i.test(sv) ? 'dicuci' : 'dibersihkan interiornya';
   const ajak = /Wash/i.test(sv) ? 'dicuci lagi' : 'dibersihkan lagi';
   if (r.stage === 14) {
-    return 'Halo Kak, udah 2 minggu nih sejak mobil ' + mobil + ' ' + kerja + ' di KONIG 😊\n\nKalau mau dijadwalkan lagi minggu ini, kabari aja ya, nanti kami siapin slotnya.\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(r.j) + ', udah 2 minggu nih sejak mobil ' + mobil + ' ' + kerja + ' di KONIG 😊\n\nKalau mau dijadwalkan lagi minggu ini, kabari aja ya, nanti kami siapin slotnya.\n\n— KONIG Auto Detailing';
   }
   const bln = Math.round(r.stage / 30);
-  return 'Halo Kak, udah sekitar ' + bln + ' bulan mobil ' + mobil + ' belum mampir ke KONIG nih 🙏\n\nKalau mau ' + ajak + ', tinggal balas chat ini ya, nanti kami atur jadwalnya.\n\n— KONIG Auto Detailing';
+  return 'Halo ' + sapa(r.j) + ', udah sekitar ' + bln + ' bulan mobil ' + mobil + ' belum mampir ke KONIG nih 🙏\n\nKalau mau ' + ajak + ', tinggal balas chat ini ya, nanti kami atur jadwalnya.\n\n— KONIG Auto Detailing';
 }
 async function markWashReminder(j, stage, today){
   try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { ['washReminders.' + stage]: today }); } catch(e) {}
@@ -843,7 +858,7 @@ function reviewReminders(jobs, today){
     .sort((a, b) => b.age - a.age);
 }
 function reviewMessage(r){
-  return 'Halo Kak, semoga mobil ' + (r.j.car || '') + ' masih kinclong ya 😊\n\nKalau sempat dan berkenan, boleh share pengalamannya di Google di sini:\n' + REVIEW_URL + '\n\nKalau sudah, makasih banyak ya Kak 🙏\n\n— KONIG Auto Detailing';
+  return 'Halo ' + sapa(r.j) + ', semoga mobil ' + (r.j.car || '') + ' masih kinclong ya 😊\n\nKalau sempat dan berkenan, boleh share pengalamannya di Google di sini:\n' + REVIEW_URL + '\n\nKalau sudah, makasih banyak ya 🙏\n\n— KONIG Auto Detailing';
 }
 function renderReviewSection(list, due, today){
   const h = document.createElement('div');
@@ -889,7 +904,7 @@ function isCoatingJob(service){ return String(service||'').split(', ').some(x =>
 function welcomeMessage(j){
   const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
   const url = location.origin + '/progress?code=' + j.id;
-  return 'Halo Kak, selamat datang di KONIG Auto Detailing 🙏\n\nMakasih sudah mempercayakan ' + mobil + ' ke kami. Tenang aja, mobilnya ada di tangan yang tepat — tim kami kerjakan dengan teliti sesuai standar KONIG.\n\nProgres pengerjaannya bisa Kakak pantau kapan aja di sini:\n' + url + '\n\nKami juga akan kirim update setiap beberapa hari ya.\n\n— KONIG Auto Detailing';
+  return 'Halo ' + sapa(j) + ', selamat datang di KONIG Auto Detailing 🙏\n\nMakasih sudah mempercayakan ' + mobil + ' ke kami. Tenang aja, mobilnya ada di tangan yang tepat — tim kami kerjakan dengan teliti sesuai standar KONIG.\n\nProgres pengerjaannya bisa Kakak pantau kapan aja di sini:\n' + url + '\n\nKami juga akan kirim update setiap beberapa hari ya.\n\n— KONIG Auto Detailing';
 }
 window.openWelcome = function(j){
   const list = document.getElementById('waList');
@@ -1077,6 +1092,10 @@ window.updateModelList = function(){
 fillList('brandList', Object.keys(CAR_MODELS));
 fillList('colorList', CAR_COLORS);
 function setCarFields(d){
+  window._waPicked = !!d.wa;
+  setTimeout(() => window.updateContactBtns && window.updateContactBtns(), 0);
+  document.getElementById('jobCustTitle').value = d.custTitle || 'Mr.';
+  document.getElementById('jobCustName').value = d.custName || '';
   document.getElementById('jobBrand').value = d.brand || '';
   document.getElementById('jobModel').value = d.brand ? (d.model || '') : (d.model || d.car || '');
   document.getElementById('jobColor').value = d.color || '';
@@ -1105,6 +1124,48 @@ window.deleteJob = async function(){
     loadJobs();
   } catch(e) { alert('Gagal menghapus: ' + e.message); }
   btn.textContent = '🗑️ Hapus Mobil Ini'; btn.disabled = false;
+};
+
+// ── KONTAK HP ──
+window.updateContactBtns = function(){
+  const pick = document.getElementById('btnPickContact'), save = document.getElementById('btnSaveContact');
+  if (pick) pick.style.display = ('contacts' in navigator && 'ContactsManager' in window) ? 'inline-flex' : 'none';
+  const wa = document.getElementById('jobWa').value.replace(/[^0-9+]/g,'');
+  if (save) save.style.display = (wa.length >= 8 && !window._waPicked) ? 'inline-flex' : 'none';
+};
+window.pickContact = async function(){
+  try {
+    const res = await navigator.contacts.select(['name','tel'], { multiple: false });
+    if (!res || !res.length) return;
+    const c = res[0];
+    const tel = (c.tel || [])[0] || '';
+    if (tel) document.getElementById('jobWa').value = tel.replace(/\s+/g,'');
+    const nm = (c.name || [])[0] || '';
+    if (nm && !document.getElementById('jobCustName').value) document.getElementById('jobCustName').value = nm.toUpperCase();
+    window._waPicked = true; window.updateContactBtns();
+  } catch(e) { alert('Tidak bisa membuka kontak: ' + e.message); }
+};
+window.saveToContacts = function(){
+  const wa = document.getElementById('jobWa').value.trim();
+  if (!wa) return;
+  let num = wa.replace(/[^0-9+]/g,''); if (num.startsWith('0')) num = '+62' + num.slice(1); else if (num.startsWith('62')) num = '+' + num;
+  const title = document.getElementById('jobCustTitle').value;
+  const name = titleCase(document.getElementById('jobCustName').value.trim()) || 'Customer';
+  const car = [document.getElementById('jobBrand').value, document.getElementById('jobModel').value].join(' ').trim().toUpperCase();
+  const plate = document.getElementById('jobPlate').value.trim().toUpperCase();
+  const full = (title + ' ' + name).trim();
+  const vcf = ['BEGIN:VCARD','VERSION:3.0',
+    'N:;' + name + ';;' + title + ';',
+    'FN:' + full + ' (KONIG)',
+    'ORG:Customer KONIG Auto Detailing',
+    'TEL;TYPE=CELL:' + num,
+    'NOTE:' + [car, plate].filter(Boolean).join(' · '),
+    'END:VCARD'].join('\r\n');
+  const blob = new Blob([vcf], { type: 'text/vcard' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = (full || 'customer').replace(/[^\w .-]/g,'') + '.vcf';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 };
 
 // ── NEW JOB MODAL ──
@@ -1185,6 +1246,8 @@ window.saveJob = async function() {
   const model = document.getElementById('jobModel').value.trim().toUpperCase();
   const color = document.getElementById('jobColor').value.trim().toUpperCase();
   const car = [brand, model].filter(Boolean).join(' ');
+  const custTitle = document.getElementById('jobCustTitle').value;
+  const custName = document.getElementById('jobCustName').value.trim().toUpperCase();
   const plate = document.getElementById('jobPlate').value.trim().toUpperCase();
   const wa = document.getElementById('jobWa').value.trim();
   const service = document.getElementById('jobService').value.trim();
@@ -1210,7 +1273,7 @@ window.saveJob = async function() {
     if (editId) {
       let wasDone = false;
       try { const prev = await window._fbFns.getDoc(doc(window._db, 'konig_progress', editId)); const pd = prev.exists() ? prev.data() : {}; wasDone = (pd.doneSteps || []).includes('done') || pd.activeStep === 'done'; } catch(e) {}
-      const upd = { car, brand, model, color, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
+      const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
       if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); justDone = editId; }
       await updateDoc(doc(window._db, 'konig_progress', editId), upd);
     } else {
@@ -1223,9 +1286,9 @@ window.saveJob = async function() {
         document.getElementById('jobCodeError').style.display = 'block';
         btn.textContent = 'Simpan →'; btn.disabled = false; return;
       }
-      await setDoc(doc(window._db, 'konig_progress', code), { car, brand, model, color, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
+      await setDoc(doc(window._db, 'konig_progress', code), { car, brand, model, color, custTitle, custName, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       if (nowDone) justDone = code;
-      else if (isCoatingJob(service)) window._welcomeJob = { id: code, car, plate, wa, service };
+      else if (isCoatingJob(service)) window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName };
     }
     closeModal('modalJob');
     loadJobs();
