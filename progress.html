@@ -857,6 +857,30 @@ const REVIEW_TEXT = '\n\nKalau berkenan, boleh minta tolong kasih review Google 
 function needsTrackLink(j){
   return String(j.service||'').split(', ').some(x => (/Coating/i.test(x) && !/Window/i.test(x)) || /Premium Polish/i.test(x));
 }
+// Panduan perawatan coating — hanya untuk layanan yang ada coating
+function hasCoating(j){
+  return String(j.service||'').split(', ').some(x => /Coating/i.test(x) && !/Window/i.test(x));
+}
+const COATING_CARE = `
+
+---
+🛡️ *Panduan Perawatan Coating*
+
+*7 hari pertama:*
+• Jangan dicuci dulu
+• Kalau ada debu atau kena hujan, biarkan saja
+• Kalau ada kotoran burung atau getah pohon, lap pakai tissue basah lembut dan segera bersihkan
+• Hindari semua chemical: wax, sealant, quick detailer — jangan dipakai dulu
+
+*Setelah 7 hari, cara cuci yang benar:*
+• Gunakan 2 bucket method
+• Shampoo pH neutral, jangan yang mengandung wax/protection
+• Pakai wash mitt — jangan kanebo atau sponge
+• Jangan bilas pakai air saja tanpa shampoo
+
+*Pengeringan:*
+• Selalu pakai drying towel
+• Jangan mengeringkan mobil yang sudah coating tanpa dicuci pakai shampoo dulu`;
 function lamaKerja(j){
   const a = toDateObj(j.createdAt); if(!a) return '';
   const b = toDateObj(j.doneAt) || new Date();
@@ -878,7 +902,7 @@ function waMessage(j){
     return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   if(done){
-    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil.\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil.\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + (hasCoating(j) ? COATING_CARE : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrian';
   let msg = 'Halo ' + sapa(j) + ', update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
