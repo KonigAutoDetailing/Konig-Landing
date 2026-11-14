@@ -783,7 +783,18 @@ window.adminLogout = function() {
 // ── LOAD JOBS ──
 window.loadJobs = async function() {
   const { collection, getDocs, query, orderBy } = window._fbFns;
-  const snap = await getDocs(query(collection(window._db, 'konig_progress'), orderBy('createdAt','desc')));
+  const listEl = document.getElementById('jobsList');
+  if (!listEl.children.length) listEl.innerHTML = '<div class="empty-state">Memuat data kendaraan...</div>';
+  let snap;
+  try {
+    snap = await Promise.race([
+      getDocs(query(collection(window._db, 'konig_progress'), orderBy('createdAt','desc'))),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout (koneksi lambat / diblokir)')), 20000))
+    ]);
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty-state">Gagal memuat data: ' + String(e.message||e).replace(/</g,'&lt;') + '<br><br><button class="btn-sm" onclick="loadJobs()">Coba lagi</button></div>';
+    return;
+  }
   const jobs = [];
   snap.forEach(d => jobs.push({ id: d.id, ...d.data() }));
   if (window.autoCloseWashJobs) await window.autoCloseWashJobs(jobs);
