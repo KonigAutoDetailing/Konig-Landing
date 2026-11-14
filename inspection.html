@@ -277,7 +277,7 @@
     <div class="bs-label">Catatan</div>
     <textarea class="bs-notes" id="bsNotes" placeholder="Catatan kondisi (opsional)..." oninput="bsNoteChange()"></textarea>
     <!-- photos -->
-    <div class="bs-label" id="bsPhotoLabel">Foto Defect (maks 5)</div>
+    <div class="bs-label" id="bsPhotoLabel">Foto Defect</div>
     <div class="bs-photo-row" id="bsPhotoRow"></div>
     <div class="bs-photo-limit" id="bsPhotoStatus"></div>
     <!-- done -->
@@ -655,7 +655,7 @@ function renderSheetPhotos(panelId) {
     t.innerHTML = `<img src="${ph._src || ph.url || ""}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deletePanelPhoto(${i})">✕</button>`}`;
     row.appendChild(t);
   });
-  if (photos.length < 5) {
+  {
     const addBtn = document.createElement('button');
     addBtn.className = 'photo-add-btn';
     addBtn.innerHTML = `<span style="font-size:22px">📷</span><span>Kamera</span>`;
@@ -668,8 +668,8 @@ function renderSheetPhotos(panelId) {
     row.appendChild(galBtn);
   }
   const lbl = document.getElementById('bsPhotoLabel');
-  lbl.textContent = `Foto Defect (${photos.length}/5)`;
-  document.getElementById('bsPhotoStatus').textContent = photos.length >= 5 ? 'Batas 5 foto tercapai' : '';
+  lbl.textContent = `Foto Defect (${photos.length})`;
+  document.getElementById('bsPhotoStatus').textContent = '';
 }
 
 window.deletePanelPhoto = function(i) {
@@ -690,9 +690,6 @@ window.handlePanelFiles = function(e) {
   if (!inspData.panels[panel]) inspData.panels[panel] = {};
   if (!inspData.panels[panel].photos) inspData.panels[panel].photos = [];
   const arr = inspData.panels[panel].photos;
-  const remaining = 5 - arr.length;
-  if (remaining <= 0) { showToast('Maksimal 5 foto per panel', true); return; }
-  files = files.slice(0, remaining);
   if (!inspData.panels[panel].status) inspData.panels[panel].status = 'other';
   files.forEach(file => {
     const ph = { url: URL.createObjectURL(file), uploading: true };
