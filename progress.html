@@ -1085,7 +1085,7 @@ window.renderJobList = function(){
           ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : ''}
           ${isDone ? lunasBtn(j) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
-          ${isDone && (j.visits||[]).length ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
+          ${isDone ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
         </div>`}
       </div>
       <div>
@@ -1107,6 +1107,7 @@ function verifyAdmin(what){
   return true;
 }
 // ── TANDAI LUNAS LANGSUNG DARI KARTU ──
+function custReviewed(j){ if (j.reviewed) return true; const w = normWa(j.wa || ''); return !!w && (window._allJobs || []).some(o => o.reviewed && normWa(o.wa || '') === w); }
 function lunasBtn(j){
   const iv = j.invoice; if (!iv) return '';
   if (iv.pay === 'lunas' || !(iv.tertagih > 0)) return '<span class="btn-sm" style="border:1px solid #16a34a;color:#4ade80;background:transparent;cursor:default">✓ Lunas</span>';
@@ -1134,7 +1135,13 @@ window.deleteVisit = async function(id, vi, activeOnly){
   const visits = (j.visits||[]).slice();
   const target = vi == null ? j : visits[vi];
   const label = (target.service || '-') + (toDateObj(target.doneAt) ? ' (' + toDateObj(target.doneAt).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) + ')' : '');
-  if (vi == null && !visits.length) { alert('Ini satu-satunya kunjungan mobil ini. Pakai tombol Hapus Mobil di Update Progress kalau ingin menghapus semuanya.'); return; }
+  if (vi == null && !visits.length) {
+    // Satu-satunya kunjungan: hapus seluruh data mobil (pakai alur Hapus Mobil, dengan password)
+    await window.openEditJobModal(id);
+    await window.deleteJob();
+    if (document.getElementById('modalJob').classList.contains('open')) closeModal('modalJob');
+    return;
+  }
   if (!activeOnly) {
     if (!confirm('Hapus kunjungan ' + label + ' dari history ' + (j.plate || id) + '? Tidak bisa dibatalkan.')) return;
     if (!verifyAdmin('menghapus kunjungan')) return;
@@ -1245,14 +1252,18 @@ function waMessage(j){
   const salam = '\n\nSalam,\nKONIG Auto Detailing';
   if(done){
     const iv = j.invoice, ivUrl = iv ? location.origin + '/invoice?code=' + encodeURIComponent(j.id) : '';
-    const invLine = !iv ? '' : iv.pay === 'lunas'
+    const rList = iv ? (iv.items||[]).filter(it => it.redeem) : [];
+    const free = iv && rList.length && !(Number(iv.tertagih||0) > 0) && !(Number(iv.total||0) > 0);
+    const invLine = !iv ? '' : free
+      ? 'Pengerjaan ini menggunakan penukaran voucher' + (rList.map(it => it.redeem && it.redeem.code).filter(Boolean).length ? ' ' + rList.map(it => it.redeem && it.redeem.code).filter(Boolean).join(', ') : '') + ', sehingga tidak ada biaya yang perlu dibayarkan. Invoice ' + iv.no + ':\n' + ivUrl + '\n\n'
+      : iv.pay === 'lunas'
       ? 'Berikut kami lampirkan invoice ' + iv.no + ' untuk pengerjaan ini (status: lunas):\n' + ivUrl + '\n\n'
       : 'Berikut kami lampirkan invoice pelunasan ' + iv.no + ':\n' + ivUrl + '\n'
         + 'Jumlah yang perlu dilunasi: Rp ' + Number(iv.tertagih||0).toLocaleString('id-ID') + (iv.dp && iv.dp.amount ? ' (sudah dikurangi DP Rp ' + Number(iv.dp.amount).toLocaleString('id-ID') + ')' : '') + '\n'
         + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
     const vList = iv ? (iv.items||[]).filter(it => it.voucherCode) : [];
     const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.\n\n' : '';
-    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + REVIEW_TEXT.replace(/^\n+/, '') + '\n\n' + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
+    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
   let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
