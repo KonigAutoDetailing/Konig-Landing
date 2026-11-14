@@ -518,6 +518,7 @@
     </div>
 
     <button class="btn-save" id="btnSaveJob" onclick="saveJob()">Simpan →</button>
+    <button type="button" id="btnReviewed" onclick="toggleReviewed()" style="display:none;width:100%;margin-top:10px;background:transparent;color:#facc15;border:1px solid rgba(250,204,21,.45);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer">⭐ Tandai Sudah Review Google</button>
     <button type="button" id="btnDeleteJob" onclick="deleteJob()" style="display:none;width:100%;margin-top:10px;background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.4);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:12px;cursor:pointer">🗑️ Hapus Mobil Ini</button>
   </div>
 </div>
@@ -1280,6 +1281,24 @@ async function deleteFolder(path){
   await Promise.all(res.items.map(it => deleteObject(it).catch(() => {})));
   for (const p of res.prefixes) await deleteFolder(p.fullPath);
 }
+function setReviewedBtn(on){
+  const b = document.getElementById('btnReviewed');
+  b.dataset.on = on ? '1' : '';
+  b.textContent = on ? '✓ Sudah Review Google · tap untuk batal' : '⭐ Tandai Sudah Review Google';
+  b.style.background = on ? 'rgba(250,204,21,.12)' : 'transparent';
+}
+window.toggleReviewed = async function(){
+  const id = document.getElementById('editJobId').value; if (!id) return;
+  const b = document.getElementById('btnReviewed'), on = !b.dataset.on;
+  b.disabled = true;
+  try {
+    const { doc, updateDoc } = window._fbFns;
+    await updateDoc(doc(window._db, 'konig_progress', id), on ? { reviewed: true, reviewReminder: todayWIB() } : { reviewed: false, reviewReminder: null });
+    setReviewedBtn(on);
+  } catch(e) { alert('Gagal menyimpan: ' + e.message); }
+  b.disabled = false;
+};
+
 window.deleteJob = async function(){
   const id = document.getElementById('editJobId').value;
   if (!id) return;
@@ -1347,6 +1366,7 @@ window.saveToContacts = function(){
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
   document.getElementById('btnDeleteJob').style.display = 'none';
+  document.getElementById('btnReviewed').style.display = 'none';
   document.getElementById('editJobId').value = '';
   document.getElementById('modalJobTitle').textContent = 'KENDARAAN BARU';
   document.getElementById('jobCode').value = '';
@@ -1372,6 +1392,8 @@ window.openEditJobModal = async function(id) {
   const d = snap.data();
 
   document.getElementById('editJobId').value = id;
+  document.getElementById('btnReviewed').style.display = 'block';
+  setReviewedBtn(!!d.reviewed);
   document.getElementById('modalJobTitle').textContent = 'UPDATE PROGRESS KENDARAAN';
   document.getElementById('jobCodeGroup').style.display = 'none';
   document.getElementById('jobCar').value = d.car || '';
