@@ -483,11 +483,6 @@
     <button class="modal-close" onclick="closeModal('modalJob')">×</button>
     <div class="modal-title" id="modalJobTitle">KENDARAAN BARU</div>
     <input type="hidden" id="editJobId"/>
-    <div class="form-group">
-      <label>Plat Nomor</label>
-      <input type="text" id="jobPlate" placeholder="B 1234 ABC" style="text-transform:uppercase;font-size:18px;letter-spacing:2px" oninput="scheduleRepeatCheck()"/>
-    </div>
-    <div id="repeatNotice" style="display:none"></div>
     <div class="form-group" id="jobCodeGroup">
       <label>Kode QR (dari stiker)</label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -503,6 +498,11 @@
       <select id="codeList" class="inv-select" style="display:none;margin-top:8px" onchange="if(this.value){document.getElementById('jobCode').value=this.value;document.getElementById('jobCodeError').style.display='none';}"></select>
       <div id="jobCodeError" style="display:none;color:var(--red);font-size:12px;margin-top:4px">Kode sudah dipakai atau tidak valid</div>
     </div>
+    <div class="form-group">
+      <label>Plat Nomor</label>
+      <input type="text" id="jobPlate" placeholder="B 1234 ABC" style="text-transform:uppercase;font-size:18px;letter-spacing:2px" oninput="scheduleRepeatCheck()"/>
+    </div>
+    <div id="repeatNotice" style="display:none"></div>
     <input type="hidden" id="jobCar"/>
     <div class="form-group">
       <label>Merk Mobil</label>
