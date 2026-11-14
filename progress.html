@@ -848,7 +848,7 @@ const POLISHER_SVG = `<svg width="1em" height="1em" viewBox="0 0 120 120" fill="
 function stepIcon(s){ return s.id === 'correction' ? POLISHER_SVG : (s.icon || ''); }
 
 // ── UPDATE SORE VIA WA ──
-const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'🌀 Paint correction (mesin poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
+const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'Paint correction', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
 function waNumber(raw){
   let n = String(raw||'').replace(/[^0-9]/g,'');
   if(n.startsWith('0')) n = '62' + n.slice(1);
@@ -864,7 +864,7 @@ function isQuick(j){
 function titleCase(t){ return String(t||'').toLowerCase().replace(/(^|[\s\-'])(\S)/g, (m,a,b) => a + b.toUpperCase()); }
 function sapa(j){ const n = String(j.custName||'').trim(); return n ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(n)) : 'Kak'; }
 const REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
-const REVIEW_TEXT = '\n\nKalau berkenan, boleh minta tolong kasih review Google buat KONIG di sini ya 🙏\n' + REVIEW_URL + '\nSetiap review sangat berharga buat perkembangan KONIG.';
+const REVIEW_TEXT = '\n\nApabila berkenan, kami akan sangat menghargai ulasan Anda di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.';
 // Link tracking hanya untuk Coating (bukan Window Coating) & Premium Polish
 function needsTrackLink(j){
   return String(j.service||'').split(', ').some(x => (/Coating/i.test(x) && !/Window/i.test(x)) || /Premium Polish/i.test(x));
@@ -876,7 +876,7 @@ function hasCoating(j){
 const COATING_CARE = `
 
 ---
-🛡️ *Panduan Perawatan Coating*
+*Panduan Perawatan Coating*
 
 *7 hari pertama:*
 • Jangan dicuci dulu
@@ -905,26 +905,24 @@ function lamaKerja(j){
 }
 function infoPaket(j){
   const lama = lamaKerja(j);
-  return (j.service ? 'Paket: ' + j.service + '\n' : '') + (lama ? 'Lama pengerjaan: ' + lama + '\n' : '') + '\n';
+  return (j.service ? 'Layanan: ' + j.service + '\n' : '') + (lama ? 'Lama pengerjaan: ' + lama + '\n' : '') + '\n';
 }
 function waMessage(j){
   const steps = window.stepsFor(j.service), done = (j.doneSteps||[]).includes('done');
   const s = steps.find(x => x.id === j.activeStep);
   const pct = done ? 100 : (s ? s.pct : 0);
   const url = location.origin + '/progress?code=' + j.id;
-  const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
-  if(done && isQuick(j)){
-    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
-  }
+  const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
+  const ambil = needsTrackLink(j) ? 'Kendaraan dapat diambil pada jam operasional workshop, Senin–Sabtu hingga pukul 17.00.' : 'Kendaraan dapat diambil hari ini hingga pukul 17.00.';
+  const salam = '\n\nSalam,\nKONIG Auto Detailing';
   if(done){
-    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil.\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + (hasCoating(j) ? COATING_CARE : '') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + REVIEW_TEXT + salam;
   }
-  const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrian';
-  let msg = 'Halo ' + sapa(j) + ', update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
+  const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
+  let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
   if(j.note) msg += '\nCatatan: ' + j.note;
-  if (needsTrackLink(j)) msg += '\n\nCek progresnya kapan aja di sini:\n' + url;
-  msg += '\n\n— KONIG Auto Detailing';
-  return msg;
+  if (needsTrackLink(j)) msg += '\n\nDetail progres dapat dipantau melalui tautan berikut:\n' + url;
+  return msg + salam;
 }
 // ── REMINDER CUCI (Premium Wash) ──
 // Jadwal setelah cuci terakhir: 14 hari, lalu 1, 2, 3, 4, 5, 6 bulan. Kalau customer cuci lagi, hitungan mulai ulang dari cuci terbaru.
@@ -974,15 +972,12 @@ function washReminders(jobs, today){
   return due.sort((a, b) => b.age - a.age);
 }
 function washMessage(r){
-  const mobil = (r.j.car || 'mobilnya') + (r.j.plate ? ' (' + r.j.plate + ')' : '');
+  const mobil = (r.j.car || 'kendaraan Anda') + (r.j.plate ? ' (' + r.j.plate + ')' : '');
   const sv = String(r.j.service||'');
   const kerja = /Wash/i.test(sv) ? 'dicuci' : 'dibersihkan interiornya';
-  const ajak = /Wash/i.test(sv) ? 'dicuci lagi' : 'dibersihkan lagi';
-  if (r.stage === 14) {
-    return 'Halo ' + sapa(r.j) + ', udah 2 minggu nih sejak mobil ' + mobil + ' ' + kerja + ' di KONIG 😊\n\nKalau mau dijadwalkan lagi minggu ini, kabari aja ya, nanti kami siapin slotnya.\n\n— KONIG Auto Detailing';
-  }
-  const bln = Math.round(r.stage / 30);
-  return 'Halo ' + sapa(r.j) + ', udah sekitar ' + bln + ' bulan mobil ' + mobil + ' belum mampir ke KONIG nih 🙏\n\nKalau mau ' + ajak + ', tinggal balas chat ini ya, nanti kami atur jadwalnya.\n\n— KONIG Auto Detailing';
+  const ajak = /Wash/i.test(sv) ? 'pencucian berikutnya' : 'pembersihan interior berikutnya';
+  const sejak = r.stage === 14 ? '2 minggu' : 'sekitar ' + Math.round(r.stage / 30) + ' bulan';
+  return 'Halo ' + sapa(r.j) + ',\n\nSudah ' + sejak + ' sejak ' + mobil + ' terakhir ' + kerja + ' di KONIG Auto Detailing. Apabila Anda ingin menjadwalkan ' + ajak + ', silakan balas pesan ini dan kami akan siapkan slotnya.\n\nSalam,\nKONIG Auto Detailing';
 }
 async function markWashReminder(j, stage, today){
   try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { ['washReminders.' + stage]: today }); } catch(e) {}
@@ -1041,7 +1036,7 @@ function reviewReminders(jobs, today){
     .sort((a, b) => b.age - a.age);
 }
 function reviewMessage(r){
-  return 'Halo ' + sapa(r.j) + ', semoga mobil ' + (r.j.car || '') + ' masih kinclong ya 😊\n\nKalau sempat dan berkenan, boleh share pengalamannya di Google di sini:\n' + REVIEW_URL + '\n\nKalau sudah, makasih banyak ya 🙏\n\n— KONIG Auto Detailing';
+  return 'Halo ' + sapa(r.j) + ',\n\nTerima kasih telah mempercayakan ' + (r.j.car || 'kendaraan Anda') + ' kepada KONIG Auto Detailing. Kami harap Anda puas dengan hasilnya.\n\nApabila berkenan, kami akan sangat menghargai ulasan Anda di Google melalui tautan berikut:\n' + REVIEW_URL + '\n\nTerima kasih atas waktunya.\n\nSalam,\nKONIG Auto Detailing';
 }
 function renderReviewSection(list, due, today){
   const h = document.createElement('div');
