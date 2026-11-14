@@ -303,7 +303,7 @@
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const app = initializeApp({
@@ -316,6 +316,7 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 const storage = getStorage(app);
+storage.maxUploadRetryTime = 15000; // jangan muter lama kalau koneksi ke storage gagal
 
 // ── DATA ──
 const PANELS = [
@@ -376,6 +377,7 @@ async function loadJob() {
     if (!inspData.panels) inspData.panels = {};
     renderPage();
     hideLoading();
+    resolveFsPhotos();
   } catch(e) {
     hideLoading();
     document.getElementById('notFound').style.display = '';
@@ -406,7 +408,7 @@ function renderGeneralPhotos() {
   (inspData.general || []).forEach((ph, i) => {
     const t = document.createElement('div');
     t.className = 'photo-thumb';
-    t.innerHTML = `<img src="${ph.url}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deleteGeneralPhoto(${i})">✕</button>`}`;
+    t.innerHTML = `<img src="${ph._src || ph.url || ""}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deleteGeneralPhoto(${i})">✕</button>`}`;
     row.appendChild(t);
   });
   const addBtn = document.createElement('button');
@@ -447,27 +449,46 @@ async function compressImage(file, maxSide = 1400, quality = 0.72) {
 }
 
 // Upload di belakang: foto langsung tampil, user bisa lanjut foto berikutnya
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+function toDataUrl(blob){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); }); }
 async function uploadPhotoBg(file, folder, ph, onDone){
+  let small = null;
   try {
-    const small = await compressImage(file, 1200, 0.7);
+    small = await compressImage(file, 1200, 0.7);
     const path = `inspection/${jobCode}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2,6)}_${small.name}`;
     const storRef = ref(storage, path);
-    await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
-    ph.url = await getDownloadURL(storRef); ph.path = path; delete ph.uploading;
+    await withTimeout(uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' }), 20000);
+    ph.url = await withTimeout(getDownloadURL(storRef), 10000); ph.path = path; delete ph.uploading;
   } catch(err) {
-    console.error(err); ph.failed = true; delete ph.uploading;
-    showToast('Gagal upload foto', true);
+    console.warn('storage gagal, pakai jalur cadangan', err);
+    // Jalur cadangan: simpan foto (lebih kecil) sebagai dokumen Firestore
+    try {
+      const tiny = await compressImage(file, 1000, 0.6);
+      const data = await toDataUrl(tiny);
+      const fid = '_ph_' + jobCode + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      await withTimeout(setDoc(doc(db, 'konig_progress', fid), { photo: data, job: jobCode }), 20000);
+      ph.fs = fid; ph._src = data; delete ph.url; delete ph.uploading;
+    } catch(err2) {
+      console.error(err2); ph.failed = true; delete ph.uploading;
+      showToast('Gagal upload foto (' + ((err && err.code) || err.message || 'error') + ')', true);
+    }
   }
   onDone();
   if (!pendingUploads()) window.saveInspection(true);
+}
+// Muat foto yang disimpan lewat jalur cadangan
+async function resolveFsPhotos(){
+  const all = [...(inspData.general||[]), ...Object.values(inspData.panels||{}).flatMap(p => p.photos || [])].filter(ph => ph.fs && !ph._src);
+  await Promise.all(all.map(async ph => { try { const sn = await getDoc(doc(db, 'konig_progress', ph.fs)); if (sn.exists()) ph._src = sn.data().photo; } catch(e) {} }));
+  if (all.length) { renderGeneralPhotos(); if (typeof activePanel !== 'undefined' && activePanel) renderSheetPhotos(activePanel); }
 }
 function pendingUploads(){
   const all = [...(inspData.general||[]), ...Object.values(inspData.panels||{}).flatMap(p => p.photos || [])];
   return all.some(ph => ph.uploading);
 }
 function cleanInsp(){
-  const ok = ph => !ph.uploading && !ph.failed && ph.url && !String(ph.url).startsWith('blob:');
-  const strip = ({ uploading, failed, ...rest }) => rest;
+  const ok = ph => !ph.uploading && !ph.failed && (ph.fs || (ph.url && !String(ph.url).startsWith('blob:')));
+  const strip = ({ uploading, failed, _src, ...rest }) => rest;
   const panels = {};
   Object.entries(inspData.panels||{}).forEach(([k, v]) => { panels[k] = { ...v, photos: (v.photos||[]).filter(ok).map(strip) }; });
   return { ...inspData, general: (inspData.general||[]).filter(ok).map(strip), panels };
@@ -631,7 +652,7 @@ function renderSheetPhotos(panelId) {
   photos.forEach((ph, i) => {
     const t = document.createElement('div');
     t.className = 'photo-thumb';
-    t.innerHTML = `<img src="${ph.url}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deletePanelPhoto(${i})">✕</button>`}`;
+    t.innerHTML = `<img src="${ph._src || ph.url || ""}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deletePanelPhoto(${i})">✕</button>`}`;
     row.appendChild(t);
   });
   if (photos.length < 5) {

@@ -1742,6 +1742,7 @@ window.deleteJob = async function(){
     window._jobsCache && (window._jobsCache = window._jobsCache.filter(j => j.id !== id));
     closeModal('modalJob');
     loadJobs();
+    try { const ins = jj.inspection || {}; [...(ins.general||[]), ...Object.values(ins.panels||{}).flatMap(p => p.photos || [])].filter(ph => ph.fs).forEach(ph => deleteDoc(doc(window._db, 'konig_progress', ph.fs)).catch(() => {})); } catch(e) {}
     Promise.race([deleteFolder('inspection/' + id), new Promise(r => setTimeout(r, 60000))]).catch(e => console.warn('hapus foto', e));
   } catch(e) { alert('Gagal menghapus: ' + e.message); }
   btn.disabled = false;
