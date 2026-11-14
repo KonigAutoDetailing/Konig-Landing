@@ -76,6 +76,12 @@
     .track-car{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:var(--white);line-height:1}
     .stage-info{margin:16px 0 4px;padding:14px 16px;border:1px solid rgba(167,139,250,.35);border-left:3px solid var(--purpleB);background:rgba(124,58,237,.08);font-size:13px;line-height:1.6;color:#d6ccf0;text-align:left}
     .stage-info-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:13px;color:#fff;margin-bottom:4px}
+    .job-tabs{display:flex;gap:0;margin:14px 0 12px;border:1px solid var(--border)}
+    .job-tab{flex:1;background:transparent;color:var(--muted);border:none;padding:12px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+    .job-tab span{display:inline-block;min-width:22px;padding:1px 6px;margin-left:6px;border-radius:10px;background:rgba(255,255,255,.08);font-size:12px;letter-spacing:0}
+    .job-tab.active{background:var(--purple);color:#fff}
+    .job-tab.active span{background:rgba(255,255,255,.2)}
+    .hist-search{width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;font-size:15px}
     .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
     .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--muted);margin-top:4px}
     .track-service{font-size:13px;color:var(--muted);margin-top:8px}
@@ -438,6 +444,11 @@
         <button class="btn-logout" onclick="adminLogout()">Logout</button>
       </div>
     </div>
+    <div class="job-tabs">
+      <button type="button" class="job-tab active" id="tabActive" onclick="setJobTab('active')">Aktif <span id="cntActive">0</span></button>
+      <button type="button" class="job-tab" id="tabHistory" onclick="setJobTab('history')">History <span id="cntHistory">0</span></button>
+    </div>
+    <input type="search" id="histSearch" class="hist-search" placeholder="Cari plat, nama, mobil, kode..." oninput="renderJobList()" style="display:none">
     <div id="jobsList"></div>
   </div>
 </div>
@@ -807,16 +818,37 @@ window.loadJobs = async function() {
   snap.forEach(d => jobs.push({ id: d.id, ...d.data() }));
   if (window.autoCloseWashJobs) await window.autoCloseWashJobs(jobs);
 
-  const active = jobs.filter(j => !j.doneSteps?.includes('done'));
-  document.getElementById('jobCount').textContent = active.length + ' kendaraan aktif · ' + jobs.length + ' total';
+  window._allJobs = jobs;
+  renderJobList();
+}
+
+window._jobTab = window._jobTab || 'active';
+window.setJobTab = function(t){ window._jobTab = t; renderJobList(); };
+function jobDoneTime(j){ const d = toDateObj(j.doneAt) || toDateObj(j.updatedAt) || toDateObj(j.createdAt); return d ? d.getTime() : 0; }
+window.renderJobList = function(){
+  const jobs = window._allJobs || [];
+  const isDoneJob = j => (j.doneSteps||[]).includes('done');
+  const active = jobs.filter(j => !isDoneJob(j));
+  const history = jobs.filter(isDoneJob).sort((a,b) => jobDoneTime(b) - jobDoneTime(a));
+  document.getElementById('jobCount').textContent = active.length + ' kendaraan aktif · ' + history.length + ' di history';
+  document.getElementById('cntActive').textContent = active.length;
+  document.getElementById('cntHistory').textContent = history.length;
+  const tab = window._jobTab;
+  document.getElementById('tabActive').classList.toggle('active', tab === 'active');
+  document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+  const search = document.getElementById('histSearch');
+  search.style.display = tab === 'history' ? 'block' : 'none';
+  let shown = tab === 'active' ? active : history;
+  const q = tab === 'history' ? search.value.trim().toUpperCase().replace(/\s+/g,'') : '';
+  if (q) shown = shown.filter(j => [j.id, j.plate, j.custName, j.car, j.color, j.wa].join(' ').toUpperCase().replace(/\s+/g,'').includes(q));
 
   const list = document.getElementById('jobsList');
-  if (jobs.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🚗</div>Belum ada kendaraan. Tambah kendaraan baru.</div>';
+  if (shown.length === 0) {
+    list.innerHTML = '<div class="empty-state">' + (tab === 'active' ? 'Tidak ada kendaraan yang sedang dikerjakan.' : (q ? 'Tidak ditemukan.' : 'Belum ada kendaraan yang selesai.')) + '</div>';
     return;
   }
 
-  list.innerHTML = jobs.map(j => {
+  list.innerHTML = shown.map(j => {
     const steps = window.stepsFor(j.service);
     const doneSteps = j.doneSteps || [];
     const activeStep = j.activeStep || null;
@@ -831,7 +863,7 @@ window.loadJobs = async function() {
         <div class="job-code">${j.id}</div>
         ${j.custName ? `<div style="font-size:12px;color:var(--muted);letter-spacing:1px">${j.custTitle || ''} ${j.custName}</div>` : ''}<div class="job-car">${j.car || '-'}${j.color ? ' · ' + j.color : ''} <span style="font-size:13px;color:var(--muted);font-family:'Barlow',sans-serif">${j.plate || ''}</span></div>
         <div class="job-service">${j.service || '-'}</div>
-        <div class="job-date">WA: ${j.wa || '-'}</div>
+        <div class="job-date">WA: ${j.wa || '-'}${isDone && toDateObj(j.doneAt) ? ' · Selesai ' + toDateObj(j.doneAt).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : ''}</div>
         <div class="job-progress-mini">
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
