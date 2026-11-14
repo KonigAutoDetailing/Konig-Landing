@@ -2010,21 +2010,20 @@ function guessSize(d){
 }
 const SIZE_IDX = { 'Small':0, 'Medium':1, 'Large':2, 'X-tra Large':3 };
 function pricelistPrice(base, size){ const p = PRICELIST[base]; if (!p) return null; const i = SIZE_IDX[size]; if (i === undefined) return p.every(v => v === p[0]) ? p[0] : null; return p[i]; }
-const COAT_STEPS = 'Cuci & dekontaminasi, paint correction, aplikasi ';
 const DESC_MAP = {
-  'Graphene Coating — Eternity': 'Graphene coating, ketahanan hingga 8 tahun. ' + COAT_STEPS + 'graphene coating.',
-  'Graphene Coating — Shield': 'Graphene coating, ketahanan hingga 7 tahun. ' + COAT_STEPS + 'graphene coating.',
-  'Graphene Coating — Armor': 'Graphene coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'graphene coating.',
-  'Prestige Coating — Sonax CC EVO': 'Ceramic coating 2 layer (base + top coat), ketahanan hingga 5 tahun. ' + COAT_STEPS + 'coating.',
-  'Prestige Coating — Gyeon Q² Syncro EVO': 'Ceramic coating 2 layer (base + top coat), ketahanan hingga 4 tahun. ' + COAT_STEPS + 'coating.',
-  'Prestige Coating — CarPro D.Quartz GO': 'Ceramic coating 2 layer (base + top coat), ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
-  'Signature Coating — Sonax CC Pro': 'Ceramic coating, ketahanan hingga 4 tahun. ' + COAT_STEPS + 'coating.',
-  'Signature Coating — Gyeon Q² Pure EVO': 'Ceramic coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
-  'Signature Coating — CarPro CQUK 3.0': 'Ceramic coating, ketahanan hingga 2 tahun. ' + COAT_STEPS + 'coating.',
-  'Essential Coating — Sonax CC One': 'Ceramic coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
-  'Essential Coating — CarPro Lite': 'Ceramic coating, ketahanan hingga 2 tahun. ' + COAT_STEPS + 'coating.',
-  'Essential Coating — Sapphire 10H': 'Ceramic coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
-  'Matte Coating — Gyeon Q² Matte': 'Coating khusus cat matte/doff, ketahanan hingga 2 tahun. Cuci & dekontaminasi, aplikasi coating tanpa mengubah efek doff.',
+  'Graphene Coating — Eternity': 'Seri flagship graphene coating KONIG (Korea). Graphene membentuk lapisan yang lebih rapat dan tahan panas dibanding ceramic biasa, sehingga cat lebih terlindungi dari waterspot dan kusam. Kilap paling maksimal, sangat licin, ketahanan hingga 8 tahun.',
+  'Graphene Coating — Shield': 'Graphene coating KONIG (Korea) dengan lapisan rapat dan tahan panas yang membantu mengurangi waterspot. Kilap tinggi, licin, dan tahan bahan kimia dengan seimbang. Ketahanan hingga 7 tahun.',
+  'Graphene Coating — Armor': 'Graphene coating KONIG (Korea) untuk proteksi harian. Efek daun talas (hidrofobik) sangat kuat sehingga air dan kotoran mudah lepas saat dicuci. Ketahanan hingga 3 tahun.',
+  'Prestige Coating — Sonax CC EVO': 'Professional line dari SONAX (Jerman). Sistem 2 layer (base coat + top coat) dengan wet look yang sangat dalam, sangat licin, dan tahan bahan kimia. Ketahanan hingga 5 tahun.',
+  'Prestige Coating — Gyeon Q² Syncro EVO': 'Sistem coating 2 layer dari Gyeon (Korea): base coat yang keras dipadukan top coat yang sangat licin dan hidrofobik. Kilap tinggi dan perlindungan menyeluruh hingga 4 tahun.',
+  'Prestige Coating — CarPro D.Quartz GO': 'Sistem coating 2 layer dari CarPro (Korea) dengan lapisan keras dan tahan bahan kimia, kilap tajam, dan efek hidrofobik kuat. Ketahanan hingga 3 tahun.',
+  'Signature Coating — Sonax CC Pro': 'Ceramic coating profesional dari SONAX (Jerman) dengan kilap dan efek hidrofobik yang sangat baik, mudah dirawat. Ketahanan hingga 4 tahun.',
+  'Signature Coating — Gyeon Q² Pure EVO': 'Ceramic coating dari Gyeon (Korea) dengan kandungan SiO₂ tinggi untuk lapisan yang tebal, kilap seperti kaca, dan hidrofobik kuat. Ketahanan hingga 3 tahun.',
+  'Signature Coating — CarPro CQUK 3.0': 'Ceramic coating andalan CarPro (Korea) dengan lapisan keras dan kilap tajam, cocok untuk perlindungan harian. Ketahanan hingga 2 tahun.',
+  'Essential Coating — Sonax CC One': 'Ceramic coating dari SONAX (Jerman) untuk proteksi dasar dengan kilap dan efek hidrofobik yang baik. Ketahanan hingga 3 tahun.',
+  'Essential Coating — CarPro Lite': 'Ceramic coating ringan dari CarPro (Korea), praktis dan mudah dirawat untuk perlindungan dasar. Ketahanan hingga 2 tahun.',
+  'Essential Coating — Sapphire 10H': 'Ceramic coating 10H buatan Indonesia, pilihan value terbaik untuk menambah kilap dan perlindungan dasar cat. Ketahanan hingga 3 tahun.',
+  'Matte Coating — Gyeon Q² Matte': 'Coating khusus cat matte/doff dari Gyeon (Korea). Melindungi cat dari noda dan kotoran tanpa membuat cat jadi mengkilap, efek doff tetap terjaga. Ketahanan hingga 2 tahun.',
   'Express Polish': 'Paint correction 1 hari: cuci pH netral, velg & ban, tar & waterspot remover, polish hingga 90% swirl hilang, trim protection, vacuum. Proteksi 6 bulan.',
   'Premium Polish': '3 steps paint correction (hingga 3 hari): cuci pH netral, velg & ban, tar & waterspot remover, trim protection, vacuum. Proteksi 12 bulan.',
   'Premium Maintenance': 'Maintenance coating per kunjungan untuk menjaga performa dan kilap coating.',
@@ -2147,7 +2146,7 @@ window.openInvoice = function(id, d, fromDone){
   if (inv) box.innerHTML = inv.items.map(it => {
     const base = String(it.produk||'').replace(/ - (Small|Medium|Large|X-tra Large)$/,'').replace(/ - /g, ' — ');
     const nd = DESC_MAP[base];
-    return invItemHtml(nd && (!it.desc || it.desc.length < 25) ? { ...it, desc: nd } : it);
+    return invItemHtml(nd && (!it.desc || it.desc.length < 25 || /Cuci & dekontaminasi, paint correction, aplikasi/.test(it.desc)) ? { ...it, desc: nd } : it);
   }).join('');
   else {
     const svs = String(d.service||'').split(', ').filter(Boolean);
