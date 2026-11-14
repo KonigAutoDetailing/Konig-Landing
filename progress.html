@@ -1288,6 +1288,7 @@ function welcomeMessage(j){
     + (j.service ? 'Layanan: ' + j.service + '\n\n' : '')
     + 'Kendaraan Anda akan dikerjakan oleh tim kami sesuai standar KONIG. Progres pengerjaan dapat dipantau secara langsung melalui tautan berikut:\n' + url + '\n\n'
     + (isCoatingJob(j.service) ? 'Kami juga akan mengirimkan update progres secara berkala.' : 'Kami akan menginformasikan kembali setelah kendaraan selesai dikerjakan.')
+    + (j.voucherCode ? '' : '\n\nApabila Anda memiliki kode voucher atau kode referral, silakan infokan kepada kami agar dapat langsung kami terapkan pada invoice.')
     + '\n\nSalam,\nKONIG Auto Detailing';
 }
 window.openWelcome = function(j){
@@ -1760,7 +1761,7 @@ window.saveJob = async function() {
       await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       window._repeatOf = null;
       if (nowDone) justDone = code;
-      else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName };
+      else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName, voucherCode };
     }
     closeModal('modalJob');
     loadJobs();
