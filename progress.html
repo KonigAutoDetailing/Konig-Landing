@@ -1767,9 +1767,11 @@ window.saveJob = async function() {
 
 
 // ── DAFTAR CUSTOMER (dropdown nama → isi nomor WA otomatis) ──
+function isRealCustomer(j){ return (j.doneSteps||[]).includes('done') || (j.visits||[]).length > 0; }
 function customerIndex(){
   const map = new Map();
-  (window._allJobs||[]).slice().sort((a,b) => (visitDate(a)||0) - (visitDate(b)||0)).forEach(j => {
+  // Hanya customer yang mobilnya sudah selesai dikerjakan (customer KONIG yang sebenarnya)
+  (window._allJobs||[]).filter(isRealCustomer).slice().sort((a,b) => (visitDate(a)||0) - (visitDate(b)||0)).forEach(j => {
     const nm = String(j.custName||'').trim().toUpperCase(); if (!nm) return;
     map.set(nm + '|' + normWa(j.wa), { name: nm, title: j.custTitle || 'Mr.', wa: j.wa || '', car: j.car || '', plate: j.plate || '', t: visitDate(j) });
   });
@@ -1881,7 +1883,7 @@ function checkRepeat(){
   }
   let waHtml = '';
   if (wa.length >= 9) {
-    const others = jobs.filter(j => normWa(j.wa) === wa && (!plate || normPlate(j.plate) !== plate)).sort((a,b) => (visitDate(b)||0) - (visitDate(a)||0)).slice(0, 3);
+    const others = jobs.filter(isRealCustomer).filter(j => normWa(j.wa) === wa && (!plate || normPlate(j.plate) !== plate)).sort((a,b) => (visitDate(b)||0) - (visitDate(a)||0)).slice(0, 3);
     if (others.length) {
       waHtml = '👤 <b>Nomor ini pernah membawa mobil lain ke KONIG:</b><br>' + others.map(j => `• ${j.car || '-'}${j.color ? ' ' + titleCase(j.color) : ''} · ${j.plate || '-'} · ${sejakLabel(visitDate(j))} · ${j.service || '-'}`).join('<br>');
     }
