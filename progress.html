@@ -1085,9 +1085,14 @@ function renderReviewSection(list, due, today){
 // ── WELCOME MESSAGE (khusus Coating, saat kendaraan baru dibuat) ──
 function isCoatingJob(service){ return String(service||'').split(', ').some(x => /Coating/i.test(x) && !/Window/i.test(x)); }
 function welcomeMessage(j){
-  const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
+  const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const url = location.origin + '/progress?code=' + j.id;
-  return 'Halo ' + sapa(j) + ', selamat datang di KONIG Auto Detailing 🙏\n\nMakasih sudah mempercayakan ' + mobil + ' ke kami. Tenang aja, mobilnya ada di tangan yang tepat — tim kami kerjakan dengan teliti sesuai standar KONIG.\n\nProgres pengerjaannya bisa dipantau kapan aja di sini:\n' + url + '\n\n' + (isCoatingJob(j.service) ? 'Kami juga akan kirim update setiap beberapa hari ya.' : 'Nanti kami kabari lagi begitu mobilnya selesai ya.') + '\n\n— KONIG Auto Detailing';
+  return 'Halo ' + sapa(j) + ',\n\n'
+    + 'Selamat datang di KONIG Auto Detailing. Terima kasih telah mempercayakan ' + mobil + ' kepada kami.\n\n'
+    + (j.service ? 'Layanan: ' + j.service + '\n\n' : '')
+    + 'Kendaraan Anda akan dikerjakan oleh tim kami sesuai standar KONIG. Progres pengerjaan dapat dipantau secara langsung melalui tautan berikut:\n' + url + '\n\n'
+    + (isCoatingJob(j.service) ? 'Kami juga akan mengirimkan update progres secara berkala.' : 'Kami akan menginformasikan kembali setelah kendaraan selesai dikerjakan.')
+    + '\n\nSalam,\nKONIG Auto Detailing';
 }
 window.openWelcome = function(j){
   const list = document.getElementById('waList');
