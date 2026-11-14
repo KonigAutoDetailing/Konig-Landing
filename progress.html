@@ -1932,6 +1932,7 @@ function findVoucher(code){
   for (const j of (window._allJobs||[])) for (const v of (j.vouchers||[])) if (v.code === code) return { ...v, jobId: j.id, owner: j };
   return null;
 }
+window.useJobVoucher = function(code){ document.getElementById('jobVoucher').value = code; checkJobVoucher(); checkRepeat(); };
 window.checkJobVoucher = function(){
   const el = document.getElementById('jobVoucher'), info = document.getElementById('jobVoucherInfo');
   el.value = el.value.toUpperCase();
@@ -2036,6 +2037,13 @@ function checkRepeat(){
     if (others.length) {
       waHtml = '👤 <b>Nomor ini pernah membawa mobil lain ke KONIG:</b><br>' + others.map(j => `• ${j.car || '-'}${j.color ? ' ' + titleCase(j.color) : ''} · ${j.plate || '-'} · ${sejakLabel(visitDate(j))} · ${j.service || '-'}`).join('<br>');
     }
+  }
+  // Voucher gratis yang belum dipakai (berdasarkan plat / nomor WA)
+  const vlist = (plate.length >= 4 || wa.length >= 9) ? vouchersFor({ plate: document.getElementById('jobPlate').value, wa: document.getElementById('jobWa').value }) : [];
+  if (vlist.length) {
+    const cur = document.getElementById('jobVoucher').value.trim().toUpperCase();
+    html.push('🎟️ <b>Customer ini punya voucher gratis yang belum dipakai:</b>' + vlist.map(v => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small>(${v.code})</small></span>${cur === v.code ? '<span style="color:#4ade80">✓ dipakai</span>' : `<button type="button" class="btn-sm" style="background:#facc15;color:#111" onclick="useJobVoucher('${v.code}')">Pakai</button>`}</div>`).join(''));
+    if (cls === 'rep-box info') cls = 'rep-box';
   }
   box.className = cls;
   box.innerHTML = html.join('<br><br>');
