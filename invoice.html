@@ -60,6 +60,9 @@
   .st tr.pay td{padding:7px 0}
   .st tr.pay td:last-child{color:#333}
   .st tr.due td{border-top:2px solid #2d3a4b;padding-top:10px;font-size:15px;font-weight:800;color:#2d3a4b}
+  .ket{border-collapse:collapse;font-size:13px}
+  .ket td{padding:2px 0}
+  .ket td:first-child{color:#777;padding-right:8mm}
   .datefoot{text-align:center;font-weight:700;color:#555;margin-top:8mm;font-size:13px}
   .lunas{position:absolute;right:28mm;top:252mm;border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:28px;letter-spacing:4px;padding:6px 18px;transform:rotate(-12deg);opacity:.85}
   .msg{text-align:center;padding:60px 20px;font-size:15px;color:#555}
@@ -113,6 +116,8 @@ const code = new URLSearchParams(location.search).get('code');
   const dmy2 = v => /^\d{4}-\d{2}-\d{2}$/.test(v||'') ? dmy(v) : esc(v||'');
   const hasDp = inv.dp && inv.dp.amount;
   const pel = inv.pay === 'lunas' ? (inv.pelunasan || { amount: Math.max(0, inv.total - (hasDp ? inv.dp.amount : 0)), date: inv.date }) : null;
+  const autoKet = [j.car, j.color ? titleCase(j.color) : '', j.plate].filter(Boolean).join(' - ');
+  const catatan = (inv.keterangan || '').trim() && inv.keterangan.trim() !== autoKet ? inv.keterangan.trim() : '';
   const payRows = (hasDp ? `<tr class="pay"><td>Down Payment<small>${esc(inv.dp.no || '')}${inv.dp.date ? ' · ' + dmy2(inv.dp.date) : ''}</small></td><td>- Rp ${money(inv.dp.amount)}</td></tr>` : '')
     + (pel ? `<tr class="pay"><td>Pelunasan<small>${pel.date ? dmy2(pel.date) : ''}</small></td><td>- Rp ${money(pel.amount)}</td></tr>` : '');
   root.className = '';
@@ -134,7 +139,11 @@ const code = new URLSearchParams(location.search).get('code');
     <table class="items"><colgroup><col style="width:19%"><col style="width:31%"><col style="width:5%"><col style="width:14%"><col style="width:9%"><col style="width:6%"><col style="width:16%"></colgroup><tr><th>Produk</th><th>Deskripsi</th><th>Qty</th><th>Harga</th><th>Disc</th><th>Pajak</th><th>Jumlah</th></tr>${rows}</table>
     <div class="bottom">
       <div class="left">
-        <div class="ph">Keterangan</div><div class="txt">${esc(inv.keterangan || '')}</div>
+        <div class="ph">Keterangan</div>
+        <table class="ket"><tr><td>Tipe Mobil</td><td>${esc(j.car || '-')}</td></tr>
+          <tr><td>Warna</td><td>${esc(j.color ? titleCase(j.color) : '-')}</td></tr>
+          <tr><td>Plat Nomor</td><td>${esc(j.plate || '-')}</td></tr></table>
+        ${catatan ? `<div class="txt" style="margin-top:6px">${esc(catatan)}</div>` : ''}
         <div class="ph">Rekening Pembayaran</div>
         <div class="txt">Transfer ke:
 Bank BCA

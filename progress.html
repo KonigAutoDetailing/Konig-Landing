@@ -633,7 +633,7 @@
     <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
     <div class="form-row2" style="margin-top:14px">
       <div class="form-group"><label>Diskon Tambahan (Rp / %)</label><input type="text" id="invDiskon" placeholder="contoh: 500.000 atau 10%" oninput="invDiscFmt(this);invCalc()"/></div>
-      <div class="form-group"><label>Keterangan</label><input type="text" id="invKet"/></div>
+      <div class="form-group"><label>Catatan (opsional)</label><input type="text" id="invKet" placeholder="Tipe, warna & plat otomatis"/></div>
     </div>
     <label class="inv-lbl">Pembayaran</label>
     <div class="inv-pay">
@@ -1856,7 +1856,8 @@ window.openInvoice = function(id, d, fromDone){
   if (inv) document.getElementById('invDue').value = inv.due; else invDueFromDate();
   document.getElementById('invSize').value = inv ? (inv.size || '') : 'Medium';
   document.getElementById('invDiskon').value = inv && inv.diskonPct ? inv.diskonPct + '%' : (inv && inv.diskon ? fmtRp(inv.diskon) : '');
-  document.getElementById('invKet').value = inv ? (inv.keterangan || '') : [d.car, d.color ? titleCase(d.color) : '', d.plate].filter(Boolean).join(' - ');
+  const autoKet = [d.car, d.color ? titleCase(d.color) : '', d.plate].filter(Boolean).join(' - ');
+  document.getElementById('invKet').value = inv && inv.keterangan && inv.keterangan !== autoKet ? inv.keterangan : '';
   document.getElementById('invHasDp').checked = !!(inv && inv.dp && inv.dp.amount);
   document.getElementById('invLunas').checked = !!(inv && inv.pay === 'lunas');
   document.getElementById('invLunasDate').value = inv && inv.pelunasan && inv.pelunasan.date || '';
