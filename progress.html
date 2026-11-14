@@ -635,7 +635,7 @@
     <div id="invItems"></div>
     <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
     <div class="form-row2" style="margin-top:14px">
-      <div class="form-group"><label>Diskon Tambahan (Rp / %)</label><input type="text" id="invDiskon" placeholder="contoh: 500.000 atau 10%" oninput="invDiscFmt(this);invCalc()"/></div>
+      <div class="form-group"><label>Diskon Tambahan (Rp / %)</label><input type="text" id="invDiskon" placeholder="contoh: 500.000 atau 10 (= 10%)" oninput="invDiscFmt(this);invCalc()"/></div>
       <div class="form-group"><label>Catatan (opsional)</label><input type="text" id="invKet" placeholder="Tipe, warna & plat otomatis"/></div>
     </div>
     <label class="inv-lbl">Pembayaran</label>
@@ -1925,7 +1925,7 @@ function fmtRp(n){ return n.toLocaleString('id-ID'); }
 window.invNum = function(el){ const n = rupiahNum(el.value); el.value = n ? fmtRp(n) : ''; };
 // Diskon: boleh Rp (500.000) atau persen (10%)
 window.invDiscFmt = function(el){ if (/%/.test(el.value)) { const v = String(el.value).replace(/[^0-9.,]/g,'').replace(',', '.'); el.value = v ? v + '%' : ''; } else invNum(el); };
-function discValue(raw, base){ const t = String(raw||''); if (/%/.test(t)) { const p = Math.min(100, parseFloat(t.replace(/[^0-9.,]/g,'').replace(',', '.')) || 0); return { amount: Math.round(base * p / 100), pct: p }; } return { amount: rupiahNum(t), pct: 0 }; }
+function discValue(raw, base){ let t = String(raw||'').trim(); if (/^\d{1,2}$/.test(t)) t += '%'; /* 1–2 angka = persen */ if (/%/.test(t)) { const p = Math.min(100, parseFloat(t.replace(/[^0-9.,]/g,'').replace(',', '.')) || 0); return { amount: Math.round(base * p / 100), pct: p }; } return { amount: rupiahNum(t), pct: 0 }; }
 function invYmd(d){ return new Date(d.getTime()+7*3600e3).toISOString().slice(0,10); }
 function nextSeq(prefix){
   const yr = new Date().getFullYear(); let mx = 0;
@@ -1944,7 +1944,7 @@ function invItemHtml(it){
     <small>DESKRIPSI</small><input class="i-desc" value="${(it.desc||'').replace(/"/g,'&quot;')}">
     <div class="row"><div><small>QTY</small><input class="i-qty" inputmode="numeric" value="${it.qty||1}" oninput="invCalc()"></div>
     <div><small>HARGA</small><input class="i-harga" inputmode="numeric" value="${it.harga ? fmtRp(it.harga) : ''}" oninput="invNum(this);invCalc()"></div>
-    <div><small>DISC (RP / %)</small><input class="i-disc" placeholder="0 / 10%" value="${it.discPct ? it.discPct + '%' : (it.disc ? fmtRp(it.disc) : '')}" oninput="invDiscFmt(this);invCalc()"></div></div></div>`;
+    <div><small>DISC (RP / %)</small><input class="i-disc" placeholder="10 = 10%" value="${it.discPct ? it.discPct + '%' : (it.disc ? fmtRp(it.disc) : '')}" oninput="invDiscFmt(this);invCalc()"></div></div></div>`;
 }
 window.invAddItem = function(){ document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({qty:1})); };
 window.invSizeChanged = function(){
