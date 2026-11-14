@@ -713,6 +713,17 @@ window.EXPRESS_STEPS = [
   { id: 'qc',         name: 'Final QC',              pct: 90,  icon: '✨' },
   { id: 'done',       name: 'Ready for Pickup',      pct: 100, icon: '🎉' },
 ];
+// Premium Wash: received → interior cleaning + wash → final qc → selesai
+window.WASH_STEPS = [
+  { id: 'received', name: 'Received',                 pct: 5,   icon: '📋' },
+  { id: 'washing',  name: 'Interior Cleaning + Wash', pct: 45,  icon: '🧽' },
+  { id: 'qc',       name: 'Final QC',                 pct: 90,  icon: '✨' },
+  { id: 'done',     name: 'Selesai',                  pct: 100, icon: '🎉' },
+];
+window.isPremiumWash = function(service){
+  const sv = String(service||'').split(', ').filter(Boolean);
+  return sv.length > 0 && sv.every(x => /Premium Wash/i.test(x));
+};
 window.isSimpleService = function(service){
   const sv = String(service||'').split(', ').filter(Boolean);
   return sv.length > 0 && sv.every(x => /Wash|Interior|Window|Engine/i.test(x));
@@ -723,10 +734,11 @@ window.isExpressPolish = function(service){
 };
 window.stepsFor = function(service){
   if(window.isExpressPolish(service)) return window.EXPRESS_STEPS;
+  if(window.isPremiumWash(service)) return window.WASH_STEPS;
   if(window.isSimpleService(service)) return window.SIMPLE_STEPS;
   return window.STEPS;
 };
-window.ALL_STEP_IDS = [...new Set([...window.STEPS, ...window.SIMPLE_STEPS, ...window.EXPRESS_STEPS].map(x => x.id))];
+window.ALL_STEP_IDS = [...new Set([...window.STEPS, ...window.SIMPLE_STEPS, ...window.EXPRESS_STEPS, ...window.WASH_STEPS].map(x => x.id))];
 
 // ── GENERATE CODE ──
 function genCode() {
