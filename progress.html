@@ -680,6 +680,10 @@
     <button class="modal-close" onclick="closeModal('modalPromo')">×</button>
     <div class="modal-title">KODE REFERRAL & PROMO</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Buat kode, lalu customer cukup menyebutkan kodenya. Masukkan di kolom <b style="color:#fff">Kode Voucher / Referral</b> saat daftar kendaraan baru, dan benefitnya otomatis masuk invoice.</p>
+    <div class="inv-lbl">Promo otomatis per layanan (diskon item)</div>
+    <div id="autoPromoBox"></div>
+    <button onclick="saveAutoPromo()" class="inv-btn-ghost" style="width:100%;margin:6px 0 16px">Simpan Promo Otomatis</button>
+    <div class="inv-lbl">Kode referral & promo</div>
     <div id="promoList"></div>
     <div class="promo-form">
       <div class="inv-lbl" style="margin-top:6px">Buat kode baru</div>
@@ -1856,7 +1860,7 @@ function pickCust(c){
 // ── KODE REFERRAL & PROMO (disimpan di konig_progress/_config) ──
 window._promos = [];
 async function loadPromos(){
-  try { const { doc, getDoc } = window._fbFns; const sn = await getDoc(doc(window._db, 'konig_progress', '_config')); if (sn.exists()) window._promos = sn.data().promos || []; } catch(e) { window._promos = window._promos || []; }
+  try { const { doc, getDoc } = window._fbFns; const sn = await getDoc(doc(window._db, 'konig_progress', '_config')); if (sn.exists()) { window._promos = sn.data().promos || []; if (sn.data().autoPromo) window._autoPromo = sn.data().autoPromo; } } catch(e) { window._promos = window._promos || []; }
   return window._promos;
 }
 async function savePromos(){ const { doc, setDoc } = window._fbFns; await setDoc(doc(window._db, 'konig_progress', '_config'), { promos: window._promos }, { merge: true }); }
@@ -1885,7 +1889,7 @@ function renderPromos(){
     d.appendChild(tog); d.appendChild(del); box.appendChild(d);
   });
 }
-window.openPromo = async function(){ openModal('modalPromo'); document.getElementById('promoList').textContent = 'Memuat…'; await loadPromos(); renderPromos(); promoTypeChanged(); };
+window.openPromo = async function(){ openModal('modalPromo'); document.getElementById('promoList').textContent = 'Memuat…'; await loadPromos(); renderAutoPromo(); renderPromos(); promoTypeChanged(); };
 window.savePromo = async function(){
   const code = document.getElementById('pCode').value.trim().toUpperCase().replace(/\s+/g,'');
   const type = document.getElementById('pType').value;
@@ -1899,6 +1903,17 @@ window.savePromo = async function(){
   try { await savePromos(); } catch(e) { window._promos.pop(); alert('Gagal menyimpan: ' + e.message); return; }
   ['pCode','pOwner','pValue','pMax'].forEach(id => document.getElementById(id).value = '');
   renderPromos();
+};
+
+// Promo otomatis per layanan (mis. graphene bulan ini). Disimpan di _config.autoPromo { layanan: persen }
+const AUTO_PROMO_SERVICES = ['Graphene Coating — Eternity','Graphene Coating — Shield','Graphene Coating — Armor'];
+window._autoPromo = { 'Graphene Coating — Eternity': 20, 'Graphene Coating — Shield': 15, 'Graphene Coating — Armor': 10 };
+function renderAutoPromo(){
+  document.getElementById('autoPromoBox').innerHTML = AUTO_PROMO_SERVICES.map((sv, i) => `<div class="form-row2" style="align-items:center;margin-bottom:6px"><div style="font-size:13px;color:#fff">${sv.replace('Graphene Coating — ','Graphene ')}</div><input type="text" inputmode="numeric" id="ap${i}" value="${window._autoPromo[sv] || ''}" placeholder="0" style="text-align:center"/></div>`).join('') + '<div style="font-size:11px;color:var(--muted);margin-top:2px">Diskon (%) otomatis terisi di kolom Disc invoice. Kosongkan / 0 kalau promo selesai.</div>';
+}
+window.saveAutoPromo = async function(){
+  AUTO_PROMO_SERVICES.forEach((sv, i) => { const v = Math.min(100, parseFloat(document.getElementById('ap' + i).value) || 0); window._autoPromo[sv] = v; });
+  try { const { doc, setDoc } = window._fbFns; await setDoc(doc(window._db, 'konig_progress', '_config'), { autoPromo: window._autoPromo }, { merge: true }); alert('Promo otomatis tersimpan.'); } catch(e) { alert('Gagal menyimpan: ' + e.message); }
 };
 // Terapkan kode promo di invoice baru
 function applyPromoToInvoice(p){
@@ -2255,6 +2270,8 @@ window.invSizeChanged = function(){
     const h = el.querySelector('.i-harga');
     const pl = pricelistPrice(base, size);
     if (pl) h.value = fmtRp(pl);
+    const ap = (window._autoPromo || {})[base]; const dc = el.querySelector('.i-disc');
+    if (ap && !dc.value) dc.value = ap + '%';
     else if (!rupiahNum(h.value)) { const lp = lastPrice(p.value); if (lp) h.value = fmtRp(lp); }
   });
   invCalc();
