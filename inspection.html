@@ -36,6 +36,7 @@
     .general-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--white);margin-bottom:2px}
     .general-desc{font-size:12px;color:var(--muted);margin-bottom:12px}
     .photo-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+    .ph-up{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45)}
     .photo-thumb{position:relative;width:72px;height:72px;border-radius:4px;overflow:hidden;border:1px solid var(--border);flex-shrink:0}
     .photo-thumb img{width:100%;height:100%;object-fit:cover}
     .photo-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.75);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -405,7 +406,7 @@ function renderGeneralPhotos() {
   (inspData.general || []).forEach((ph, i) => {
     const t = document.createElement('div');
     t.className = 'photo-thumb';
-    t.innerHTML = `<img src="${ph.url}" loading="lazy"/><button class="photo-del" onclick="deleteGeneralPhoto(${i})">✕</button>`;
+    t.innerHTML = `<img src="${ph.url}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deleteGeneralPhoto(${i})">✕</button>`}`;
     row.appendChild(t);
   });
   const addBtn = document.createElement('button');
@@ -445,27 +446,42 @@ async function compressImage(file, maxSide = 1400, quality = 0.72) {
   } catch(e) { return file; }
 }
 
-window.handleGeneralFiles = async function(e) {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
-  showLoading('Mengupload foto...');
+// Upload di belakang: foto langsung tampil, user bisa lanjut foto berikutnya
+async function uploadPhotoBg(file, folder, ph, onDone){
   try {
-    const results = await Promise.all(files.map(async (file, i) => {
-      const small = await compressImage(file);
-      const path = `inspection/${jobCode}/general/${Date.now()}_${i}_${small.name}`;
-      const storRef = ref(storage, path);
-      await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
-      return { url: await getDownloadURL(storRef), path };
-    }));
-    results.forEach(r => inspData.general.push(r));
-    renderGeneralPhotos();
-    window.saveInspection(true);
+    const small = await compressImage(file, 1200, 0.7);
+    const path = `inspection/${jobCode}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2,6)}_${small.name}`;
+    const storRef = ref(storage, path);
+    await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
+    ph.url = await getDownloadURL(storRef); ph.path = path; delete ph.uploading;
   } catch(err) {
+    console.error(err); ph.failed = true; delete ph.uploading;
     showToast('Gagal upload foto', true);
-    console.error(err);
   }
+  onDone();
+  if (!pendingUploads()) window.saveInspection(true);
+}
+function pendingUploads(){
+  const all = [...(inspData.general||[]), ...Object.values(inspData.panels||{}).flatMap(p => p.photos || [])];
+  return all.some(ph => ph.uploading);
+}
+function cleanInsp(){
+  const ok = ph => !ph.uploading && !ph.failed && ph.url && !String(ph.url).startsWith('blob:');
+  const strip = ({ uploading, failed, ...rest }) => rest;
+  const panels = {};
+  Object.entries(inspData.panels||{}).forEach(([k, v]) => { panels[k] = { ...v, photos: (v.photos||[]).filter(ok).map(strip) }; });
+  return { ...inspData, general: (inspData.general||[]).filter(ok).map(strip), panels };
+}
+window.handleGeneralFiles = function(e) {
+  const files = Array.from(e.target.files);
   e.target.value = '';
-  hideLoading();
+  if (!files.length) return;
+  files.forEach(file => {
+    const ph = { url: URL.createObjectURL(file), uploading: true };
+    inspData.general.push(ph);
+    uploadPhotoBg(file, 'general', ph, () => { if (ph.failed) inspData.general = inspData.general.filter(x => x !== ph); renderGeneralPhotos(); });
+  });
+  renderGeneralPhotos();
 };
 
 // ── SUMMARY LIST (hanya temuan) ──
@@ -615,7 +631,7 @@ function renderSheetPhotos(panelId) {
   photos.forEach((ph, i) => {
     const t = document.createElement('div');
     t.className = 'photo-thumb';
-    t.innerHTML = `<img src="${ph.url}" loading="lazy"/><button class="photo-del" onclick="deletePanelPhoto(${i})">✕</button>`;
+    t.innerHTML = `<img src="${ph.url}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deletePanelPhoto(${i})">✕</button>`}`;
     row.appendChild(t);
   });
   if (photos.length < 5) {
@@ -644,42 +660,30 @@ window.deletePanelPhoto = function(i) {
   }
 };
 
-window.handlePanelFiles = async function(e) {
+window.handlePanelFiles = function(e) {
   if (!activePanel) return;
   let files = Array.from(e.target.files);
+  e.target.value = '';
   if (!files.length) return;
-  const existing = (inspData.panels[activePanel] || {}).photos || [];
-  const remaining = 5 - existing.length;
+  const panel = activePanel;
+  if (!inspData.panels[panel]) inspData.panels[panel] = {};
+  if (!inspData.panels[panel].photos) inspData.panels[panel].photos = [];
+  const arr = inspData.panels[panel].photos;
+  const remaining = 5 - arr.length;
   if (remaining <= 0) { showToast('Maksimal 5 foto per panel', true); return; }
   files = files.slice(0, remaining);
-  // show uploading state in sheet
-  const row = document.getElementById('bsPhotoRow');
-  const spinner = document.createElement('div');
-  spinner.innerHTML = `<span class="upload-spin"></span> Mengupload...`;
-  spinner.style.cssText = 'color:var(--muted);font-size:12px;align-self:center;padding:8px 0';
-  row.appendChild(spinner);
-  try {
-    const panel = activePanel;
-    const results = await Promise.all(files.map(async (file, i) => {
-      const small = await compressImage(file);
-      const path = `inspection/${jobCode}/${panel}/${Date.now()}_${i}_${small.name}`;
-      const storRef = ref(storage, path);
-      await uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' });
-      return { url: await getDownloadURL(storRef), path };
-    }));
-    if (!inspData.panels[panel]) inspData.panels[panel] = {};
-    if (!inspData.panels[panel].photos) inspData.panels[panel].photos = [];
-    results.forEach(r => inspData.panels[panel].photos.push(r));
-    if (!inspData.panels[activePanel].status) inspData.panels[activePanel].status = 'other';
-    renderSheetPhotos(activePanel);
-    refreshSummaryRow(activePanel);
-    window.saveInspection(true);
-  } catch(err) {
-    showToast('Gagal upload foto', true);
-    console.error(err);
-    renderSheetPhotos(activePanel);
-  }
-  e.target.value = '';
+  if (!inspData.panels[panel].status) inspData.panels[panel].status = 'other';
+  files.forEach(file => {
+    const ph = { url: URL.createObjectURL(file), uploading: true };
+    arr.push(ph);
+    uploadPhotoBg(file, panel, ph, () => {
+      if (ph.failed) inspData.panels[panel].photos = inspData.panels[panel].photos.filter(x => x !== ph);
+      if (activePanel === panel) renderSheetPhotos(panel);
+      refreshSummaryRow(panel);
+    });
+  });
+  renderSheetPhotos(panel);
+  refreshSummaryRow(panel);
 };
 
 // ── SAVE ──
@@ -689,7 +693,7 @@ window.saveInspection = async function(silent) {
   btn.disabled = true;
   try {
     await updateDoc(doc(db, 'konig_progress', jobCode), {
-      inspection: inspData,
+      inspection: cleanInsp(),
       inspectedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -703,7 +707,9 @@ window.saveInspection = async function(silent) {
 };
 
 // ── BACK ──
+window.addEventListener('beforeunload', e => { if (pendingUploads()) { e.preventDefault(); e.returnValue = ''; } });
 window.goBack = function() {
+  if (pendingUploads() && !confirm('Masih ada foto yang sedang diupload. Keluar sekarang? Foto yang belum selesai tidak tersimpan.')) return;
   window.location.href = '/progress?code=' + jobCode;
 };
 
