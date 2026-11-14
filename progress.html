@@ -637,6 +637,7 @@
         <div class="form-group"><label>Jumlah DP (Rp)</label><input type="text" inputmode="numeric" id="invDpAmt" oninput="invNum(this);invCalc()"/></div>
         <div class="form-group"><label>No. DP</label><input type="text" id="invDpNo"/></div>
       </div>
+      <div class="form-group"><label>Tanggal DP</label><input type="date" id="invDpDate"/></div>
     </div>
     <div id="invLunasBox" style="display:none">
       <div class="form-row2">
@@ -1785,6 +1786,8 @@ window.openInvoice = function(id, d, fromDone){
   document.getElementById('invLunasDate').value = inv && inv.pelunasan && inv.pelunasan.date || '';
   document.getElementById('invDpAmt').value = inv && inv.dp && inv.dp.amount ? fmtRp(inv.dp.amount) : '';
   document.getElementById('invDpNo').value = inv && inv.dp && inv.dp.no ? inv.dp.no : nextSeq('INV-DP');
+  const masuk = toDateObj(d.createdAt);
+  document.getElementById('invDpDate').value = inv && inv.dp && inv.dp.date && inv.dp.date !== inv.due ? inv.dp.date : (masuk ? invYmd(masuk) : today);
   const box = document.getElementById('invItems');
   if (inv) box.innerHTML = inv.items.map(invItemHtml).join('');
   else {
@@ -1803,7 +1806,7 @@ window.saveInvoice = async function(save){
     if (c.items.some(it => !it.harga) && !confirm('Ada item tanpa harga. Tetap simpan?')) return;
     const invoice = { no: document.getElementById('invNo').value.trim(), date: document.getElementById('invDate').value, due: document.getElementById('invDue').value,
       size: document.getElementById('invSize').value, items: c.items, diskon: c.diskon, keterangan: document.getElementById('invKet').value.trim(),
-      pay: c.pay, dp: c.hasDp && c.dpAmt ? { amount: c.dpAmt, no: document.getElementById('invDpNo').value.trim(), date: document.getElementById('invDue').value } : null,
+      pay: c.pay, dp: c.hasDp && c.dpAmt ? { amount: c.dpAmt, no: document.getElementById('invDpNo').value.trim(), date: document.getElementById('invDpDate').value } : null,
       pelunasan: c.lunas ? { amount: c.pelunasan, date: document.getElementById('invLunasDate').value } : null,
       subtotal: c.subtotal, total: c.total, tertagih: c.tertagih };
     try {
