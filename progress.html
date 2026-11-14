@@ -2153,13 +2153,13 @@ window.checkJobVoucher = function(){
   info.style.display = 'block';
   if (!v) {
     const p = findPromo(code);
-    if (p) { const ok = promoUsable(p); info.style.color = ok ? '#4ade80' : '#f87171'; info.textContent = ok ? '✓ Kode ' + p.code + ': ' + promoBenefit(p) + (p.owner ? ' (' + p.owner + ')' : '') + '. Otomatis dipakai di invoice.' : '✗ Kode ' + p.code + ' tidak aktif / sudah mencapai batas'; if (ok && p.type === 'free' && typeof addService === 'function' && !selectedServices.includes(p.service)) addService(p.service); return; }
+    if (p) { const ok = promoUsable(p); info.style.color = ok ? '#4ade80' : '#f87171'; info.textContent = ok ? '✓ Kode ' + p.code + ': ' + promoBenefit(p) + (p.owner ? ' (' + p.owner + ')' : '') + '. Otomatis dipakai di invoice.' : '✗ Kode ' + p.code + ' tidak aktif / sudah mencapai batas'; if (ok && p.type === 'free' && typeof addService === 'function' && !selectedServices.includes(p.service)) addService(p.service, true); return; }
     info.style.color = 'var(--muted)'; info.textContent = code.length >= 4 ? '✗ Kode tidak ditemukan' : ''; return;
   }
   if (v.used) { info.style.color = '#f87171'; info.textContent = '✗ Voucher sudah dipakai' + (v.usedAt ? ' (' + v.usedAt + ')' : ''); return; }
   const o = v.owner; const nm = o.custName ? (o.custTitle ? o.custTitle + ' ' : '') + titleCase(o.custName) : (o.plate || '');
   info.style.color = '#4ade80'; info.textContent = '✓ Voucher valid: Free ' + v.service + ' (dari ' + nm + '). Otomatis dipakai di invoice.';
-  if (typeof addService === 'function' && !selectedServices.includes(v.service)) addService(v.service);
+  if (typeof addService === 'function' && !selectedServices.includes(v.service)) addService(v.service, true);
 };
 
 // ── DETEKSI MOBIL / CUSTOMER LAMA ──
@@ -2792,14 +2792,14 @@ function removeService(i) {
   renderServiceTags();
 }
 
-function addService(s) {
+function addService(s, noFocus) {
   if (!selectedServices.includes(s)) {
     selectedServices.push(s);
     renderServiceTags();
   }
   document.getElementById('jobServiceInput').value = '';
   document.getElementById('serviceDropdown').style.display = 'none';
-  document.getElementById('jobServiceInput').focus();
+  if (!noFocus) document.getElementById('jobServiceInput').focus();
 }
 
 function filterService(val) {
