@@ -1669,10 +1669,19 @@ const PRICELIST = {
   'Essential Coating — Sonax CC One': [3100000,3600000,4100000,4600000],
   'Essential Coating — CarPro Lite': [3250000,3750000,4250000,4750000],
   'Essential Coating — Sapphire 10H': [2500000,3000000,3500000,4000000],
+  'Matte Coating — Gyeon Q² Matte': [4000000,4500000,5000000,5500000],
+  'Express Polish': [1000000,1250000,1500000,1750000],
+  'Premium Polish': [1750000,2000000,2250000,2500000],
   'Premium Wash Exterior': [200000,200000,200000,200000],
+  'Interior Detailing — 1 Row': [200000,200000,200000,200000],
+  'Interior Detailing — 2 Row': [550000,550000,550000,550000],
+  'Interior Detailing — 3 Row': [800000,800000,800000,800000],
+  'Engine Detailing': [450000,450000,450000,450000],
+  'Window Coating — Kaca Depan': [200000,200000,200000,200000],
+  'Window Coating — Semua Kaca': [500000,500000,500000,500000],
 };
 const SIZE_IDX = { 'Small':0, 'Medium':1, 'Large':2, 'X-tra Large':3 };
-function pricelistPrice(base, size){ const p = PRICELIST[base]; if (!p) return null; const i = SIZE_IDX[size]; return i === undefined ? null : p[i]; }
+function pricelistPrice(base, size){ const p = PRICELIST[base]; if (!p) return null; const i = SIZE_IDX[size]; if (i === undefined) return p.every(v => v === p[0]) ? p[0] : null; return p[i]; }
 const INV_DESC = sv => /Graphene/i.test(sv) ? 'Graphene coating' : /Matte/i.test(sv) ? 'Matte coating' : /Coating —/i.test(sv) && !/Window/i.test(sv) ? 'Ceramic coating' : /Polish/i.test(sv) ? 'Paint correction' : /Wash/i.test(sv) ? 'Premium wash' : /Interior/i.test(sv) ? 'Interior detailing' : /Engine/i.test(sv) ? 'Engine detailing' : /Window/i.test(sv) ? 'Window coating' : '';
 const INV_SIZED = sv => /Coating —|Polish/i.test(sv) && !/Window/i.test(sv);
 function rupiahNum(v){ return parseInt(String(v||'').replace(/[^0-9]/g,'')) || 0; }
