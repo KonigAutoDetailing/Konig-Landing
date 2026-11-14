@@ -669,7 +669,17 @@
     </div>
     <label class="inv-lbl">Item</label>
     <div id="invItems"></div>
-    <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
+      <button type="button" class="inv-add" style="color:#facc15;border-color:rgba(250,204,21,.5)" onclick="toggleBonus()">🎁 Tambah Bonus</button>
+    </div>
+    <div id="bonusOpts" style="display:none;margin-top:8px;display:none">
+      <div class="code-opts" style="grid-template-columns:1fr;gap:6px">
+        <button type="button" onclick="invAddBonus('Premium Wash Exterior')">Free Premium Wash</button>
+        <button type="button" onclick="invAddBonus('Premium Maintenance')">Free Premium Maintenance</button>
+        <button type="button" onclick="invAddBonus('Professional Maintenance')">Free Professional Maintenance</button>
+      </div>
+    </div>
     <div class="form-row2" style="margin-top:14px">
       <div class="form-group"><label>Diskon Tambahan</label><input type="text" id="invDiskon" placeholder="500.000 / 10%" oninput="invDiscFmt(this);invCalc()"/></div>
       <div class="form-group"><label>Catatan</label><input type="text" id="invKet" placeholder="Opsional"/></div>
@@ -762,7 +772,7 @@ window.isPremiumWash = function(service){
 };
 window.isSimpleService = function(service){
   const sv = String(service||'').split(', ').filter(Boolean);
-  return sv.length > 0 && sv.every(x => /Wash|Interior|Window|Engine/i.test(x));
+  return sv.length > 0 && sv.every(x => /Wash|Interior|Window|Engine|Maintenance/i.test(x));
 };
 window.isExpressPolish = function(service){
   const sv = String(service||'').split(', ').filter(Boolean);
@@ -1027,7 +1037,7 @@ function todayWIB(){ return new Date(Date.now()+7*3600e3).toISOString().slice(0,
 function tsDay(t){ try{ const d = t && t.toDate ? t.toDate() : (t ? new Date(t) : null); return d ? new Date(d.getTime()+7*3600e3).toISOString().slice(0,10) : ''; }catch(e){ return ''; } }
 function isQuick(j){
   const sv = String(j.service||'').split(', ').filter(Boolean);
-  return sv.length > 0 && sv.every(x => /Wash|Interior|Engine|Window|Express Polish/i.test(x));
+  return sv.length > 0 && sv.every(x => /Wash|Interior|Engine|Window|Express Polish|Maintenance/i.test(x));
 }
 function titleCase(t){ return String(t||'').toLowerCase().replace(/(^|[\s\-'])(\S)/g, (m,a,b) => a + b.toUpperCase()); }
 function sapa(j){ const n = String(j.custName||'').trim(); return n ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(n)) : 'Bapak/Ibu'; }
@@ -1976,6 +1986,8 @@ const PRICELIST = {
   'Matte Coating — Gyeon Q² Matte': [4000000,4500000,5000000,5500000],
   'Express Polish': [1000000,1250000,1500000,1750000],
   'Premium Polish': [1750000,2000000,2250000,2500000],
+  'Premium Maintenance': [1000000,1000000,1000000,1000000],
+  'Professional Maintenance': [2000000,2000000,2000000,2000000],
   'Premium Wash Exterior': [200000,200000,200000,200000],
   'Interior Detailing — 1 Row': [200000,200000,200000,200000],
   'Interior Detailing — 2 Row': [550000,550000,550000,550000],
@@ -2003,6 +2015,8 @@ const DESC_MAP = {
   'Matte Coating — Gyeon Q² Matte': 'Coating khusus cat matte/doff, ketahanan hingga 2 tahun. Cuci & dekontaminasi, aplikasi coating tanpa mengubah efek doff.',
   'Express Polish': 'Paint correction 1 hari: cuci pH netral, velg & ban, tar & waterspot remover, polish hingga 90% swirl hilang, trim protection, vacuum. Proteksi 6 bulan.',
   'Premium Polish': '3 steps paint correction (hingga 3 hari): cuci pH netral, velg & ban, tar & waterspot remover, trim protection, vacuum. Proteksi 12 bulan.',
+  'Premium Maintenance': 'Maintenance coating per kunjungan untuk menjaga performa dan kilap coating.',
+  'Professional Maintenance': 'Maintenance coating profesional per kunjungan untuk menjaga performa, kilap & daya hidrofobik coating.',
   'Premium Wash Exterior': 'Cuci detail pH netral, velg & ban, tar remover, trim protection, wetcoat (proteksi 1 bulan), vacuum dasar.',
   'Interior Detailing — 1 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (1 baris kursi).',
   'Interior Detailing — 2 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (2 baris kursi).',
@@ -2039,6 +2053,13 @@ function invItemHtml(it){
     <div><small>HARGA</small><input class="i-harga" inputmode="numeric" value="${it.harga ? fmtRp(it.harga) : ''}" oninput="invNum(this);invCalc()"></div>
     <div><small>DISC</small><input class="i-disc" placeholder="Rp / %" value="${it.discPct ? it.discPct + '%' : (it.disc ? fmtRp(it.disc) : '')}" oninput="invDiscFmt(this);invCalc()"></div></div></div>`;
 }
+window.toggleBonus = function(){ const b = document.getElementById('bonusOpts'); b.style.display = b.style.display === 'block' ? 'none' : 'block'; };
+window.invAddBonus = function(base){
+  const harga = pricelistPrice(base, '') || 0;
+  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: 'BONUS - ' + base, desc: 'Free ' + base + '. ' + (DESC_MAP[base] || ''), qty: 1, harga, discPct: 100, disc: harga }));
+  document.getElementById('bonusOpts').style.display = 'none';
+  invCalc();
+};
 window.invAddItem = function(){ document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({qty:1})); };
 window.invSizeChanged = function(){
   const size = document.getElementById('invSize').value;
@@ -2275,6 +2296,8 @@ const LAYANAN_LIST = [
   'Express Polish',
   'Premium Polish',
   // Ala Carte
+  'Premium Maintenance',
+  'Professional Maintenance',
   'Premium Wash Exterior',
   'Interior Detailing — 1 Row',
   'Interior Detailing — 2 Row',

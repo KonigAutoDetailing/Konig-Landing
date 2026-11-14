@@ -116,7 +116,7 @@ const code = new URLSearchParams(location.search).get('code');
   if (!inv) { root.textContent = 'Invoice belum tersedia.'; return; }
   const nama = j.custName ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(j.custName)) : '-';
   document.title = 'Invoice ' + inv.no + ' — KONÏG';
-  const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.discPct ? it.discPct + '%' : (it.disc ? money(it.disc) : 0)}</td><td>-</td><td>${money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
+  const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.discPct ? it.discPct + '%' : (it.disc ? money(it.disc) : 0)}</td><td>-</td><td>${(it.qty*it.harga - (it.disc||0)) <= 0 && it.harga ? '<b style="color:#16a34a">FREE</b>' : money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
   const dmy2 = v => /^\d{4}-\d{2}-\d{2}$/.test(v||'') ? dmy(v) : esc(v||'');
   const hasDp = inv.dp && inv.dp.amount;
   const pel = inv.pay === 'lunas' ? (inv.pelunasan || { amount: Math.max(0, inv.total - (hasDp ? inv.dp.amount : 0)), date: inv.date }) : null;
