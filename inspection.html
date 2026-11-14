@@ -297,6 +297,8 @@
 <!-- File inputs -->
 <input type="file" id="fileInputGeneral" accept="image/*" multiple style="display:none" onchange="handleGeneralFiles(event)"/>
 <input type="file" id="fileInputPanel" accept="image/*" multiple style="display:none" onchange="handlePanelFiles(event)"/>
+<input type="file" id="camInputGeneral" accept="image/*" capture="environment" style="display:none" onchange="handleGeneralFiles(event)"/>
+<input type="file" id="camInputPanel" accept="image/*" capture="environment" style="display:none" onchange="handlePanelFiles(event)"/>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -408,9 +410,14 @@ function renderGeneralPhotos() {
   });
   const addBtn = document.createElement('button');
   addBtn.className = 'photo-add-btn';
-  addBtn.innerHTML = `<span style="font-size:22px">+</span><span>Tambah</span>`;
-  addBtn.onclick = () => document.getElementById('fileInputGeneral').click();
+  addBtn.innerHTML = `<span style="font-size:22px">📷</span><span>Kamera</span>`;
+  addBtn.onclick = () => { const fi = document.getElementById('camInputGeneral'); fi.value = ''; fi.click(); };
   row.appendChild(addBtn);
+  const galBtn = document.createElement('button');
+  galBtn.className = 'photo-add-btn';
+  galBtn.innerHTML = `<span style="font-size:22px">🖼️</span><span>Galeri</span>`;
+  galBtn.onclick = () => { const fi = document.getElementById('fileInputGeneral'); fi.value = ''; fi.click(); };
+  row.appendChild(galBtn);
 }
 
 window.deleteGeneralPhoto = function(i) {
@@ -452,6 +459,7 @@ window.handleGeneralFiles = async function(e) {
     }));
     results.forEach(r => inspData.general.push(r));
     renderGeneralPhotos();
+    window.saveInspection(true);
   } catch(err) {
     showToast('Gagal upload foto', true);
     console.error(err);
@@ -613,13 +621,14 @@ function renderSheetPhotos(panelId) {
   if (photos.length < 5) {
     const addBtn = document.createElement('button');
     addBtn.className = 'photo-add-btn';
-    addBtn.innerHTML = `<span style="font-size:22px">+</span><span>Foto Defect</span>`;
-    addBtn.onclick = () => {
-      const fi = document.getElementById('fileInputPanel');
-      fi.value = '';
-      fi.click();
-    };
+    addBtn.innerHTML = `<span style="font-size:22px">📷</span><span>Kamera</span>`;
+    addBtn.onclick = () => { const fi = document.getElementById('camInputPanel'); fi.value = ''; fi.click(); };
     row.appendChild(addBtn);
+    const galBtn = document.createElement('button');
+    galBtn.className = 'photo-add-btn';
+    galBtn.innerHTML = `<span style="font-size:22px">🖼️</span><span>Galeri</span>`;
+    galBtn.onclick = () => { const fi = document.getElementById('fileInputPanel'); fi.value = ''; fi.click(); };
+    row.appendChild(galBtn);
   }
   const lbl = document.getElementById('bsPhotoLabel');
   lbl.textContent = `Foto Defect (${photos.length}/5)`;
@@ -664,6 +673,7 @@ window.handlePanelFiles = async function(e) {
     if (!inspData.panels[activePanel].status) inspData.panels[activePanel].status = 'other';
     renderSheetPhotos(activePanel);
     refreshSummaryRow(activePanel);
+    window.saveInspection(true);
   } catch(err) {
     showToast('Gagal upload foto', true);
     console.error(err);
@@ -673,7 +683,7 @@ window.handlePanelFiles = async function(e) {
 };
 
 // ── SAVE ──
-window.saveInspection = async function() {
+window.saveInspection = async function(silent) {
   const btn = document.getElementById('btnSave');
   btn.textContent = '⏳ Menyimpan...';
   btn.disabled = true;
@@ -683,7 +693,7 @@ window.saveInspection = async function() {
       inspectedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-    showToast('✓ Inspeksi tersimpan');
+    showToast(silent === true ? '✓ Foto tersimpan' : '✓ Inspeksi tersimpan');
   } catch(e) {
     showToast('Gagal menyimpan', true);
     console.error(e);
