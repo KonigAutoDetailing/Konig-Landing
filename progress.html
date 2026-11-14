@@ -290,6 +290,8 @@
       font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
       padding:3px 10px;border:1px solid;
     }
+    .badge-row{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;justify-content:flex-end}
+    @media(max-width:640px){ .badge-row{justify-content:flex-start} }
     .job-progress-mini{margin-top:10px}
     .job-prog-bg{background:var(--dark);height:6px;border-radius:3px;overflow:hidden}
     .job-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--purpleB));transition:width 0.5s}
@@ -1092,8 +1094,8 @@ window.renderJobList = function(){
           ${isDone ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
         </div>`}
       </div>
-      <div>
-        <span class="job-status-badge" style="${badgeColor}">${isDone ? '✓ Selesai' : 'Aktif'}</span>
+      <div class="badge-row">
+        <span class="job-status-badge" style="${badgeColor}">${isDone ? '✓ Selesai' : 'Aktif'}</span>${isDone && isLunas(j) ? '<span class="job-status-badge" style="border-color:#16a34a;color:#4ade80">✓ Lunas</span>' : ''}
       </div>
     </div>`;
   }).join('');
@@ -1112,9 +1114,10 @@ function verifyAdmin(what){
 }
 // ── TANDAI LUNAS LANGSUNG DARI KARTU ──
 function custReviewed(j){ if (j.reviewed) return true; const w = normWa(j.wa || ''); return !!w && (window._allJobs || []).some(o => o.reviewed && normWa(o.wa || '') === w); }
+function isLunas(j){ const iv = j.invoice; return !!iv && (iv.pay === 'lunas' || !(iv.tertagih > 0)); }
 function lunasBtn(j){
   const iv = j.invoice; if (!iv) return '';
-  if (iv.pay === 'lunas' || !(iv.tertagih > 0)) return '<span class="btn-sm" style="border:1px solid #16a34a;color:#4ade80;background:transparent;cursor:default">✓ Lunas</span>';
+  if (iv.pay === 'lunas' || !(iv.tertagih > 0)) return ''; // status Lunas tampil sebagai badge di sebelah Selesai
   return `<button class="btn-sm" style="background:#16a34a;color:#fff" onclick="markLunas('${j.id}', ${j._vi == null ? 'null' : j._vi})">💰 Sudah Lunas · Rp ${Number(iv.tertagih||0).toLocaleString('id-ID')}</button>`;
 }
 window.markLunas = async function(id, vi){
