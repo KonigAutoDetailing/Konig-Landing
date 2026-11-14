@@ -1137,13 +1137,13 @@ window.deleteVisit = async function(id, vi, activeOnly){
     // 1. Kembalikan voucher yang dipakai di invoice kunjungan ini
     for (const it of (inv && inv.items || []).filter(x => x.redeem)) {
       const src = (window._allJobs||[]).find(x => x.id === it.redeem.jobId); if (!src) continue;
-      const arr = (src.vouchers||[]).map(v => v.code === it.redeem.code ? { code: v.code, service: v.service, issuedAt: v.issuedAt || '', invoiceNo: v.invoiceNo || '', used: false } : v);
+      const arr = jobVouchers(src).map(v => v.code === it.redeem.code ? { code: v.code, service: v.service, issuedAt: v.issuedAt || '', invoiceNo: v.invoiceNo || '', used: false } : v);
       src.vouchers = arr;
       if (src.id !== id) await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr });
     }
     // 2. Voucher yang diterbitkan invoice kunjungan ini (bonus) ikut dihapus
     const issued = new Set((inv && inv.items || []).filter(x => x.voucherCode).map(x => x.voucherCode));
-    let vouchers = (j.vouchers||[]).filter(v => !issued.has(v.code));
+    let vouchers = jobVouchers(j).filter(v => !issued.has(v.code));
     // 3. Hapus pemakaian kode promo
     if (inv && inv.promo) { const pr = findPromo(inv.promo); if (pr) { pr.uses = (pr.uses||[]).filter(u => !(u.jobId === id && u.invoiceNo === inv.no)); try { await savePromos(); } catch(e) {} } }
     let upd;
@@ -1897,7 +1897,7 @@ window.saveJob = async function() {
         // Kunjungan ulang: simpan kunjungan sebelumnya ke riwayat (visits), kode QR tetap sama
         const prevVisit = { service: old.service || '', car: old.car || '', color: old.color || '', plate: old.plate || '', note: old.note || '', custTitle: old.custTitle || '', custName: old.custName || '', wa: old.wa || '',
           createdAt: old.createdAt || null, doneAt: old.doneAt || null, invoice: old.invoice || null };
-        carry = { visits: (old.visits || []).concat([prevVisit]) };
+        carry = { visits: (old.visits || []).concat([prevVisit]), vouchers: jobVouchers({ ...old, id: code }) };
         if (window._ownerChoice !== 'new' && normWa(old.wa) === normWa(wa)) { if (old.reviewed) carry.reviewed = old.reviewed; if (old.reviewReminder) carry.reviewReminder = old.reviewReminder; }
       }
       await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
@@ -2053,9 +2053,25 @@ function applyPromoToInvoice(p){
 }
 
 // ── KODE VOUCHER DI FORM KENDARAAN BARU ──
+
+// Daftar voucher sebuah mobil: yang tersimpan + yang direkonstruksi dari invoice (jaga-jaga data lama hilang)
+function redeemedCodes(){
+  const set = new Map();
+  (window._allJobs||[]).forEach(j => [j.invoice, ...(j.visits||[]).map(v => v.invoice)].forEach(iv => (iv && iv.items || []).forEach(it => { if (it.redeem && it.redeem.code) set.set(it.redeem.code, { on: j.id, inv: iv.no, date: iv.date }); })));
+  return set;
+}
+function jobVouchers(j){
+  const list = (j.vouchers || []).map(v => ({ ...v }));
+  const have = new Set(list.map(v => v.code));
+  [j.invoice, ...(j.visits||[]).map(v => v.invoice)].forEach(iv => (iv && iv.items || []).forEach(it => {
+    if (it.voucherCode && !have.has(it.voucherCode)) { have.add(it.voucherCode); list.push({ code: it.voucherCode, service: it.bonus || String(it.produk||'').replace(/^VOUCHER - Free /,''), issuedAt: iv.date || '', invoiceNo: iv.no || '', used: false }); }
+  }));
+  const red = redeemedCodes();
+  return list.map(v => red.has(v.code) && !v.used ? { ...v, used: true, usedOn: red.get(v.code).on, usedAt: red.get(v.code).date } : v);
+}
 function findVoucher(code){
   code = String(code||'').trim().toUpperCase(); if (!code) return null;
-  for (const j of (window._allJobs||[])) for (const v of (j.vouchers||[])) if (v.code === code) return { ...v, jobId: j.id, owner: j };
+  for (const j of (window._allJobs||[])) for (const v of jobVouchers(j)) if (v.code === code) return { ...v, jobId: j.id, owner: j };
   return null;
 }
 window.skipJobVoucher = function(code){ window._skipVouchers = (window._skipVouchers||[]).concat([code]); if (document.getElementById('jobVoucher').value.trim().toUpperCase() === code) { document.getElementById('jobVoucher').value = ''; checkJobVoucher(); } checkRepeat(); };
@@ -2227,7 +2243,7 @@ async function _markDoneFirestore(id, sent) {
     const v = me && me.voucherCode ? findVoucher(me.voucherCode) : null;
     if (v && !v.used) {
       const src = (window._allJobs||[]).find(x => x.id === v.jobId);
-      const arr = (src.vouchers||[]).map(x => x.code === v.code ? { ...x, used: true, usedAt: todayWIB(), usedOn: id } : x);
+      const arr = jobVouchers(src).map(x => x.code === v.code ? { ...x, used: true, usedAt: todayWIB(), usedOn: id } : x);
       src.vouchers = arr; await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr });
     }
   } catch(e) {}
@@ -2378,7 +2394,7 @@ function invItemHtml(it){
 function newVoucherCode(){ const ch = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = 'KV-'; for (let i = 0; i < 5; i++) c += ch[Math.floor(Math.random() * ch.length)]; return c; }
 function vouchersFor(d){
   const plate = normPlate(d.plate), wa = normWa(d.wa), out = [];
-  (window._allJobs||[]).forEach(j => (j.vouchers||[]).forEach(v => {
+  (window._allJobs||[]).forEach(j => jobVouchers(j).forEach(v => {
     if (v.used) return;
     if ((plate && normPlate(j.plate) === plate) || (wa.length >= 9 && normWa(j.wa) === wa)) out.push({ ...v, jobId: j.id });
   }));
@@ -2521,14 +2537,15 @@ window.saveInvoice = async function(save){
     try {
       const { doc, updateDoc } = window._fbFns;
       const j0 = (window._allJobs||[]).find(x => x.id === id) || {};
-      const keep = (j0.vouchers || []).filter(v => v.used || invoice.items.some(it => it.voucherCode === v.code));
+      const keep = jobVouchers(j0).filter(v => v.used || v.invoiceNo !== invoice.no || invoice.items.some(it => it.voucherCode === v.code));
       const fresh = invoice.items.filter(it => it.voucherCode && !keep.some(v => v.code === it.voucherCode)).map(it => ({ code: it.voucherCode, service: it.bonus, issuedAt: invoice.date, invoiceNo: invoice.no, used: false }));
       const vouchers = keep.concat(fresh);
       await updateDoc(doc(window._db, 'konig_progress', id), { invoice, vouchers });
       // Tandai voucher yang dipakai di invoice ini
       for (const it of invoice.items.filter(x => x.redeem)) {
         const src = (window._allJobs||[]).find(x => x.id === it.redeem.jobId); if (!src) continue;
-        const arr = (src.id === id ? vouchers : (src.vouchers || [])).map(v => v.code === it.redeem.code ? { ...v, used: true, usedAt: invoice.date, usedOn: id, usedInvoice: invoice.no } : v);
+        const base = src.id === id ? vouchers : jobVouchers(src);
+        const arr = base.map(v => v.code === it.redeem.code ? { ...v, used: true, usedAt: invoice.date, usedOn: id, usedInvoice: invoice.no } : v);
         if (src.id === id) { vouchers.splice(0, vouchers.length, ...arr); await updateDoc(doc(window._db, 'konig_progress', id), { vouchers }); }
         else { await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr }); src.vouchers = arr; }
       }
