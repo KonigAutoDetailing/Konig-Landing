@@ -104,6 +104,28 @@
     .rep-box b{color:#fff}
     .rep-box.info{border-color:rgba(56,189,248,.45);border-left-color:#38bdf8;background:rgba(56,189,248,.07);color:#d6eef8}
     .rep-box.warn{border-color:rgba(248,113,113,.5);border-left-color:#f87171;background:rgba(248,113,113,.08);color:#fde2e2}
+    /* Invoice modal: semua field sama tinggi, isi rata tengah, tidak melebihi border */
+    #modalInvoice .form-row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:end}
+    #modalInvoice .form-group{margin-bottom:14px;min-width:0}
+    #modalInvoice label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #modalInvoice input, #modalInvoice select{display:block;width:100%;min-width:0;max-width:100%;height:48px;box-sizing:border-box;padding:0 12px;font-size:15px;margin:0;border-radius:0;-webkit-appearance:none;appearance:none;background-color:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white)}
+    #modalInvoice input[type=checkbox], #modalInvoice input[type=radio]{display:inline-block;width:18px;height:18px;padding:0;-webkit-appearance:auto;appearance:auto;accent-color:#7B4FD8}
+    #modalInvoice select{background-image:linear-gradient(45deg,transparent 50%,#a899c8 50%),linear-gradient(135deg,#a899c8 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+    #modalInvoice input[type=date]{line-height:46px}
+    #modalInvoice input[type=date]::-webkit-date-and-time-value{text-align:center;margin:0}
+    #modalInvoice input[type=date]::-webkit-calendar-picker-indicator{margin:0}
+    #modalInvoice #invNo, #modalInvoice #invSize, #modalInvoice #invDate, #modalInvoice #invDue, #modalInvoice #invDiskon, #modalInvoice #invDpAmt, #modalInvoice #invDpNo, #modalInvoice #invDpDate, #modalInvoice #invLunasDate, #modalInvoice #invLunasAmt, #modalInvoice #invKet, #modalInvoice .i-qty, #modalInvoice .i-harga, #modalInvoice .i-disc{text-align:center;text-align-last:center}
+    #modalInvoice .inv-item{padding:12px;box-sizing:border-box}
+    #modalInvoice .inv-item input{height:44px;margin-bottom:8px}
+    #modalInvoice .inv-item .row{display:grid;grid-template-columns:minmax(0,.6fr) minmax(0,1.4fr) minmax(0,1fr);gap:8px}
+    #modalInvoice .inv-item .row input{margin-bottom:0;padding:0 6px}
+    #modalInvoice .inv-item textarea.i-desc{display:block;width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:10px 12px;font:13px/1.5 Barlow,sans-serif;resize:vertical;margin:0 0 8px;min-height:84px;border-radius:0}
+    #modalInvoice .inv-item small{text-align:left}
+    #modalInvoice .inv-item .row small{text-align:center}
+    #modalInvoice .inv-pay{justify-content:center;gap:18px}
+    #modalInvoice .inv-pay label{white-space:normal;font-size:14px}
+    #modalInvoice #invDpNo, #modalInvoice #invNo{font-size:13px;padding:0 6px}
+    #modalInvoice .inv-btn-main, #modalInvoice .inv-btn-ghost{min-height:52px;letter-spacing:1px;white-space:nowrap;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2}
     .code-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
     .code-opts button{background:rgba(124,58,237,.15);border:1px solid rgba(167,139,250,.4);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px;padding:9px 4px;cursor:pointer;line-height:1.2;white-space:nowrap}
     .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
@@ -551,7 +573,7 @@
       <div id="serviceDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);border-top:none;z-index:50;max-height:220px;overflow-y:auto;"></div>
     </div>
     <div class="form-group">
-      <label>Catatan (opsional)</label>
+      <label>Catatan</label>
       <input type="text" id="jobNote" placeholder="Ada minor scratch di kap"/>
     </div>
 
@@ -635,13 +657,13 @@
     <div id="invItems"></div>
     <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
     <div class="form-row2" style="margin-top:14px">
-      <div class="form-group"><label>Diskon Tambahan (Rp / %)</label><input type="text" id="invDiskon" placeholder="contoh: 500.000 atau 10 (= 10%)" oninput="invDiscFmt(this);invCalc()"/></div>
-      <div class="form-group"><label>Catatan (opsional)</label><input type="text" id="invKet" placeholder="Tipe, warna & plat otomatis"/></div>
+      <div class="form-group"><label>Diskon Tambahan</label><input type="text" id="invDiskon" placeholder="500.000 / 10%" oninput="invDiscFmt(this);invCalc()"/></div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="invKet" placeholder="Opsional"/></div>
     </div>
     <label class="inv-lbl">Pembayaran</label>
     <div class="inv-pay">
       <label><input type="checkbox" id="invHasDp" onchange="invPayChanged()"> Sudah DP</label>
-      <label><input type="checkbox" id="invLunas" onchange="invPayChanged()"> Sudah lunas (pelunasan diterima)</label>
+      <label><input type="checkbox" id="invLunas" onchange="invPayChanged()"> Sudah lunas</label>
     </div>
     <div id="invDpBox" style="display:none">
       <div class="form-row2">
@@ -658,8 +680,8 @@
     </div>
     <div class="inv-sum" id="invSum"></div>
     <div style="display:flex;gap:10px;margin-top:14px">
-      <button onclick="saveInvoice(true)" class="inv-btn-main" id="invSaveBtn">Simpan & Kirim ke Customer</button>
-      <button onclick="saveInvoice(false)" class="inv-btn-ghost" id="invSkipBtn">Lewati Invoice</button>
+      <button onclick="saveInvoice(true)" class="inv-btn-main" id="invSaveBtn">Simpan & Kirim</button>
+      <button onclick="saveInvoice(false)" class="inv-btn-ghost" id="invSkipBtn">Lewati</button>
     </div>
   </div>
 </div>
@@ -1941,10 +1963,10 @@ function lastPrice(produk){
 function invItemHtml(it){
   return `<div class="inv-item"><button type="button" class="del" onclick="this.parentNode.remove();invCalc()">×</button>
     <small>PRODUK</small><input class="i-produk" value="${(it.produk||'').replace(/"/g,'&quot;')}" data-base="${(it.base||'').replace(/"/g,'&quot;')}" oninput="invCalc()">
-    <small>DESKRIPSI</small><input class="i-desc" value="${(it.desc||'').replace(/"/g,'&quot;')}">
+    <small>DESKRIPSI</small><textarea class="i-desc" rows="2">${(it.desc||'').replace(/</g,'&lt;')}</textarea>
     <div class="row"><div><small>QTY</small><input class="i-qty" inputmode="numeric" value="${it.qty||1}" oninput="invCalc()"></div>
     <div><small>HARGA</small><input class="i-harga" inputmode="numeric" value="${it.harga ? fmtRp(it.harga) : ''}" oninput="invNum(this);invCalc()"></div>
-    <div><small>DISC (RP / %)</small><input class="i-disc" placeholder="10 = 10%" value="${it.discPct ? it.discPct + '%' : (it.disc ? fmtRp(it.disc) : '')}" oninput="invDiscFmt(this);invCalc()"></div></div></div>`;
+    <div><small>DISC</small><input class="i-disc" placeholder="Rp / %" value="${it.discPct ? it.discPct + '%' : (it.disc ? fmtRp(it.disc) : '')}" oninput="invDiscFmt(this);invCalc()"></div></div></div>`;
 }
 window.invAddItem = function(){ document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({qty:1})); };
 window.invSizeChanged = function(){
@@ -2000,8 +2022,8 @@ window.openInvoice = function(id, d, fromDone){
   window._invId = id; window._invFromDone = !!fromDone;
   const inv = d.invoice;
   document.getElementById('invCarName').textContent = (d.car || '—') + (d.plate ? ' · ' + d.plate : '');
-  document.getElementById('invSkipBtn').textContent = fromDone ? 'Lewati Invoice' : 'Batal';
-  document.getElementById('invSaveBtn').textContent = fromDone ? 'Simpan & Kirim ke Customer' : 'Simpan Invoice';
+  document.getElementById('invSkipBtn').textContent = fromDone ? 'Lewati' : 'Batal';
+  document.getElementById('invSaveBtn').textContent = fromDone ? 'Simpan & Kirim' : 'Simpan Invoice';
   const today = invYmd(new Date());
   document.getElementById('invNo').value = inv ? inv.no : nextSeq('INV');
   document.getElementById('invDate').value = inv ? inv.date : today;
