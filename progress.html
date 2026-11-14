@@ -1755,7 +1755,7 @@ window.openNewJobModal = function() {
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
   document.getElementById('jobVoucher').value = ''; document.getElementById('jobVoucherInfo').style.display = 'none'; loadPromos();
-  window._repeatOf = null; window._ownerChoice = null; setCodeLocked(false); window.fillCustList(); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
+  window._repeatOf = null; window._ownerChoice = null; window._skipVouchers = []; setCodeLocked(false); window.fillCustList(); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   selectedServices = [];
   renderServiceTags();
   document.getElementById('jobServiceInput').value = '';
@@ -2035,6 +2035,7 @@ function findVoucher(code){
   for (const j of (window._allJobs||[])) for (const v of (j.vouchers||[])) if (v.code === code) return { ...v, jobId: j.id, owner: j };
   return null;
 }
+window.skipJobVoucher = function(code){ window._skipVouchers = (window._skipVouchers||[]).concat([code]); if (document.getElementById('jobVoucher').value.trim().toUpperCase() === code) { document.getElementById('jobVoucher').value = ''; checkJobVoucher(); } checkRepeat(); };
 window.useJobVoucher = function(code){ document.getElementById('jobVoucher').value = code; checkJobVoucher(); checkRepeat(); };
 window.checkJobVoucher = function(){
   const el = document.getElementById('jobVoucher'), info = document.getElementById('jobVoucherInfo');
@@ -2142,10 +2143,10 @@ function checkRepeat(){
     }
   }
   // Voucher gratis yang belum dipakai (berdasarkan plat / nomor WA)
-  const vlist = (plate.length >= 4 || wa.length >= 9) ? vouchersFor({ plate: document.getElementById('jobPlate').value, wa: document.getElementById('jobWa').value }) : [];
+  const vlist = (plate.length >= 4 || wa.length >= 9) ? vouchersFor({ plate: document.getElementById('jobPlate').value, wa: document.getElementById('jobWa').value }).filter(v => !(window._skipVouchers||[]).includes(v.code)) : [];
   if (vlist.length) {
     const cur = document.getElementById('jobVoucher').value.trim().toUpperCase();
-    html.push('🎟️ <b>Customer ini punya voucher gratis yang belum dipakai:</b>' + vlist.map(v => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small>(${v.code})</small></span>${cur === v.code ? '<span style="color:#4ade80">✓ dipakai</span>' : `<button type="button" class="btn-sm" style="background:#facc15;color:#111" onclick="useJobVoucher('${v.code}')">Pakai</button>`}</div>`).join(''));
+    html.push('🎟️ <b>Customer ini punya voucher gratis yang belum dipakai:</b>' + vlist.map(v => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small>(${v.code})</small></span>${cur === v.code ? '<span style="color:#4ade80">✓ dipakai</span>' : `<button type="button" class="btn-sm" style="background:#facc15;color:#111" onclick="useJobVoucher('${v.code}')">Pakai</button><button type="button" class="btn-sm" onclick="skipJobVoucher('${v.code}')">Tidak</button>`}</div>`).join('') + '<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalau tidak dipakai sekarang, voucher tetap tersimpan untuk kunjungan berikutnya.</div>');
     if (cls === 'rep-box info') cls = 'rep-box';
   }
   box.className = cls;
@@ -2196,6 +2197,16 @@ async function _markDoneFirestore(id, sent) {
   const upd = { doneSteps: allSteps, activeStep: 'done', updatedAt: serverTimestamp(), doneAt: serverTimestamp() };
   if (sent) upd.lastWaUpdate = todayWIB();
   await updateDoc(doc(window._db, 'konig_progress', id), upd);
+  // Voucher yang dipilih saat daftar langsung dianggap terpakai saat mobil selesai
+  try {
+    const me = (window._allJobs||[]).find(x => x.id === id);
+    const v = me && me.voucherCode ? findVoucher(me.voucherCode) : null;
+    if (v && !v.used) {
+      const src = (window._allJobs||[]).find(x => x.id === v.jobId);
+      const arr = (src.vouchers||[]).map(x => x.code === v.code ? { ...x, used: true, usedAt: todayWIB(), usedOn: id } : x);
+      src.vouchers = arr; await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr });
+    }
+  } catch(e) {}
   loadJobs();
 }
 
