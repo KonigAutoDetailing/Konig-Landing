@@ -614,12 +614,28 @@ window.SIMPLE_STEPS = [
   { id: 'working',  name: 'Pengerjaan', pct: 50,  icon: '🧽' },
   { id: 'done',     name: 'Selesai',    pct: 100, icon: '🎉' },
 ];
+// Express Polish: received → interior cleaning + wash → 1 step paint correction → final qc → done
+window.EXPRESS_STEPS = [
+  { id: 'received',   name: 'Received',              pct: 5,   icon: '📋' },
+  { id: 'washing',    name: 'Interior Cleaning & Wash', pct: 25,  icon: '🧽' },
+  { id: 'correction', name: '1 Step Paint Correction', pct: 60,  icon: '⚙️' },
+  { id: 'qc',         name: 'Final QC',              pct: 90,  icon: '✨' },
+  { id: 'done',       name: 'Ready for Pickup',      pct: 100, icon: '🎉' },
+];
 window.isSimpleService = function(service){
   const sv = String(service||'').split(', ').filter(Boolean);
   return sv.length > 0 && sv.every(x => /Wash|Interior|Window|Engine/i.test(x));
 };
-window.stepsFor = function(service){ return window.isSimpleService(service) ? window.SIMPLE_STEPS : window.STEPS; };
-window.ALL_STEP_IDS = [...new Set([...window.STEPS, ...window.SIMPLE_STEPS].map(x => x.id))];
+window.isExpressPolish = function(service){
+  const sv = String(service||'').split(', ').filter(Boolean);
+  return sv.length > 0 && sv.every(x => /Express Polish/i.test(x));
+};
+window.stepsFor = function(service){
+  if(window.isExpressPolish(service)) return window.EXPRESS_STEPS;
+  if(window.isSimpleService(service)) return window.SIMPLE_STEPS;
+  return window.STEPS;
+};
+window.ALL_STEP_IDS = [...new Set([...window.STEPS, ...window.SIMPLE_STEPS, ...window.EXPRESS_STEPS].map(x => x.id))];
 
 // ── GENERATE CODE ──
 function genCode() {
@@ -816,7 +832,7 @@ window.loadJobs = async function() {
 
 
 // ── UPDATE SORE VIA WA ──
-const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'Paint correction (poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
+const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'⚙️ Paint correction (mesin poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
 function waNumber(raw){
   let n = String(raw||'').replace(/[^0-9]/g,'');
   if(n.startsWith('0')) n = '62' + n.slice(1);
@@ -858,7 +874,7 @@ function waMessage(j){
     return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil ✨\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + ' Makasih udah percayain mobilnya ke kami 🙏' + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   if(done){
-    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil 🎉\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
+    return 'Halo ' + sapa(j) + ', mobil ' + mobil + ' sudah selesai dan siap diambil.\n\n' + infoPaket(j) + (needsTrackLink(j) ? 'Workshop buka sampai jam 17.00 ya (Senin–Sabtu).' : 'Mobilnya bisa diambil hari ini ya, workshop buka sampai jam 17.00.') + REVIEW_TEXT + '\n\n— KONIG Auto Detailing';
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrian';
   let msg = 'Halo ' + sapa(j) + ', update mobil ' + mobil + ' hari ini 🙌\n\nProgres: ' + pct + '% — ' + tahap;
@@ -1438,8 +1454,9 @@ window.markDone = async function(id) {
   window._doneId = id;
   window._doneWa = d.wa || '';
   document.getElementById('doneCarName').textContent = (d.car || '—') + (d.plate ? ' · ' + d.plate : '');
-  // Pesan selesai tanpa emoticon
-  const msg = `Halo, kendaraan ${d.car || ''}${d.plate ? ' (' + d.plate + ')' : ''} sudah selesai dikerjakan dan siap untuk diambil.\n\nTerima kasih sudah mempercayakan kendaraan Anda ke KONIG Auto Detailing.\n\nSampai jumpa di kunjungan berikutnya.`;
+  // Pakai waMessage dengan status done
+  const fakeJob = { ...d, id, doneSteps: ['done'], activeStep: 'done' };
+  const msg = waMessage(fakeJob);
   document.getElementById('doneWaMsg').value = msg;
   openModal('modalDone');
 };
