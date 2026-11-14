@@ -108,8 +108,11 @@ const code = new URLSearchParams(location.search).get('code');
   let snap;
   try { snap = await getDoc(doc(db, 'konig_progress', code)); }
   catch(e) { root.textContent = 'Gagal memuat invoice: ' + e.message; return; }
-  if (!snap.exists() || !snap.data().invoice) { root.textContent = 'Invoice belum tersedia.'; return; }
-  const j = snap.data(), inv = j.invoice;
+  if (!snap.exists()) { root.textContent = 'Invoice belum tersedia.'; return; }
+  const j0 = snap.data(), vIdx = new URLSearchParams(location.search).get('v');
+  const j = vIdx !== null && j0.visits && j0.visits[+vIdx] ? { ...j0, ...j0.visits[+vIdx] } : j0;
+  const inv = j.invoice;
+  if (!inv) { root.textContent = 'Invoice belum tersedia.'; return; }
   const nama = j.custName ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(j.custName)) : '-';
   document.title = 'Invoice ' + inv.no + ' — KONÏG';
   const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.discPct ? it.discPct + '%' : (it.disc ? money(it.disc) : 0)}</td><td>-</td><td>${money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
