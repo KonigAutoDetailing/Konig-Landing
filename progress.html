@@ -16,6 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
   <!-- QR Code generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
     :root{
@@ -648,6 +649,7 @@
       <div>
         <button class="btn-copy" onclick="copyLink()">Copy Link</button>
         <button class="btn-copy" onclick="copyWA()">Copy WA</button>
+        <button class="btn-copy" onclick="downloadQR()">⬇ Download PNG</button>
         <button class="btn-print" onclick="printQR()">🖨️ Print Sticker</button>
       </div>
     </div>
@@ -2611,20 +2613,68 @@ window.saveInvoice = async function(save){
 window.openInvoiceFor = function(id){ const j = (window._allJobs||[]).find(x => x.id === id); if (j) openInvoice(id, j, false); };
 
 // ── QR CODE ──
-window.showQR = function(code, car) {
-  const url = location.origin + '/progress?code=' + code;
+const QR_BASE = 'https://www.konigautodetailing.com/progress';
+let _qrTmpl = null;
+function loadQrTemplate(){
+  if (_qrTmpl) return Promise.resolve(_qrTmpl);
+  const getSrc = () => new Promise(res => {
+    if (typeof QR_TEMPLATE_B64 !== 'undefined') return res(QR_TEMPLATE_B64);
+    const sc = document.createElement('script'); sc.src = '/qr-template-b64.js?v=4';
+    sc.onload = () => res(typeof QR_TEMPLATE_B64 !== 'undefined' ? QR_TEMPLATE_B64 : '/qr-sticker-template.png');
+    sc.onerror = () => res('/qr-sticker-template.png');
+    document.head.appendChild(sc);
+  });
+  return getSrc().then(src => new Promise((res, rej) => { const img = new Image(); img.onload = () => { _qrTmpl = img; res(img); }; img.onerror = rej; img.src = src; }));
+}
+// Sama persis dengan print-qr.html (template + QR ungu + kode)
+async function renderQrSticker(code, S){
+  const url = QR_BASE + '?code=' + code;
+  const TW = 1122*S, TH = 1402*S, x1 = 137*S, x2 = 984*S, y1 = 282*S, y2 = 1081*S;
+  const qSize = Math.floor(Math.min(x2-x1, y2-y1)*0.85), margin = Math.floor(qSize*0.04), inner = qSize - margin*2;
+  const cx = Math.floor((x1+x2)/2), qrTop = y1 + Math.floor(((y2-y1) - qSize)*0.40);
+  const tmpl = await loadQrTemplate();
+  const qr = qrcode(0, 'H'); qr.addData(url); qr.make();
+  const n = qr.getModuleCount(), cell = inner / n;
+  const c = document.createElement('canvas'); c.width = TW; c.height = TH;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(tmpl, 0, 0, TW, TH);
+  const ox = cx - Math.floor(qSize/2), oy = qrTop;
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(ox, oy, qSize, qSize);
+  ctx.fillStyle = '#4B0082';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) ctx.fillRect(ox + margin + Math.floor(k*cell), oy + margin + Math.floor(r*cell), Math.ceil(cell), Math.ceil(cell));
+  const qb = qrTop + qSize, gap = y2 - qb;
+  ctx.font = 'bold ' + Math.floor(gap*0.55) + 'px sans-serif'; ctx.fillStyle = '#3c0064'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(code, cx, qb + Math.floor(gap/2));
+  return c;
+}
+window.showQR = async function(code, car) {
+  const url = QR_BASE + '?code=' + code;
   document.getElementById('qrCodeText').textContent = code;
   document.getElementById('qrLink').textContent = url;
-  document.getElementById('qrCanvas').innerHTML = '';
-  new QRCode(document.getElementById('qrCanvas'), {
-    text: url, width: 200, height: 200,
-    colorDark: '#7B2FBE', colorLight: '#080810',
-    correctLevel: QRCode.CorrectLevel.H
-  });
+  const box = document.getElementById('qrCanvas');
+  box.innerHTML = '<div style="padding:40px 0;color:var(--muted);font-size:12px">Memuat stiker...</div>';
   window._currentQRUrl = url;
   window._currentQRCode = code;
   window._currentQRCar = car;
   openModal('modalQR');
+  try {
+    const c = await renderQrSticker(code, 1);
+    if (window._currentQRCode !== code) return;
+    const img = new Image(); img.src = c.toDataURL('image/png');
+    img.style.cssText = 'width:220px;max-width:100%;height:auto;display:block;margin:0 auto';
+    box.innerHTML = ''; box.appendChild(img);
+  } catch(e) {
+    box.innerHTML = '';
+    new QRCode(box, { text: url, width: 200, height: 200, colorDark: '#4B0082', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+  }
+}
+
+window.downloadQR = async function() {
+  const code = window._currentQRCode;
+  try {
+    const c = await renderQrSticker(code, 4);
+    c.toBlob(blob => { const a = document.createElement('a'); a.download = 'KONIG-QR-' + code + '.png'; a.href = URL.createObjectURL(blob); a.click(); }, 'image/png');
+  } catch(e) { alert('Gagal membuat stiker: ' + e.message); }
 }
 
 window.copyLink = function() {
@@ -2638,38 +2688,16 @@ window.copyWA = function() {
   alert('Pesan WA berhasil dicopy! Tinggal paste ke WhatsApp.');
 }
 
-window.printQR = function() {
-  const url = window._currentQRUrl;
+window.printQR = async function() {
   const code = window._currentQRCode;
-  const car = window._currentQRCar;
-  const w = window.open('', '_blank', 'width=400,height=500');
-  w.document.write(`<!DOCTYPE html><html><head><title>QR Sticker - ${code}</title>
-  <style>
-    body{font-family:Arial,sans-serif;text-align:center;padding:20px;background:#fff}
-    .sticker{border:3px solid #7B2FBE;border-radius:12px;padding:20px;max-width:280px;margin:0 auto;background:#080810;color:#fff}
-    .logo{font-size:28px;font-weight:900;letter-spacing:4px;color:#fff;margin-bottom:4px}
-    .sub{font-size:10px;letter-spacing:3px;color:#b06aff;margin-bottom:16px}
-    .code{font-size:36px;font-weight:900;letter-spacing:8px;color:#b06aff;margin:12px 0}
-    .car{font-size:14px;color:#d4cef0;margin-bottom:12px}
-    .url{font-size:10px;color:#9d93c0;word-break:break-all}
-    @media print{body{margin:0}button{display:none}}
-  </style></head><body>
-  <div class="sticker">
-    <div class="logo">KONÏG</div>
-    <div class="sub">AUTO DETAILING</div>
-    <div id="qr2"></div>
-    <div class="code">${code}</div>
-    <div class="car">${car}</div>
-    <div class="url">konigautodetailing.com/progress</div>
-  </div>
-  <br><button onclick="window.print()" style="padding:10px 24px;background:#7B2FBE;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px">🖨️ Print</button>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
-  <script>new QRCode(document.getElementById('qr2'),{text:'${url}',width:160,height:160,colorDark:'#7B2FBE',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H})<\/script>
-  </body></html>`);
-  w.document.close();
+  const w = window.open('', '_blank');
+  try {
+    const c = await renderQrSticker(code, 1);
+    w.document.write('<!DOCTYPE html><html><head><title>QR Sticker - ' + code + '</title><style>@page{size:A4;margin:10mm}body{margin:0;background:#fff}img{width:44mm;height:auto;display:block}</style></head><body><img src="' + c.toDataURL('image/png') + '" onload="setTimeout(function(){window.print()},300)"></body></html>');
+    w.document.close();
+  } catch(e) { w.close(); alert('Gagal membuat stiker: ' + e.message); }
 }
 
-// ── HELPERS ──
 window.showScreen = function(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
