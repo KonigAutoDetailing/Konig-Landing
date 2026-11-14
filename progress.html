@@ -2452,6 +2452,7 @@ window.invSizeChanged = function(){
 window.invDueFromDate = function(){ const done = window._invData && toDateObj(window._invData.doneAt); document.getElementById('invDue').value = done ? invYmd(done) : document.getElementById('invDate').value; };
 window.invPayChanged = function(){
   document.getElementById('invDpBox').style.display = document.getElementById('invHasDp').checked ? 'block' : 'none';
+  document.getElementById('invLunas').dataset.auto = '';
   const l = document.getElementById('invLunas').checked;
   document.getElementById('invLunasBox').style.display = l ? 'block' : 'none';
   if (l && !document.getElementById('invLunasDate').value) document.getElementById('invLunasDate').value = invYmd(new Date());
@@ -2467,11 +2468,16 @@ function invCollect(){
     if (meta.redeem) it.redeem = meta.redeem;
     return it;
   }).filter(it => it.produk);
-  const hasDp = document.getElementById('invHasDp').checked, lunas = document.getElementById('invLunas').checked;
-  const pay = lunas ? 'lunas' : hasDp ? 'dp' : 'belum';
+  const hasDp = document.getElementById('invHasDp').checked;
   const subtotal = items.reduce((a,it) => a + it.qty*it.harga - it.disc, 0);
   const dTam = discValue(document.getElementById('invDiskon').value, subtotal), diskon = dTam.amount, diskonPct = dTam.pct;
   const total = Math.max(0, subtotal - diskon);
+  const autoLunas = items.length > 0 && total === 0;
+  const lb = document.getElementById('invLunas');
+  if (!autoLunas && lb.dataset.auto === '1' && lb.checked) { lb.checked = false; lb.dataset.auto = ''; document.getElementById('invLunasBox').style.display = 'none'; }
+  if (autoLunas && !lb.checked) { lb.checked = true; lb.dataset.auto = '1'; document.getElementById('invLunasBox').style.display = 'block'; if (!document.getElementById('invLunasDate').value) document.getElementById('invLunasDate').value = invYmd(new Date()); }
+  const lunas = lb.checked;
+  const pay = lunas ? 'lunas' : hasDp ? 'dp' : 'belum';
   const dpAmt = hasDp ? rupiahNum(document.getElementById('invDpAmt').value) : 0;
   const sisa = Math.max(0, total - dpAmt);
   const pelunasan = lunas ? sisa : 0;
@@ -2504,7 +2510,7 @@ window.openInvoice = function(id, d, fromDone){
   const autoKet = [d.car, d.color ? titleCase(d.color) : '', d.plate].filter(Boolean).join(' - ');
   document.getElementById('invKet').value = inv && inv.keterangan && inv.keterangan !== autoKet ? inv.keterangan : '';
   document.getElementById('invHasDp').checked = !!(inv && inv.dp && inv.dp.amount);
-  document.getElementById('invLunas').checked = !!(inv && inv.pay === 'lunas');
+  document.getElementById('invLunas').checked = !!(inv && inv.pay === 'lunas'); document.getElementById('invLunas').dataset.auto = '';
   document.getElementById('invLunasDate').value = inv && inv.pelunasan && inv.pelunasan.date || '';
   document.getElementById('invDpAmt').value = inv && inv.dp && inv.dp.amount ? fmtRp(inv.dp.amount) : '';
   document.getElementById('invDpNo').value = inv && inv.dp && inv.dp.no ? inv.dp.no : nextSeq('INV-DP');
