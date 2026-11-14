@@ -1070,11 +1070,12 @@ window.renderJobList = function(){
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
         </div>
-        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions">${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span style="font-size:12px;color:var(--muted)">Tanpa invoice</span>'}<span style="font-size:11px;color:var(--muted);align-self:center">🔒 Terkunci (lebih dari 3 hari)</span><button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
+        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions">${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span style="font-size:12px;color:var(--muted)">Tanpa invoice</span>'}${lunasBtn(j)}<span style="font-size:11px;color:var(--muted);align-self:center">🔒 Terkunci (lebih dari 3 hari)</span><button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
           ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : ''}
+          ${isDone ? lunasBtn(j) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
           ${isDone && (j.visits||[]).length ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
         </div>`}
@@ -1087,6 +1088,29 @@ window.renderJobList = function(){
 }
 
 
+
+
+// ── TANDAI LUNAS LANGSUNG DARI KARTU ──
+function lunasBtn(j){
+  const iv = j.invoice; if (!iv) return '';
+  if (iv.pay === 'lunas') return '<span class="btn-sm" style="border:1px solid #16a34a;color:#4ade80;cursor:default">✓ Lunas</span>';
+  return `<button class="btn-sm" style="background:#16a34a;color:#fff" onclick="markLunas('${j.id}', ${j._vi == null ? 'null' : j._vi})">💰 Sudah Lunas · Rp ${Number(iv.tertagih||0).toLocaleString('id-ID')}</button>`;
+}
+window.markLunas = async function(id, vi){
+  const j = (window._allJobs||[]).find(x => x.id === id); if (!j) return;
+  const visits = (j.visits||[]).slice();
+  const iv = vi == null ? j.invoice : (visits[vi] && visits[vi].invoice); if (!iv) return;
+  const dp = iv.dp && iv.dp.amount ? iv.dp.amount : 0;
+  const amt = Math.max(0, (iv.total || 0) - dp);
+  if (!confirm('Tandai invoice ' + iv.no + ' LUNAS?\nPelunasan Rp ' + amt.toLocaleString('id-ID') + ' hari ini.')) return;
+  const nv = { ...iv, pay: 'lunas', pelunasan: { amount: amt, date: todayWIB() }, tertagih: 0 };
+  try {
+    const { doc, updateDoc } = window._fbFns;
+    if (vi == null) { await updateDoc(doc(window._db, 'konig_progress', id), { invoice: nv }); j.invoice = nv; }
+    else { visits[vi] = { ...visits[vi], invoice: nv }; await updateDoc(doc(window._db, 'konig_progress', id), { visits }); j.visits = visits; }
+    renderJobList();
+  } catch(e) { alert('Gagal menyimpan: ' + e.message); }
+};
 
 // ── HAPUS SATU KUNJUNGAN (mis. data tes) — voucher yang dipakai dikembalikan ──
 window.deleteVisit = async function(id, vi){
