@@ -2045,7 +2045,7 @@ window.saveAutoPromo = async function(){
 function applyPromoToInvoice(p){
   if (p.type === 'percent') { document.getElementById('invDiskon').value = p.value + '%'; }
   else if (p.type === 'amount') { document.getElementById('invDiskon').value = Number(p.value).toLocaleString('id-ID'); }
-  else { const harga = pricelistPrice(p.service, document.getElementById('invSize').value) || pricelistPrice(p.service, '') || 0;
+  else { removeInvItemByBase(p.service); const harga = pricelistPrice(p.service, document.getElementById('invSize').value) || pricelistPrice(p.service, '') || 0;
     document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: p.service + ' (Kode ' + p.code + ')', desc: 'Gratis dari kode ' + p.code + '.', qty: 1, harga, discPct: 100, disc: harga })); }
   const k = document.getElementById('invKet'); if (!k.value) k.value = 'Kode ' + p.code + ': ' + promoBenefit(p);
   window._invPromo = p.code;
@@ -2069,12 +2069,13 @@ window.checkJobVoucher = function(){
   info.style.display = 'block';
   if (!v) {
     const p = findPromo(code);
-    if (p) { const ok = promoUsable(p); info.style.color = ok ? '#4ade80' : '#f87171'; info.textContent = ok ? '✓ Kode ' + p.code + ': ' + promoBenefit(p) + (p.owner ? ' (' + p.owner + ')' : '') + '. Otomatis dipakai di invoice.' : '✗ Kode ' + p.code + ' tidak aktif / sudah mencapai batas'; return; }
+    if (p) { const ok = promoUsable(p); info.style.color = ok ? '#4ade80' : '#f87171'; info.textContent = ok ? '✓ Kode ' + p.code + ': ' + promoBenefit(p) + (p.owner ? ' (' + p.owner + ')' : '') + '. Otomatis dipakai di invoice.' : '✗ Kode ' + p.code + ' tidak aktif / sudah mencapai batas'; if (ok && p.type === 'free' && typeof addService === 'function' && !selectedServices.includes(p.service)) addService(p.service); return; }
     info.style.color = 'var(--muted)'; info.textContent = code.length >= 4 ? '✗ Kode tidak ditemukan' : ''; return;
   }
   if (v.used) { info.style.color = '#f87171'; info.textContent = '✗ Voucher sudah dipakai' + (v.usedAt ? ' (' + v.usedAt + ')' : ''); return; }
   const o = v.owner; const nm = o.custName ? (o.custTitle ? o.custTitle + ' ' : '') + titleCase(o.custName) : (o.plate || '');
   info.style.color = '#4ade80'; info.textContent = '✓ Voucher valid: Free ' + v.service + ' (dari ' + nm + '). Otomatis dipakai di invoice.';
+  if (typeof addService === 'function' && !selectedServices.includes(v.service)) addService(v.service);
 };
 
 // ── DETEKSI MOBIL / CUSTOMER LAMA ──
@@ -2391,7 +2392,9 @@ function renderVoucherBox(d){
   box.style.display = 'block';
   box.innerHTML = '<b>🎟️ Customer punya voucher yang belum dipakai:</b>' + list.map(v => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small style="color:var(--muted)">(${v.code})</small></span><button type="button" class="btn-sm" style="background:#facc15;color:#111" onclick='redeemVoucher(${JSON.stringify(v)})'>Pakai</button></div>`).join('');
 }
+function removeInvItemByBase(base){ document.querySelectorAll('#invItems .inv-item').forEach(el => { const p = el.querySelector('.i-produk'); if (p && p.dataset.base === base) el.remove(); }); }
 window.redeemVoucher = function(v){
+  removeInvItemByBase(v.service);
   const harga = pricelistPrice(v.service, document.getElementById('invSize').value) || pricelistPrice(v.service, '') || 0;
   document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: v.service + ' (Voucher ' + v.code + ')', desc: 'Penukaran voucher ' + v.code + '.', qty: 1, harga, discPct: 100, disc: harga, redeem: { code: v.code, jobId: v.jobId } }));
   renderVoucherBox(window._invData || {});
