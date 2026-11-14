@@ -241,7 +241,7 @@
     .job-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .btn-sm{
       font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
-      color:var(--white);border:none;cursor:pointer;padding:8px 14px;transition:background 0.2s;
+      color:var(--white);border:none;background:rgba(255,255,255,.08);cursor:pointer;padding:8px 14px;transition:background 0.2s;
     }
     .btn-edit{background:var(--purple)}
     .btn-edit:hover{background:var(--purple2)}
@@ -1242,11 +1242,12 @@ window.openWaUpdate = async function(onlyId){
   const allJobs = [];
   snap.forEach(d => { const j = { id: d.id, ...d.data() }; allJobs.push(j); const done = (j.doneSteps||[]).includes('done');
     if(onlyId){ if(j.id === onlyId) jobs.push(j); return; }
+    if(j.lastWaUpdate === today) return; // sudah dikirim / dihapus dari daftar hari ini
     if(done){ if((tsDay(j.doneAt) || tsDay(j.updatedAt)) === today) jobs.push(j); return; }
     if(isQuick(j) || autoWashDone(j)) return;
     // Coating/poles: update tiap 3 hari sejak mobil masuk / sejak update terakhir
     const base = j.lastWaUpdate || tsDay(j.createdAt);
-    if (j.lastWaUpdate === today || (base && dayDiff(base, today) >= 3)) jobs.push(j); });
+    if (base && dayDiff(base, today) >= 3) jobs.push(j); });
   list.textContent = '';
   const washDue = onlyId ? [] : washReminders(allJobs, today);
   const reviewDue = onlyId ? [] : reviewReminders(allJobs, today);
@@ -1276,7 +1277,14 @@ window.openWaUpdate = async function(onlyId){
       };
     }
     const info = document.createElement('span'); info.style.cssText = 'font-size:12px;color:var(--muted)'; info.textContent = j.wa ? 'WA: ' + j.wa : '';
-    row.appendChild(btn); row.appendChild(info);
+    const del = document.createElement('button');
+    del.className = 'btn-sm'; del.textContent = 'Hapus dari daftar';
+    del.style.cssText = 'background:transparent;color:var(--muted);border:1px solid var(--border);margin-left:auto';
+    del.onclick = async () => {
+      box.remove();
+      try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { lastWaUpdate: today }); } catch(e) {}
+    };
+    row.appendChild(btn); row.appendChild(info); if (!onlyId) row.appendChild(del);
     box.appendChild(head); box.appendChild(ta); box.appendChild(row);
     list.appendChild(box);
   });
@@ -1643,7 +1651,7 @@ window.confirmDone = async function() {
   const id = window._doneId;
   const wa = window._doneWa;
   const msg = document.getElementById('doneWaMsg').value.trim();
-  await _markDoneFirestore(id);
+  await _markDoneFirestore(id, !!(wa && msg));
   closeModal('modalDone');
   if (wa && msg) {
     const phone = wa.replace(/\D/g, '').replace(/^0/, '62');
@@ -1656,14 +1664,13 @@ window.confirmDoneNoSend = async function() {
   closeModal('modalDone');
 };
 
-async function _markDoneFirestore(id) {
+async function _markDoneFirestore(id, sent) {
   const { doc, updateDoc, serverTimestamp } = window._fbFns;
   const allSteps = window.ALL_STEP_IDS;
-  await updateDoc(doc(window._db, 'konig_progress', id), {
-    doneSteps: allSteps, activeStep: 'done', updatedAt: serverTimestamp(), doneAt: serverTimestamp()
-  });
+  const upd = { doneSteps: allSteps, activeStep: 'done', updatedAt: serverTimestamp(), doneAt: serverTimestamp() };
+  if (sent) upd.lastWaUpdate = todayWIB();
+  await updateDoc(doc(window._db, 'konig_progress', id), upd);
   loadJobs();
-  window.openWaUpdate(id);
 }
 
 
