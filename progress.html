@@ -1070,12 +1070,13 @@ window.renderJobList = function(){
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
         </div>
-        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions">${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span style="font-size:12px;color:var(--muted)">Tanpa invoice</span>'}<span style="font-size:11px;color:var(--muted);align-self:center">🔒 Terkunci (lebih dari 3 hari)</span></div>` : `<div class="job-actions">
+        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions">${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span style="font-size:12px;color:var(--muted)">Tanpa invoice</span>'}<span style="font-size:11px;color:var(--muted);align-self:center">🔒 Terkunci (lebih dari 3 hari)</span><button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
           ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
+          ${isDone && (j.visits||[]).length ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
         </div>`}
       </div>
       <div>
@@ -1085,6 +1086,47 @@ window.renderJobList = function(){
   }).join('');
 }
 
+
+
+// ── HAPUS SATU KUNJUNGAN (mis. data tes) — voucher yang dipakai dikembalikan ──
+window.deleteVisit = async function(id, vi){
+  const j = (window._allJobs||[]).find(x => x.id === id); if (!j) return;
+  const visits = (j.visits||[]).slice();
+  const target = vi == null ? j : visits[vi];
+  const label = (target.service || '-') + (toDateObj(target.doneAt) ? ' (' + toDateObj(target.doneAt).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) + ')' : '');
+  if (vi == null && !visits.length) { alert('Ini satu-satunya kunjungan mobil ini. Pakai tombol Hapus Mobil di Update Progress kalau ingin menghapus semuanya.'); return; }
+  if (!confirm('Hapus kunjungan ' + label + ' dari history ' + (j.plate || id) + '? Tidak bisa dibatalkan.')) return;
+  const { doc, updateDoc } = window._fbFns;
+  const inv = target.invoice || null;
+  try {
+    // 1. Kembalikan voucher yang dipakai di invoice kunjungan ini
+    for (const it of (inv && inv.items || []).filter(x => x.redeem)) {
+      const src = (window._allJobs||[]).find(x => x.id === it.redeem.jobId); if (!src) continue;
+      const arr = (src.vouchers||[]).map(v => v.code === it.redeem.code ? { code: v.code, service: v.service, issuedAt: v.issuedAt || '', invoiceNo: v.invoiceNo || '', used: false } : v);
+      src.vouchers = arr;
+      if (src.id !== id) await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr });
+    }
+    // 2. Voucher yang diterbitkan invoice kunjungan ini (bonus) ikut dihapus
+    const issued = new Set((inv && inv.items || []).filter(x => x.voucherCode).map(x => x.voucherCode));
+    let vouchers = (j.vouchers||[]).filter(v => !issued.has(v.code));
+    // 3. Hapus pemakaian kode promo
+    if (inv && inv.promo) { const pr = findPromo(inv.promo); if (pr) { pr.uses = (pr.uses||[]).filter(u => !(u.jobId === id && u.invoiceNo === inv.no)); try { await savePromos(); } catch(e) {} } }
+    let upd;
+    if (vi == null) {
+      // Kunjungan terbaru dihapus: kunjungan sebelumnya jadi data utama lagi
+      const last = visits.pop();
+      upd = { service: last.service || '', car: last.car || j.car || '', color: last.color || '', plate: last.plate || j.plate || '', note: last.note || '',
+        custTitle: last.custTitle || j.custTitle || '', custName: last.custName || j.custName || '', wa: last.wa || j.wa || '',
+        createdAt: last.createdAt || null, doneAt: last.doneAt || null, invoice: last.invoice || null,
+        doneSteps: window.ALL_STEP_IDS, activeStep: 'done', stepTimes: {}, voucherCode: '', visits, vouchers };
+    } else {
+      visits.splice(vi, 1);
+      upd = { visits, vouchers };
+    }
+    await updateDoc(doc(window._db, 'konig_progress', id), upd);
+    loadJobs();
+  } catch(e) { alert('Gagal menghapus: ' + e.message); }
+};
 
 // ── STEP ICON HELPER ──
 const POLISHER_SVG = `<svg width="1em" height="1em" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle"><ellipse cx="45" cy="100" rx="34" ry="9" fill="#fb923c" opacity="0.25"/><ellipse cx="45" cy="96" rx="30" ry="7" fill="#fb923c" opacity="0.45"/><ellipse cx="45" cy="92" rx="25" ry="6" fill="#fb923c" opacity="0.7"/><ellipse cx="45" cy="88" rx="20" ry="5" fill="#f97316"/><rect x="40" y="68" width="10" height="22" rx="5" fill="#c2410c"/><rect x="22" y="38" width="46" height="34" rx="14" fill="#ea580c"/><ellipse cx="45" cy="40" rx="18" ry="10" fill="#fed7aa"/><ellipse cx="45" cy="38" rx="12" ry="7" fill="#ffedd5"/><rect x="58" y="46" width="38" height="20" rx="10" fill="#c2410c"/><path d="M96 54 C104 50 108 44 106 36" stroke="#9a3412" stroke-width="4" stroke-linecap="round" fill="none"/><rect x="18" y="62" width="8" height="22" rx="4" fill="#9a3412" transform="rotate(15 22 73)"/><circle cx="72" cy="56" r="4" fill="#fed7aa"/><circle cx="72" cy="56" r="2" fill="#fb923c"/><ellipse cx="38" cy="42" rx="8" ry="4" fill="white" opacity="0.25" transform="rotate(-10 38 42)"/></svg>`;
