@@ -745,7 +745,7 @@ function renderTrack(code, data) {
     div.className = 'step ' + (isDone ? 'done' : isActive ? 'active' : 'pending');
     div.style.animationDelay = (stepsEl.children.length * 0.08) + 's';
     div.innerHTML = `
-      <div class="step-dot">${isDone ? '✓' : isActive ? s.icon : s.icon}</div>
+      <div class="step-dot">${isDone ? '✓' : stepIcon(s)}</div>
       <div class="step-info">
         <div class="step-name">${s.name}</div>
         <div class="step-time">${isDone ? (data.stepTimes?.[s.id] || '') : isActive ? 'Sedang dikerjakan' : 'Menunggu'}</div>
@@ -830,6 +830,10 @@ window.loadJobs = async function() {
   }).join('');
 }
 
+
+// ── STEP ICON HELPER ──
+const POLISHER_SVG = `<svg width="1em" height="1em" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle"><ellipse cx="45" cy="100" rx="34" ry="9" fill="#fb923c" opacity="0.25"/><ellipse cx="45" cy="96" rx="30" ry="7" fill="#fb923c" opacity="0.45"/><ellipse cx="45" cy="92" rx="25" ry="6" fill="#fb923c" opacity="0.7"/><ellipse cx="45" cy="88" rx="20" ry="5" fill="#f97316"/><rect x="40" y="68" width="10" height="22" rx="5" fill="#c2410c"/><rect x="22" y="38" width="46" height="34" rx="14" fill="#ea580c"/><ellipse cx="45" cy="40" rx="18" ry="10" fill="#fed7aa"/><ellipse cx="45" cy="38" rx="12" ry="7" fill="#ffedd5"/><rect x="58" y="46" width="38" height="20" rx="10" fill="#c2410c"/><path d="M96 54 C104 50 108 44 106 36" stroke="#9a3412" stroke-width="4" stroke-linecap="round" fill="none"/><rect x="18" y="62" width="8" height="22" rx="4" fill="#9a3412" transform="rotate(15 22 73)"/><circle cx="72" cy="56" r="4" fill="#fed7aa"/><circle cx="72" cy="56" r="2" fill="#fb923c"/><ellipse cx="38" cy="42" rx="8" ry="4" fill="white" opacity="0.25" transform="rotate(-10 38 42)"/></svg>`;
+function stepIcon(s){ return s.id === 'correction' ? POLISHER_SVG : (s.icon || ''); }
 
 // ── UPDATE SORE VIA WA ──
 const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'🌀 Paint correction (mesin poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
@@ -1362,7 +1366,7 @@ function renderStepsEditor(doneSteps, activeStep) {
     const isActive = s.id === activeStep && !isDone;
     return `<div class="step-row ${isDone ? 'done-row' : isActive ? 'active-row' : ''}" id="srow_${s.id}" onclick="toggleStep('${s.id}')" style="cursor:pointer;">
       <button class="step-toggle ${isDone ? 'done' : isActive ? 'active-btn' : ''}" id="stbtn_${s.id}" style="pointer-events:none;">
-        ${isDone ? '✓' : isActive ? '▶' : s.icon}
+        ${isDone ? '✓' : isActive ? '▶' : stepIcon(s)}
       </button>
       <span class="step-label">${s.name}</span>
       <span class="step-pct-val">${s.pct}%</span>
