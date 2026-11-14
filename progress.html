@@ -1121,14 +1121,16 @@ window.markLunas = async function(id, vi){
 };
 
 // ── HAPUS SATU KUNJUNGAN (mis. data tes) — voucher yang dipakai dikembalikan ──
-window.deleteVisit = async function(id, vi){
+window.deleteVisit = async function(id, vi, activeOnly){
   const j = (window._allJobs||[]).find(x => x.id === id); if (!j) return;
   const visits = (j.visits||[]).slice();
   const target = vi == null ? j : visits[vi];
   const label = (target.service || '-') + (toDateObj(target.doneAt) ? ' (' + toDateObj(target.doneAt).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) + ')' : '');
   if (vi == null && !visits.length) { alert('Ini satu-satunya kunjungan mobil ini. Pakai tombol Hapus Mobil di Update Progress kalau ingin menghapus semuanya.'); return; }
-  if (!confirm('Hapus kunjungan ' + label + ' dari history ' + (j.plate || id) + '? Tidak bisa dibatalkan.')) return;
-  if (!verifyAdmin('menghapus kunjungan')) return;
+  if (!activeOnly) {
+    if (!confirm('Hapus kunjungan ' + label + ' dari history ' + (j.plate || id) + '? Tidak bisa dibatalkan.')) return;
+    if (!verifyAdmin('menghapus kunjungan')) return;
+  }
   const { doc, updateDoc } = window._fbFns;
   const inv = target.invoice || null;
   try {
@@ -1690,8 +1692,18 @@ window.deleteJob = async function(){
   const id = document.getElementById('editJobId').value;
   if (!id) return;
   const car = document.getElementById('jobCar').value || [document.getElementById('jobBrand').value, document.getElementById('jobModel').value].join(' ');
+  const jj = (window._allJobs||[]).find(x => x.id === id) || {};
+  const active = !(jj.doneSteps||[]).includes('done');
+  // Mobil sedang dikerjakan & punya riwayat: hapus layanan hari ini saja, riwayat tetap (tanpa password)
+  if (active && (jj.visits||[]).length) {
+    if (!confirm('Hapus layanan yang sedang berjalan untuk ' + (car.trim() || id) + '?\n\nRiwayat kunjungan sebelumnya TETAP tersimpan.')) return;
+    await window.deleteVisit(id, null, true);
+    closeModal('modalJob');
+    return;
+  }
   if (!confirm('Hapus ' + (car.trim() || 'mobil ini') + ' (kode ' + id + ')?\n\nSemua data, progres, catatan, dan foto inspeksi mobil ini akan terhapus PERMANEN dan tidak bisa dikembalikan.')) return;
-  if (!verifyAdmin('menghapus mobil')) return;
+  // Password hanya untuk data yang sudah jadi history (mobil sudah selesai)
+  if (!active && !verifyAdmin('menghapus mobil')) return;
   const btn = document.getElementById('btnDeleteJob');
   btn.textContent = 'Menghapus...'; btn.disabled = true;
   try {
@@ -1706,7 +1718,7 @@ window.deleteJob = async function(){
     loadJobs();
     Promise.race([deleteFolder('inspection/' + id), new Promise(r => setTimeout(r, 60000))]).catch(e => console.warn('hapus foto', e));
   } catch(e) { alert('Gagal menghapus: ' + e.message); }
-  btn.textContent = '🗑️ Hapus Mobil Ini'; btn.disabled = false;
+  btn.disabled = false;
 };
 
 // ── KONTAK HP ──
@@ -1776,6 +1788,7 @@ window.openNewJobModal = function() {
 
 window.openEditJobModal = async function(id) {
   document.getElementById('btnDeleteJob').style.display = 'block';
+  { const jj = (window._allJobs||[]).find(x => x.id === id) || {}; document.getElementById('btnDeleteJob').textContent = (!(jj.doneSteps||[]).includes('done') && (jj.visits||[]).length) ? '🗑️ Hapus Layanan Hari Ini' : '🗑️ Hapus Mobil Ini'; }
   document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   const { doc, getDoc } = window._fbFns;
   const snap = await getDoc(doc(window._db, 'konig_progress', id));
