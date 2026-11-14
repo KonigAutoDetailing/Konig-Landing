@@ -32,6 +32,7 @@
   table.items td{background:#f0f0f0;padding:10px 6px;text-align:center;color:#555;border-bottom:2px solid #fff}
   table.items td:first-child,table.items td:nth-child(2){text-align:left;padding-left:10px}
   table.items td:last-child{text-align:right;padding-right:10px}
+  table.items td:nth-child(2){font-size:11.5px;line-height:1.45}
   .bottom{display:flex;justify-content:space-between;margin-top:10mm;gap:8mm}
   .left{width:46%;padding-top:24mm;font-size:13px}
   .left .ph{margin-top:8mm}
@@ -49,6 +50,16 @@
   .dptbl td:last-child{text-align:right;font-weight:700;color:#333}
   .tag{border-top:1px solid #333;margin-top:4px;padding-top:6px}
   .tag .r span{font-weight:700 !important;color:#333 !important}
+  .st{width:100%;border-collapse:collapse;font-size:13px;color:#555}
+  .st td{padding:5px 0}
+  .st td:first-child{font-weight:700;padding-right:6mm}
+  .st td:last-child{text-align:right;white-space:nowrap}
+  .st small{display:block;font-weight:400;font-size:11px;color:#888;margin-top:1px}
+  .st tr.tot td{border-top:1px solid #bbb;padding-top:8px;color:#333}
+  .st tr.sec td{padding-top:14px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#3a6ea5;border-bottom:1px solid #c9e0f0}
+  .st tr.pay td{padding:7px 0}
+  .st tr.pay td:last-child{color:#333}
+  .st tr.due td{border-top:2px solid #2d3a4b;padding-top:10px;font-size:15px;font-weight:800;color:#2d3a4b}
   .datefoot{text-align:center;font-weight:700;color:#555;margin-top:8mm;font-size:13px}
   .lunas{position:absolute;right:28mm;top:252mm;border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:28px;letter-spacing:4px;padding:6px 18px;transform:rotate(-12deg);opacity:.85}
   .msg{text-align:center;padding:60px 20px;font-size:15px;color:#555}
@@ -102,11 +113,8 @@ const code = new URLSearchParams(location.search).get('code');
   const dmy2 = v => /^\d{4}-\d{2}-\d{2}$/.test(v||'') ? dmy(v) : esc(v||'');
   const hasDp = inv.dp && inv.dp.amount;
   const pel = inv.pay === 'lunas' ? (inv.pelunasan || { amount: Math.max(0, inv.total - (hasDp ? inv.dp.amount : 0)), date: inv.date }) : null;
-  const dp = (hasDp || pel) ? `
-      <div class="dphead">Pembayaran</div>
-      <table class="dptbl"><tr><th>Keterangan</th><th>Tanggal</th><th></th></tr>
-      ${hasDp ? `<tr><td>Down Payment${inv.dp.no ? '<br><small>' + esc(inv.dp.no) + '</small>' : ''}</td><td>${dmy2(inv.dp.date)}</td><td>Rp (${money(inv.dp.amount)})</td></tr>` : ''}
-      ${pel ? `<tr><td>Pelunasan</td><td>${dmy2(pel.date)}</td><td>Rp (${money(pel.amount)})</td></tr>` : ''}</table>` : '';
+  const payRows = (hasDp ? `<tr class="pay"><td>Down Payment<small>${esc(inv.dp.no || '')}${inv.dp.date ? ' · ' + dmy2(inv.dp.date) : ''}</small></td><td>- Rp ${money(inv.dp.amount)}</td></tr>` : '')
+    + (pel ? `<tr class="pay"><td>Pelunasan<small>${pel.date ? dmy2(pel.date) : ''}</small></td><td>- Rp ${money(pel.amount)}</td></tr>` : '');
   root.className = '';
   root.innerHTML = `<div class="page">
     ${inv.pay === 'lunas' ? '<div class="lunas">LUNAS</div>' : ''}
@@ -123,7 +131,7 @@ const code = new URLSearchParams(location.search).get('code');
       <div><div class="ph">Tagihan Untuk</div><div class="pname">${esc(nama)}</div>
         <div class="pinfo">Telp: ${esc(waNum(j.wa) || '-')}</div></div>
     </div>
-    <table class="items"><colgroup><col style="width:21%"><col style="width:19%"><col style="width:6%"><col style="width:15%"><col style="width:13%"><col style="width:8%"><col style="width:18%"></colgroup><tr><th>Produk</th><th>Deskripsi</th><th>Qty</th><th>Harga</th><th>Disc</th><th>Pajak</th><th>Jumlah</th></tr>${rows}</table>
+    <table class="items"><colgroup><col style="width:19%"><col style="width:31%"><col style="width:5%"><col style="width:14%"><col style="width:9%"><col style="width:6%"><col style="width:16%"></colgroup><tr><th>Produk</th><th>Deskripsi</th><th>Qty</th><th>Harga</th><th>Disc</th><th>Pajak</th><th>Jumlah</th></tr>${rows}</table>
     <div class="bottom">
       <div class="left">
         <div class="ph">Keterangan</div><div class="txt">${esc(inv.keterangan || '')}</div>
@@ -134,13 +142,14 @@ No. Rekening: 7615866016
 a.n. PT KONIG MOBIL INDONESIA</div>
       </div>
       <div class="sum">
-        <div class="r"><span>Subtotal</span><span>Rp ${money(inv.subtotal)}</span></div>
-        <div class="r"><span>Diskon Tambahan</span><span>Rp (${money(inv.diskon)})</span></div>
-        <div class="r"><span>Pajak</span><span>Rp 0.00</span></div>
-        <div class="r"><span>Total</span><span>Rp ${money(inv.total)}</span></div>
-        <div class="r"><span>Pajak Inclusive</span><span>Rp 0.00</span></div>
-        ${dp}
-        <div class="tag"><div class="r"><span>Jumlah Tertagih:</span><span>Rp ${money(inv.pay === 'lunas' ? 0 : inv.tertagih)}</span></div></div>
+        <table class="st">
+          <tr><td>Subtotal</td><td>Rp ${money(inv.subtotal)}</td></tr>
+          ${inv.diskon ? `<tr><td>Diskon Tambahan</td><td>- Rp ${money(inv.diskon)}</td></tr>` : ''}
+          <tr><td>Pajak</td><td>Rp 0.00</td></tr>
+          <tr class="tot"><td>Total</td><td>Rp ${money(inv.total)}</td></tr>
+          ${payRows ? `<tr class="sec"><td colspan="2">Pembayaran</td></tr>` + payRows : ''}
+          <tr class="due"><td>Jumlah Tertagih</td><td>Rp ${money(inv.pay === 'lunas' ? 0 : inv.tertagih)}</td></tr>
+        </table>
         <div class="datefoot">${longDate(inv.date)}</div>
       </div>
     </div>

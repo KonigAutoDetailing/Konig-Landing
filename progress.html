@@ -1694,7 +1694,32 @@ const PRICELIST = {
 };
 const SIZE_IDX = { 'Small':0, 'Medium':1, 'Large':2, 'X-tra Large':3 };
 function pricelistPrice(base, size){ const p = PRICELIST[base]; if (!p) return null; const i = SIZE_IDX[size]; if (i === undefined) return p.every(v => v === p[0]) ? p[0] : null; return p[i]; }
-const INV_DESC = sv => /Graphene/i.test(sv) ? 'Graphene coating' : /Matte/i.test(sv) ? 'Matte coating' : /Coating —/i.test(sv) && !/Window/i.test(sv) ? 'Ceramic coating' : /Polish/i.test(sv) ? 'Paint correction' : /Wash/i.test(sv) ? 'Premium wash' : /Interior/i.test(sv) ? 'Interior detailing' : /Engine/i.test(sv) ? 'Engine detailing' : /Window/i.test(sv) ? 'Window coating' : '';
+const COAT_STEPS = 'Cuci & dekontaminasi, paint correction, aplikasi ';
+const DESC_MAP = {
+  'Graphene Coating — Eternity': 'Graphene coating, ketahanan hingga 8 tahun. ' + COAT_STEPS + 'graphene coating.',
+  'Graphene Coating — Shield': 'Graphene coating, ketahanan hingga 7 tahun. ' + COAT_STEPS + 'graphene coating.',
+  'Graphene Coating — Armor': 'Graphene coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'graphene coating.',
+  'Prestige Coating — Sonax CC EVO': 'Ceramic coating 2 layer (base + top coat), ketahanan hingga 5 tahun. ' + COAT_STEPS + 'coating.',
+  'Prestige Coating — Gyeon Q² Syncro EVO': 'Ceramic coating 2 layer (base + top coat), ketahanan hingga 4 tahun. ' + COAT_STEPS + 'coating.',
+  'Prestige Coating — CarPro D.Quartz GO': 'Ceramic coating 2 layer (base + top coat), ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
+  'Signature Coating — Sonax CC Pro': 'Ceramic coating, ketahanan hingga 4 tahun. ' + COAT_STEPS + 'coating.',
+  'Signature Coating — Gyeon Q² Pure EVO': 'Ceramic coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
+  'Signature Coating — CarPro CQUK 3.0': 'Ceramic coating, ketahanan hingga 2 tahun. ' + COAT_STEPS + 'coating.',
+  'Essential Coating — Sonax CC One': 'Ceramic coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
+  'Essential Coating — CarPro Lite': 'Ceramic coating, ketahanan hingga 2 tahun. ' + COAT_STEPS + 'coating.',
+  'Essential Coating — Sapphire 10H': 'Ceramic coating, ketahanan hingga 3 tahun. ' + COAT_STEPS + 'coating.',
+  'Matte Coating — Gyeon Q² Matte': 'Coating khusus cat matte/doff, ketahanan hingga 2 tahun. Cuci & dekontaminasi, aplikasi coating tanpa mengubah efek doff.',
+  'Express Polish': 'Paint correction 1 hari: cuci pH netral, velg & ban, tar & waterspot remover, polish hingga 90% swirl hilang, trim protection, vacuum. Proteksi 6 bulan.',
+  'Premium Polish': '3 steps paint correction (hingga 3 hari): cuci pH netral, velg & ban, tar & waterspot remover, trim protection, vacuum. Proteksi 12 bulan.',
+  'Premium Wash Exterior': 'Cuci detail pH netral, velg & ban, tar remover, trim protection, wetcoat (proteksi 1 bulan), vacuum dasar.',
+  'Interior Detailing — 1 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (1 baris kursi).',
+  'Interior Detailing — 2 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (2 baris kursi).',
+  'Interior Detailing — 3 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (3 baris kursi).',
+  'Engine Detailing': 'Chemical wash untuk minyak & kerak ruang mesin, engine bay dressing & protectant.',
+  'Window Coating — Kaca Depan': 'Hydrophobic coating kaca depan (windshield).',
+  'Window Coating — Semua Kaca': 'Hydrophobic coating kaca depan, samping & belakang.',
+};
+const INV_DESC = sv => DESC_MAP[sv] || '';
 const INV_SIZED = sv => /Coating —|Polish/i.test(sv) && !/Window/i.test(sv);
 function rupiahNum(v){ return parseInt(String(v||'').replace(/[^0-9]/g,'')) || 0; }
 function fmtRp(n){ return n.toLocaleString('id-ID'); }
