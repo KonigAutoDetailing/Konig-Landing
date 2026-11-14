@@ -14,7 +14,7 @@
   .bar button,.bar a{background:#7B2FBE;color:#fff;border:none;padding:10px 16px;font-size:14px;font-weight:700;border-radius:4px;text-decoration:none;cursor:pointer}
   .bar .wa{background:#25D366}
   .wrap{padding:16px 8px 40px}
-  .page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:16mm 13mm;box-shadow:0 2px 12px rgba(0,0,0,.15);position:relative}
+  .page{width:210mm;height:297mm;overflow:hidden;margin:0 auto;background:#fff;padding:16mm 13mm;box-shadow:0 2px 12px rgba(0,0,0,.15);position:relative}
   .top{display:flex;justify-content:space-between;align-items:flex-start}
   .logo{width:56mm;margin-top:4mm}
   .meta h1{margin:0 0 6mm;text-align:right;color:#3a6ea5;font-size:26px}
@@ -65,7 +65,7 @@
   .ket td{padding:2px 0}
   .ket td:first-child{color:#777;padding-right:8mm}
   .datefoot{text-align:center;font-weight:700;color:#555;margin-top:8mm;font-size:13px}
-  .lunas{position:absolute;right:28mm;top:252mm;border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:28px;letter-spacing:4px;padding:6px 18px;transform:rotate(-12deg);opacity:.85}
+  .lunas{position:absolute;right:24mm;bottom:14mm;z-index:2;border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:28px;letter-spacing:4px;padding:6px 18px;transform:rotate(-12deg);opacity:.85}
   .msg{text-align:center;padding:60px 20px;font-size:15px;color:#555}
   @page{size:A4;margin:0}
   @media print{
@@ -116,7 +116,7 @@ const code = new URLSearchParams(location.search).get('code');
   if (!inv) { root.textContent = 'Invoice belum tersedia.'; return; }
   const nama = j.custName ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(j.custName)) : '-';
   document.title = 'Invoice ' + inv.no + ' — KONÏG';
-  const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.discPct ? it.discPct + '%' : (it.disc ? money(it.disc) : 0)}</td><td>-</td><td>${(it.qty*it.harga - (it.disc||0)) <= 0 && it.harga ? '<b style="color:#16a34a">FREE</b>' : money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
+  const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.discPct ? it.discPct + '%' : (it.disc ? money(it.disc) : 0)}</td><td>${(it.qty*it.harga - (it.disc||0)) <= 0 && it.harga ? '<b style="color:#16a34a">FREE</b>' : money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
   const dmy2 = v => /^\d{4}-\d{2}-\d{2}$/.test(v||'') ? dmy(v) : esc(v||'');
   const hasDp = inv.dp && inv.dp.amount;
   const pel = inv.pay === 'lunas' ? (inv.pelunasan || { amount: Math.max(0, inv.total - (hasDp ? inv.dp.amount : 0)), date: inv.date }) : null;
@@ -125,8 +125,7 @@ const code = new URLSearchParams(location.search).get('code');
   const payRows = (hasDp ? `<tr class="pay"><td>Down Payment<small>${esc(inv.dp.no || '')}${inv.dp.date ? ' · ' + dmy2(inv.dp.date) : ''}</small></td><td>- Rp ${money(inv.dp.amount)}</td></tr>` : '')
     + (pel ? `<tr class="pay"><td>Pelunasan<small>${pel.date ? dmy2(pel.date) : ''}</small></td><td>- Rp ${money(pel.amount)}</td></tr>` : '');
   root.className = '';
-  root.innerHTML = `<div class="page">
-    ${inv.pay === 'lunas' ? '<div class="lunas">LUNAS</div>' : ''}
+  root.innerHTML = `<div class="page">${inv.pay === 'lunas' ? '<div class="lunas">LUNAS</div>' : ''}<div class="pin">
     <div class="top">
       <img class="logo" src="/konig-logo.png" alt="KONÏG">
       <div class="meta"><h1>Invoice</h1><table>
@@ -140,7 +139,7 @@ const code = new URLSearchParams(location.search).get('code');
       <div><div class="ph">Tagihan Untuk</div><div class="pname">${esc(nama)}</div>
         <div class="pinfo">Telp: ${esc(waNum(j.wa) || '-')}</div></div>
     </div>
-    <table class="items"><colgroup><col style="width:19%"><col style="width:31%"><col style="width:5%"><col style="width:14%"><col style="width:9%"><col style="width:6%"><col style="width:16%"></colgroup><tr><th>Produk</th><th>Deskripsi</th><th>Qty</th><th>Harga</th><th>Disc</th><th>Pajak</th><th>Jumlah</th></tr>${rows}</table>
+    <table class="items"><colgroup><col style="width:22%"><col style="width:33%"><col style="width:6%"><col style="width:14%"><col style="width:9%"><col style="width:16%"></colgroup><tr><th>Produk</th><th>Deskripsi</th><th>Qty</th><th>Harga</th><th>Disc</th><th>Jumlah</th></tr>${rows}</table>
     <div class="bottom">
       <div class="left">
         <div class="ph">Keterangan</div>
@@ -166,10 +165,12 @@ a.n. PT KONIG MOBIL INDONESIA</div>
         <div class="datefoot">${longDate(inv.date)}</div>
       </div>
     </div>
-  </div>`;
+  </div></div>`;
   const msg = 'Halo ' + nama + ',\n\nBerikut invoice ' + inv.no + ' untuk ' + (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '') + ':\n' + location.href + '\n\n'
     + (inv.pay === 'lunas' ? 'Status: Lunas. Terima kasih.' : 'Jumlah tertagih: Rp ' + Number(inv.tertagih||0).toLocaleString('id-ID') + '\nPembayaran ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.')
     + '\n\nSalam,\nKONIG Auto Detailing';
+  // Selalu 1 halaman: kecilkan isi kalau melebihi tinggi A4
+  (function(){ const pg = root.querySelector('.page'), pin = root.querySelector('.pin'); const avail = pg.clientHeight - parseFloat(getComputedStyle(pg).paddingTop) - parseFloat(getComputedStyle(pg).paddingBottom); const h = pin.scrollHeight; if (h > avail) pin.style.zoom = (avail / h).toFixed(3); })();
   window.__invNo = inv.no; window.__invMsg = msg;
   const fit = () => { const pg = document.querySelector('.page'); if (!pg) return; const w = document.querySelector('.wrap').clientWidth - 16; pg.style.zoom = w < 794 ? (w / 794).toFixed(3) : ''; };
   fit(); addEventListener('resize', fit);

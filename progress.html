@@ -132,6 +132,10 @@
     .cust-sug div:active{background:rgba(124,58,237,.25)}
     .code-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
     .code-opts button{background:rgba(124,58,237,.15);border:1px solid rgba(167,139,250,.4);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px;padding:9px 4px;cursor:pointer;line-height:1.2;white-space:nowrap}
+    .trk-vouch{margin:0 0 22px;padding:14px 16px;border:1px dashed rgba(250,204,21,.6);background:rgba(250,204,21,.06);text-align:left;font-size:13px;color:#f3ead0;line-height:1.6}
+    .trk-vouch b{color:#facc15;font-family:'Barlow Condensed',sans-serif;letter-spacing:1.5px;text-transform:uppercase;font-size:13px}
+    .trk-vouch .vc{display:flex;justify-content:space-between;gap:10px;margin-top:6px;color:#fff}
+    .trk-vouch .vc span:last-child{font-family:monospace;letter-spacing:1px;color:#facc15}
     .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
     .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--muted);margin-top:4px}
     .track-service{font-size:13px;color:var(--muted);margin-top:8px}
@@ -413,6 +417,7 @@
       <div class="track-plate" id="trackPlate">-</div>
       <div class="track-service" id="trackService">-</div>
     </div>
+    <div id="trackVouchers" class="trk-vouch" style="display:none"></div>
 
     <div id="trackLive">
     <div class="prog-bar-wrap">
@@ -673,6 +678,7 @@
       <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
       <button type="button" class="inv-add" style="color:#facc15;border-color:rgba(250,204,21,.5)" onclick="toggleBonus()">🎁 Tambah Bonus</button>
     </div>
+    <div id="invVoucherBox" class="rep-box" style="display:none;margin:10px 0 0"></div>
     <div id="bonusOpts" style="display:none;margin-top:8px;display:none">
       <div class="code-opts" style="grid-template-columns:1fr;gap:6px">
         <button type="button" onclick="invAddBonus('Premium Wash Exterior')">Free Premium Wash</button>
@@ -855,6 +861,9 @@ function renderTrack(code, data) {
   document.getElementById('trackPlate').textContent = data.plate || '-';
   document.getElementById('trackService').textContent = data.service || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
+  const tv = document.getElementById('trackVouchers'), vv = (data.vouchers||[]).filter(v => !v.used);
+  tv.innerHTML = vv.length ? '<b>🎁 Your Vouchers</b><div style="color:var(--muted);font-size:12px">Free service, no expiry date. Show the code on your next visit.</div>' + vv.map(v => `<div class="vc"><span>Free ${v.service}</span><span>${v.code}</span></div>`).join('') : '';
+  tv.style.display = vv.length ? 'block' : 'none';
   const isHist = renderHistory(data);
   document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
   document.getElementById('trackHelloSub').textContent = isHist ? 'Thank you for trusting your car to KONIG.' : 'Your car is in good hands. Track its progress here.';
@@ -1100,7 +1109,9 @@ function waMessage(j){
       : 'Berikut kami lampirkan invoice pelunasan ' + iv.no + ':\n' + ivUrl + '\n'
         + 'Jumlah yang perlu dilunasi: Rp ' + Number(iv.tertagih||0).toLocaleString('id-ID') + (iv.dp && iv.dp.amount ? ' (sudah dikurangi DP Rp ' + Number(iv.dp.amount).toLocaleString('id-ID') + ')' : '') + '\n'
         + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
-    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + REVIEW_TEXT.replace(/^\n+/, '') + '\n\n' + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
+    const vList = iv ? (iv.items||[]).filter(it => it.voucherCode) : [];
+    const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.\n\n' : '';
+    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + REVIEW_TEXT.replace(/^\n+/, '') + '\n\n' + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
   let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
@@ -2011,30 +2022,30 @@ function guessSize(d){
 const SIZE_IDX = { 'Small':0, 'Medium':1, 'Large':2, 'X-tra Large':3 };
 function pricelistPrice(base, size){ const p = PRICELIST[base]; if (!p) return null; const i = SIZE_IDX[size]; if (i === undefined) return p.every(v => v === p[0]) ? p[0] : null; return p[i]; }
 const DESC_MAP = {
-  'Graphene Coating — Eternity': 'Seri flagship graphene coating KONIG (Korea). Graphene membentuk lapisan yang lebih rapat dan tahan panas dibanding ceramic biasa, sehingga cat lebih terlindungi dari waterspot dan kusam. Kilap paling maksimal, sangat licin, ketahanan hingga 8 tahun.',
-  'Graphene Coating — Shield': 'Graphene coating KONIG (Korea) dengan lapisan rapat dan tahan panas yang membantu mengurangi waterspot. Kilap tinggi, licin, dan tahan bahan kimia dengan seimbang. Ketahanan hingga 7 tahun.',
-  'Graphene Coating — Armor': 'Graphene coating KONIG (Korea) untuk proteksi harian. Efek daun talas (hidrofobik) sangat kuat sehingga air dan kotoran mudah lepas saat dicuci. Ketahanan hingga 3 tahun.',
-  'Prestige Coating — Sonax CC EVO': 'Professional line dari SONAX (Jerman). Sistem 2 layer (base coat + top coat) dengan wet look yang sangat dalam, sangat licin, dan tahan bahan kimia. Ketahanan hingga 5 tahun.',
-  'Prestige Coating — Gyeon Q² Syncro EVO': 'Sistem coating 2 layer dari Gyeon (Korea): base coat yang keras dipadukan top coat yang sangat licin dan hidrofobik. Kilap tinggi dan perlindungan menyeluruh hingga 4 tahun.',
-  'Prestige Coating — CarPro D.Quartz GO': 'Sistem coating 2 layer dari CarPro (Korea) dengan lapisan keras dan tahan bahan kimia, kilap tajam, dan efek hidrofobik kuat. Ketahanan hingga 3 tahun.',
-  'Signature Coating — Sonax CC Pro': 'Ceramic coating profesional dari SONAX (Jerman) dengan kilap dan efek hidrofobik yang sangat baik, mudah dirawat. Ketahanan hingga 4 tahun.',
-  'Signature Coating — Gyeon Q² Pure EVO': 'Ceramic coating dari Gyeon (Korea) dengan kandungan SiO₂ tinggi untuk lapisan yang tebal, kilap seperti kaca, dan hidrofobik kuat. Ketahanan hingga 3 tahun.',
-  'Signature Coating — CarPro CQUK 3.0': 'Ceramic coating andalan CarPro (Korea) dengan lapisan keras dan kilap tajam, cocok untuk perlindungan harian. Ketahanan hingga 2 tahun.',
-  'Essential Coating — Sonax CC One': 'Ceramic coating dari SONAX (Jerman) untuk proteksi dasar dengan kilap dan efek hidrofobik yang baik. Ketahanan hingga 3 tahun.',
-  'Essential Coating — CarPro Lite': 'Ceramic coating ringan dari CarPro (Korea), praktis dan mudah dirawat untuk perlindungan dasar. Ketahanan hingga 2 tahun.',
-  'Essential Coating — Sapphire 10H': 'Ceramic coating 10H buatan Indonesia, pilihan value terbaik untuk menambah kilap dan perlindungan dasar cat. Ketahanan hingga 3 tahun.',
-  'Matte Coating — Gyeon Q² Matte': 'Coating khusus cat matte/doff dari Gyeon (Korea). Melindungi cat dari noda dan kotoran tanpa membuat cat jadi mengkilap, efek doff tetap terjaga. Ketahanan hingga 2 tahun.',
-  'Express Polish': 'Paint correction 1 hari: cuci pH netral, velg & ban, tar & waterspot remover, polish hingga 90% swirl hilang, trim protection, vacuum. Proteksi 6 bulan.',
-  'Premium Polish': '3 steps paint correction (hingga 3 hari): cuci pH netral, velg & ban, tar & waterspot remover, trim protection, vacuum. Proteksi 12 bulan.',
-  'Premium Maintenance': 'Maintenance coating per kunjungan untuk menjaga performa dan kilap coating.',
-  'Professional Maintenance': 'Maintenance coating profesional per kunjungan untuk menjaga performa, kilap & daya hidrofobik coating.',
-  'Premium Wash Exterior': 'Cuci detail pH netral, velg & ban, tar remover, trim protection, wetcoat (proteksi 1 bulan), vacuum dasar.',
-  'Interior Detailing — 1 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (1 baris kursi).',
-  'Interior Detailing — 2 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (2 baris kursi).',
-  'Interior Detailing — 3 Row': 'Deep cleaning & vacuum, cleaning & dressing semua panel + door trim, pembersihan kaca, stain & odor removal (3 baris kursi).',
-  'Engine Detailing': 'Chemical wash untuk minyak & kerak ruang mesin, engine bay dressing & protectant.',
-  'Window Coating — Kaca Depan': 'Hydrophobic coating kaca depan (windshield).',
-  'Window Coating — Semua Kaca': 'Hydrophobic coating kaca depan, samping & belakang.',
+  'Graphene Coating — Eternity': 'Graphene coating flagship KONIG (Korea): lebih tahan panas & waterspot, kilap maksimal, hingga 8 tahun.',
+  'Graphene Coating — Shield': 'Graphene coating KONIG (Korea): tahan panas & waterspot, kilap dan licin seimbang, hingga 7 tahun.',
+  'Graphene Coating — Armor': 'Graphene coating KONIG (Korea): efek daun talas sangat kuat, mudah dibersihkan, hingga 3 tahun.',
+  'Prestige Coating — Sonax CC EVO': 'Professional line SONAX (Jerman), 2 layer, wet look sangat dalam, hingga 5 tahun.',
+  'Prestige Coating — Gyeon Q² Syncro EVO': 'Coating 2 layer Gyeon (Korea): keras, sangat licin & hidrofobik, hingga 4 tahun.',
+  'Prestige Coating — CarPro D.Quartz GO': 'Coating 2 layer CarPro (Korea): keras, tahan bahan kimia, kilap tajam, hingga 3 tahun.',
+  'Signature Coating — Sonax CC Pro': 'Ceramic coating profesional SONAX (Jerman): kilap & hidrofobik sangat baik, hingga 4 tahun.',
+  'Signature Coating — Gyeon Q² Pure EVO': 'Ceramic coating Gyeon (Korea) SiO₂ tinggi: lapisan tebal, kilap kaca, hingga 3 tahun.',
+  'Signature Coating — CarPro CQUK 3.0': 'Ceramic coating andalan CarPro (Korea): lapisan keras, kilap tajam, hingga 2 tahun.',
+  'Essential Coating — Sonax CC One': 'Ceramic coating SONAX (Jerman) untuk proteksi dasar, kilap & hidrofobik baik, hingga 3 tahun.',
+  'Essential Coating — CarPro Lite': 'Ceramic coating ringan CarPro (Korea), praktis & mudah dirawat, hingga 2 tahun.',
+  'Essential Coating — Sapphire 10H': 'Ceramic coating 10H buatan Indonesia, value terbaik untuk proteksi dasar, hingga 3 tahun.',
+  'Matte Coating — Gyeon Q² Matte': 'Coating khusus cat doff dari Gyeon (Korea), efek doff tetap terjaga, hingga 2 tahun.',
+  'Express Polish': 'Polish 1 hari, hingga 90% swirl hilang + proteksi 6 bulan.',
+  'Premium Polish': '3 steps paint correction (hingga 3 hari) + proteksi 12 bulan.',
+  'Premium Maintenance': 'Maintenance coating per kunjungan untuk menjaga kilap & performa.',
+  'Professional Maintenance': 'Maintenance coating profesional: kilap, licin & hidrofobik tetap terjaga.',
+  'Premium Wash Exterior': 'Cuci detail pH netral, velg & ban, tar remover, wetcoat 1 bulan.',
+  'Interior Detailing — 1 Row': 'Deep cleaning interior, dressing panel, stain & odor removal (1 baris).',
+  'Interior Detailing — 2 Row': 'Deep cleaning interior, dressing panel, stain & odor removal (2 baris).',
+  'Interior Detailing — 3 Row': 'Deep cleaning interior, dressing panel, stain & odor removal (3 baris).',
+  'Engine Detailing': 'Pembersihan ruang mesin + dressing & protectant.',
+  'Window Coating — Kaca Depan': 'Hydrophobic coating kaca depan.',
+  'Window Coating — Semua Kaca': 'Hydrophobic coating semua kaca.',
 };
 const INV_DESC = sv => DESC_MAP[sv] || '';
 const INV_SIZED = sv => /Coating —|Polish/i.test(sv) && !/Window/i.test(sv);
@@ -2057,17 +2068,43 @@ function lastPrice(produk){
   return best;
 }
 function invItemHtml(it){
-  return `<div class="inv-item"><button type="button" class="del" onclick="this.parentNode.remove();invCalc()">×</button>
+  const meta = encodeURIComponent(JSON.stringify({ bonus: it.bonus || null, voucherCode: it.voucherCode || null, redeem: it.redeem || null }));
+  return `<div class="inv-item${it.bonus ? ' is-bonus' : ''}${it.redeem ? ' is-redeem' : ''}" data-meta="${meta}"><button type="button" class="del" onclick="this.parentNode.remove();invCalc()">×</button>
     <small>PRODUK</small><input class="i-produk" value="${(it.produk||'').replace(/"/g,'&quot;')}" data-base="${(it.base||'').replace(/"/g,'&quot;')}" oninput="invCalc()">
     <small>DESKRIPSI</small><textarea class="i-desc" rows="2">${(it.desc||'').replace(/</g,'&lt;')}</textarea>
     <div class="row"><div><small>QTY</small><input class="i-qty" inputmode="numeric" value="${it.qty||1}" oninput="invCalc()"></div>
     <div><small>HARGA</small><input class="i-harga" inputmode="numeric" value="${it.harga ? fmtRp(it.harga) : ''}" oninput="invNum(this);invCalc()"></div>
     <div><small>DISC</small><input class="i-disc" placeholder="Rp / %" value="${it.discPct ? it.discPct + '%' : (it.disc ? fmtRp(it.disc) : '')}" oninput="invDiscFmt(this);invCalc()"></div></div></div>`;
 }
+
+// ── VOUCHER BONUS ──
+function newVoucherCode(){ const ch = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = 'KV-'; for (let i = 0; i < 5; i++) c += ch[Math.floor(Math.random() * ch.length)]; return c; }
+function vouchersFor(d){
+  const plate = normPlate(d.plate), wa = normWa(d.wa), out = [];
+  (window._allJobs||[]).forEach(j => (j.vouchers||[]).forEach(v => {
+    if (v.used) return;
+    if ((plate && normPlate(j.plate) === plate) || (wa.length >= 9 && normWa(j.wa) === wa)) out.push({ ...v, jobId: j.id });
+  }));
+  return out;
+}
+function renderVoucherBox(d){
+  const box = document.getElementById('invVoucherBox'); if (!box) return;
+  const used = new Set([...document.querySelectorAll('#invItems .inv-item')].map(el => { try { const m = JSON.parse(decodeURIComponent(el.dataset.meta||'')); return m.redeem && m.redeem.code; } catch(e) { return null; } }).filter(Boolean));
+  const list = vouchersFor(d).filter(v => !used.has(v.code));
+  if (!list.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = '<b>🎟️ Customer punya voucher yang belum dipakai:</b>' + list.map(v => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small style="color:var(--muted)">(${v.code})</small></span><button type="button" class="btn-sm" style="background:#facc15;color:#111" onclick='redeemVoucher(${JSON.stringify(v)})'>Pakai</button></div>`).join('');
+}
+window.redeemVoucher = function(v){
+  const harga = pricelistPrice(v.service, document.getElementById('invSize').value) || pricelistPrice(v.service, '') || 0;
+  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: v.service + ' (Voucher ' + v.code + ')', desc: 'Penukaran voucher ' + v.code + '.', qty: 1, harga, discPct: 100, disc: harga, redeem: { code: v.code, jobId: v.jobId } }));
+  renderVoucherBox(window._invData || {});
+  invCalc();
+};
 window.toggleBonus = function(){ const b = document.getElementById('bonusOpts'); b.style.display = b.style.display === 'block' ? 'none' : 'block'; };
 window.invAddBonus = function(base){
   const harga = pricelistPrice(base, '') || 0;
-  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: 'BONUS - ' + base, desc: 'Free ' + base + '. ' + (DESC_MAP[base] || ''), qty: 1, harga, discPct: 100, disc: harga }));
+  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: 'VOUCHER - Free ' + base, desc: 'Voucher gratis 1x ' + base + ', tanpa batas waktu.', qty: 1, harga, discPct: 100, disc: harga, bonus: base }));
   document.getElementById('bonusOpts').style.display = 'none';
   invCalc();
 };
@@ -2098,7 +2135,11 @@ function invCollect(){
   const items = [...document.querySelectorAll('#invItems .inv-item')].map(el => {
     const qty = Math.max(1, rupiahNum(el.querySelector('.i-qty').value) || 1), harga = rupiahNum(el.querySelector('.i-harga').value);
     const dv = discValue(el.querySelector('.i-disc').value, qty * harga);
-    return { produk: el.querySelector('.i-produk').value.trim(), desc: el.querySelector('.i-desc').value.trim(), qty, harga, disc: dv.amount, discPct: dv.pct };
+    let meta = {}; try { meta = JSON.parse(decodeURIComponent(el.dataset.meta || '')) || {}; } catch(e) {}
+    const it = { produk: el.querySelector('.i-produk').value.trim(), desc: el.querySelector('.i-desc').value.trim(), qty, harga, disc: dv.amount, discPct: dv.pct };
+    if (meta.bonus) { it.bonus = meta.bonus; if (meta.voucherCode) it.voucherCode = meta.voucherCode; }
+    if (meta.redeem) it.redeem = meta.redeem;
+    return it;
   }).filter(it => it.produk);
   const hasDp = document.getElementById('invHasDp').checked, lunas = document.getElementById('invLunas').checked;
   const pay = lunas ? 'lunas' : hasDp ? 'dp' : 'belum';
@@ -2146,7 +2187,7 @@ window.openInvoice = function(id, d, fromDone){
   if (inv) box.innerHTML = inv.items.map(it => {
     const base = String(it.produk||'').replace(/ - (Small|Medium|Large|X-tra Large)$/,'').replace(/ - /g, ' — ');
     const nd = DESC_MAP[base];
-    return invItemHtml(nd && (!it.desc || it.desc.length < 25 || /Cuci & dekontaminasi, paint correction, aplikasi/.test(it.desc)) ? { ...it, desc: nd } : it);
+    return invItemHtml(nd && (!it.desc || it.desc.length < 25 || it.desc.length > nd.length + 15) ? { ...it, desc: nd } : it);
   }).join('');
   else {
     const svs = String(d.service||'').split(', ').filter(Boolean);
@@ -2154,6 +2195,7 @@ window.openInvoice = function(id, d, fromDone){
     invSizeChanged();
   }
   invPayChanged();
+  window._invData = d; renderVoucherBox(d);
   openModal('modalInvoice');
 };
 window.saveInvoice = async function(save){
@@ -2167,10 +2209,23 @@ window.saveInvoice = async function(save){
       pay: c.pay, dp: c.hasDp && c.dpAmt ? { amount: c.dpAmt, no: document.getElementById('invDpNo').value.trim(), date: document.getElementById('invDpDate').value } : null,
       pelunasan: c.lunas ? { amount: c.pelunasan, date: document.getElementById('invLunasDate').value } : null,
       subtotal: c.subtotal, total: c.total, tertagih: c.tertagih };
+    // Voucher bonus: beri kode untuk tiap bonus baru
+    invoice.items.forEach(it => { if (it.bonus && !it.voucherCode) { it.voucherCode = newVoucherCode(); it.desc = 'Voucher 1x ' + it.bonus + ', kode ' + it.voucherCode + ', tanpa batas waktu.'; } });
     try {
       const { doc, updateDoc } = window._fbFns;
-      await updateDoc(doc(window._db, 'konig_progress', id), { invoice });
-      const j = (window._allJobs||[]).find(x => x.id === id); if (j) j.invoice = invoice;
+      const j0 = (window._allJobs||[]).find(x => x.id === id) || {};
+      const keep = (j0.vouchers || []).filter(v => v.used || invoice.items.some(it => it.voucherCode === v.code));
+      const fresh = invoice.items.filter(it => it.voucherCode && !keep.some(v => v.code === it.voucherCode)).map(it => ({ code: it.voucherCode, service: it.bonus, issuedAt: invoice.date, invoiceNo: invoice.no, used: false }));
+      const vouchers = keep.concat(fresh);
+      await updateDoc(doc(window._db, 'konig_progress', id), { invoice, vouchers });
+      // Tandai voucher yang dipakai di invoice ini
+      for (const it of invoice.items.filter(x => x.redeem)) {
+        const src = (window._allJobs||[]).find(x => x.id === it.redeem.jobId); if (!src) continue;
+        const arr = (src.id === id ? vouchers : (src.vouchers || [])).map(v => v.code === it.redeem.code ? { ...v, used: true, usedAt: invoice.date, usedOn: id, usedInvoice: invoice.no } : v);
+        if (src.id === id) { vouchers.splice(0, vouchers.length, ...arr); await updateDoc(doc(window._db, 'konig_progress', id), { vouchers }); }
+        else { await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr }); src.vouchers = arr; }
+      }
+      const j = (window._allJobs||[]).find(x => x.id === id); if (j) { j.invoice = invoice; j.vouchers = vouchers; }
       if (window._doneJobData && window._doneJobData.id === id) window._doneJobData.invoice = invoice;
     } catch(e) { alert('Gagal menyimpan invoice: ' + e.message); return; }
   }
