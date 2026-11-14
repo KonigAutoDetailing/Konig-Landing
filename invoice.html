@@ -50,7 +50,7 @@
   .tag{border-top:1px solid #333;margin-top:4px;padding-top:6px}
   .tag .r span{font-weight:700 !important;color:#333 !important}
   .datefoot{text-align:center;font-weight:700;color:#555;margin-top:8mm;font-size:13px}
-  .lunas{position:absolute;right:28mm;top:232mm;border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:28px;letter-spacing:4px;padding:6px 18px;transform:rotate(-12deg);opacity:.85}
+  .lunas{position:absolute;right:28mm;top:252mm;border:3px solid #16a34a;color:#16a34a;font-weight:800;font-size:28px;letter-spacing:4px;padding:6px 18px;transform:rotate(-12deg);opacity:.85}
   .msg{text-align:center;padding:60px 20px;font-size:15px;color:#555}
   @page{size:A4;margin:0}
   @media print{
@@ -99,10 +99,14 @@ const code = new URLSearchParams(location.search).get('code');
   const nama = j.custName ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(j.custName)) : '-';
   document.title = 'Invoice ' + inv.no + ' — KONÏG';
   const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.disc ? money(it.disc) : 0}</td><td>-</td><td>${money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
-  const dp = inv.pay === 'dp' && inv.dp && inv.dp.amount ? `
-      <div class="dphead">Down Payment</div>
-      <table class="dptbl"><tr><th>No. Down Payment</th><th>Tgl. Jatuh Tempo</th><th></th></tr>
-      <tr><td>${esc(inv.dp.no || '-')}</td><td>${esc(inv.dp.date || '')}</td><td>Rp (${money(inv.dp.amount)})</td></tr></table>` : '';
+  const dmy2 = v => /^\d{4}-\d{2}-\d{2}$/.test(v||'') ? dmy(v) : esc(v||'');
+  const hasDp = inv.dp && inv.dp.amount;
+  const pel = inv.pay === 'lunas' ? (inv.pelunasan || { amount: Math.max(0, inv.total - (hasDp ? inv.dp.amount : 0)), date: inv.date }) : null;
+  const dp = (hasDp || pel) ? `
+      <div class="dphead">Pembayaran</div>
+      <table class="dptbl"><tr><th>Keterangan</th><th>Tanggal</th><th></th></tr>
+      ${hasDp ? `<tr><td>Down Payment${inv.dp.no ? '<br><small>' + esc(inv.dp.no) + '</small>' : ''}</td><td>${dmy2(inv.dp.date)}</td><td>Rp (${money(inv.dp.amount)})</td></tr>` : ''}
+      ${pel ? `<tr><td>Pelunasan</td><td>${dmy2(pel.date)}</td><td>Rp (${money(pel.amount)})</td></tr>` : ''}</table>` : '';
   root.className = '';
   root.innerHTML = `<div class="page">
     ${inv.pay === 'lunas' ? '<div class="lunas">LUNAS</div>' : ''}
@@ -136,7 +140,7 @@ PT KONIG MOBIL INDONESIA
         <div class="r"><span>Total</span><span>Rp ${money(inv.total)}</span></div>
         <div class="r"><span>Pajak Inclusive</span><span>Rp 0.00</span></div>
         ${dp}
-        <div class="tag"><div class="r"><span>${inv.pay === 'lunas' ? 'Status' : 'Jumlah Tertagih:'}</span><span>${inv.pay === 'lunas' ? 'LUNAS' : 'Rp ' + money(inv.tertagih)}</span></div></div>
+        <div class="tag"><div class="r"><span>Jumlah Tertagih:</span><span>Rp ${money(inv.pay === 'lunas' ? 0 : inv.tertagih)}</span></div></div>
         <div class="datefoot">${longDate(inv.date)}</div>
       </div>
     </div>
