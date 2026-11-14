@@ -2167,8 +2167,11 @@ const normPlate = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const normWa = w => { let n = String(w||'').replace(/\D/g,''); if (n.startsWith('0')) n = '62' + n.slice(1); else if (n.startsWith('8')) n = '62' + n; return n; };
 function sejakLabel(d){
   if (!d) return '';
-  const days = Math.floor((Date.now() - d.getTime()) / 864e5);
+  // Hitung beda hari kalender (WIB), bukan 24 jam
+  const ymd = t => { const x = new Date(t + 7 * 36e5); return Date.UTC(x.getUTCFullYear(), x.getUTCMonth(), x.getUTCDate()); };
+  const days = Math.round((ymd(Date.now()) - ymd(d.getTime())) / 864e5);
   if (days <= 0) return 'hari ini';
+  if (days === 1) return 'kemarin';
   if (days < 7) return days + ' hari lalu';
   if (days < 30) return Math.round(days / 7) + ' minggu lalu';
   if (days < 365) return Math.round(days / 30) + ' bulan lalu';
