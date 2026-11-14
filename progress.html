@@ -130,6 +130,16 @@
     .cust-sug div{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:14px;color:#fff;text-align:left}
     .cust-sug div small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
     .cust-sug div:active{background:rgba(124,58,237,.25)}
+    .promo-item{border:1px solid var(--border);padding:10px 12px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+    .promo-item .pc{grid-column:1/-1;font-family:monospace;font-size:16px;color:#facc15;letter-spacing:1px}
+    .promo-item .pd{font-size:12px;color:var(--muted);line-height:1.5}
+    .promo-item .btn-sm{padding:7px 10px;font-size:10px}
+    #modalPromo .form-row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end}
+    #modalPromo .form-group{min-width:0}
+    #modalPromo label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #modalPromo input, #modalPromo select{display:block;width:100%;min-width:0;height:46px;box-sizing:border-box;padding:0 10px;font-size:14px;border-radius:0;-webkit-appearance:none;appearance:none;background-color:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);text-align:center;text-align-last:center}
+    .promo-item.off{opacity:.45}
+    .promo-form{border-top:1px solid var(--border);margin-top:12px;padding-top:6px}
     .code-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
     .code-opts button{background:rgba(124,58,237,.15);border:1px solid rgba(167,139,250,.4);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px;padding:9px 4px;cursor:pointer;line-height:1.2;white-space:nowrap}
     .trk-vouch{margin:0 0 22px;padding:14px 16px;border:1px dashed rgba(250,204,21,.6);background:rgba(250,204,21,.06);text-align:left;font-size:13px;color:#f3ead0;line-height:1.6}
@@ -367,6 +377,7 @@
     .scan-frame{position:absolute;width:62vmin;height:62vmin;max-width:320px;max-height:320px;border:3px solid #b06aff;border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.45);pointer-events:none}
     .scan-hint{color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:1px;margin-top:16px;text-align:center;padding:0 20px}
     .scan-close{position:absolute;top:18px;right:18px;background:rgba(255,255,255,.15);color:#fff;border:none;font-size:26px;width:44px;height:44px;border-radius:50%;cursor:pointer}
+    .btn-promo{background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.5);color:#facc15;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:10px 16px;cursor:pointer;white-space:nowrap}
     .act-qr{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:10px 16px;text-decoration:none;white-space:nowrap;display:flex;align-items:center;justify-content:center}
     @media(max-width:640px){
       .admin-actions{width:100%;flex-direction:column;align-items:stretch}
@@ -496,6 +507,7 @@
           <button class="btn-new act-btn" style="background:#25D366" onclick="openWaUpdate()">📲 Update Sore</button>
           <a href="/print-qr.html" target="_blank" class="act-btn act-qr">🖨️ Print QR</a>
         </div>
+        <button class="btn-promo" onclick="openPromo()">🎟️ Kode Referral & Promo</button>
         <button class="btn-logout" onclick="adminLogout()">Logout</button>
       </div>
     </div>
@@ -582,8 +594,8 @@
       <div id="serviceDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);border-top:none;z-index:50;max-height:220px;overflow-y:auto;"></div>
     </div>
     <div class="form-group">
-      <label>Kode Voucher (opsional)</label>
-      <input type="text" id="jobVoucher" placeholder="KV-XXXXX" autocomplete="off" oninput="checkJobVoucher()" style="text-align:center;letter-spacing:2px"/>
+      <label>Kode Voucher / Referral (opsional)</label>
+      <input type="text" id="jobVoucher" placeholder="KV-XXXXX / kode referral" autocomplete="off" oninput="checkJobVoucher()" style="text-align:center;letter-spacing:2px"/>
       <div id="jobVoucherInfo" style="display:none;font-size:12px;margin-top:2px"></div>
     </div>
     <div class="form-group">
@@ -660,6 +672,35 @@
     <p style="font-size:13px;color:var(--muted);margin:6px 0 18px;line-height:1.6">Pesan sudah dibuka di WhatsApp. Setelah terkirim, kembali ke sini lalu tekan tombol di bawah, pilih <b style="color:#fff">WhatsApp Business</b>, lalu pilih chat customer <b id="pdfCust" style="color:#fff"></b>.</p>
     <button id="btnSharePdf" onclick="shareInvoicePdf()" style="width:100%;background:#25D366;color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:15px;cursor:pointer">📄 Kirim Invoice PDF</button>
     <div id="pdfStatus" style="font-size:12px;color:var(--muted);margin-top:10px"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalPromo">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" onclick="closeModal('modalPromo')">×</button>
+    <div class="modal-title">KODE REFERRAL & PROMO</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Buat kode, lalu customer cukup menyebutkan kodenya. Masukkan di kolom <b style="color:#fff">Kode Voucher / Referral</b> saat daftar kendaraan baru, dan benefitnya otomatis masuk invoice.</p>
+    <div id="promoList"></div>
+    <div class="promo-form">
+      <div class="inv-lbl" style="margin-top:6px">Buat kode baru</div>
+      <div class="form-row2">
+        <div class="form-group"><label>Kode</label><input type="text" id="pCode" placeholder="ANDI10" style="text-transform:uppercase;text-align:center;letter-spacing:2px"/></div>
+        <div class="form-group"><label>Keterangan</label><input type="text" id="pOwner" placeholder="Referral Mr. Andi"/></div>
+      </div>
+      <div class="form-group"><label>Benefit</label>
+        <select id="pType" class="inv-select" onchange="promoTypeChanged()">
+          <option value="percent">Diskon persen (%)</option>
+          <option value="amount">Potongan harga (Rp)</option>
+          <option value="free">Gratis layanan</option>
+        </select></div>
+      <div class="form-row2">
+        <div class="form-group" id="pValueGroup"><label id="pValueLbl">Diskon (%)</label><input type="text" id="pValue" inputmode="numeric" placeholder="10" style="text-align:center"/></div>
+        <div class="form-group" id="pServiceGroup" style="display:none"><label>Layanan gratis</label>
+          <select id="pService" class="inv-select"><option>Premium Wash Exterior</option><option>Premium Maintenance</option><option>Professional Maintenance</option><option>Engine Detailing</option><option>Window Coating — Kaca Depan</option><option>Interior Detailing — 1 Row</option></select></div>
+        <div class="form-group"><label>Batas pemakaian</label><input type="text" id="pMax" inputmode="numeric" placeholder="Tanpa batas" style="text-align:center"/></div>
+      </div>
+      <button onclick="savePromo()" class="inv-btn-main" style="width:100%">Simpan Kode</button>
+    </div>
   </div>
 </div>
 
@@ -809,7 +850,7 @@ window.genCode = genCode;
 // ── LOOKUP CODE (customer) ──
 window.lookupCode = async function() {
   const code = document.getElementById('codeInput').value.trim().toUpperCase();
-  if (!code) return;
+  if (!code || code.startsWith('_')) return;
   document.getElementById('codeError').style.display = 'none';
 
   try {
@@ -969,6 +1010,7 @@ window.loadJobs = async function() {
   if (window.autoCloseWashJobs) await window.autoCloseWashJobs(jobs);
 
   window._allJobs = jobs;
+  loadPromos();
   renderJobList();
 }
 
@@ -1635,7 +1677,7 @@ window.openNewJobModal = function() {
   setCarFields({});
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
-  document.getElementById('jobVoucher').value = ''; document.getElementById('jobVoucherInfo').style.display = 'none';
+  document.getElementById('jobVoucher').value = ''; document.getElementById('jobVoucherInfo').style.display = 'none'; loadPromos();
   window._repeatOf = null; window._ownerChoice = null; setCodeLocked(false); window.fillCustList(); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   selectedServices = [];
   renderServiceTags();
@@ -1810,6 +1852,65 @@ function pickCust(c){
 }
 
 
+
+// ── KODE REFERRAL & PROMO (disimpan di konig_progress/_config) ──
+window._promos = [];
+async function loadPromos(){
+  try { const { doc, getDoc } = window._fbFns; const sn = await getDoc(doc(window._db, 'konig_progress', '_config')); if (sn.exists()) window._promos = sn.data().promos || []; } catch(e) { window._promos = window._promos || []; }
+  return window._promos;
+}
+async function savePromos(){ const { doc, setDoc } = window._fbFns; await setDoc(doc(window._db, 'konig_progress', '_config'), { promos: window._promos }, { merge: true }); }
+function promoBenefit(p){ return p.type === 'percent' ? 'Diskon ' + p.value + '%' : p.type === 'amount' ? 'Potongan Rp ' + Number(p.value).toLocaleString('id-ID') : 'Gratis ' + p.service; }
+function findPromo(code){ code = String(code||'').trim().toUpperCase(); return (window._promos||[]).find(p => p.code === code) || null; }
+function promoUsable(p){ return p && p.active !== false && (!p.max || (p.uses||[]).length < p.max); }
+window.promoTypeChanged = function(){
+  const t = document.getElementById('pType').value;
+  document.getElementById('pValueGroup').style.display = t === 'free' ? 'none' : '';
+  document.getElementById('pServiceGroup').style.display = t === 'free' ? '' : 'none';
+  document.getElementById('pValueLbl').textContent = t === 'percent' ? 'Diskon (%)' : 'Potongan (Rp)';
+  document.getElementById('pValue').placeholder = t === 'percent' ? '10' : '200.000';
+};
+function renderPromos(){
+  const box = document.getElementById('promoList');
+  if (!window._promos.length) { box.innerHTML = '<div class="empty-state" style="padding:14px">Belum ada kode.</div>'; return; }
+  box.innerHTML = '';
+  window._promos.slice().reverse().forEach(p => {
+    const d = document.createElement('div'); d.className = 'promo-item' + (p.active === false ? ' off' : '');
+    const used = (p.uses||[]).length;
+    d.innerHTML = `<div class="pc">${p.code}</div><div class="pd">${promoBenefit(p)}${p.owner ? ' · ' + p.owner.replace(/</g,'&lt;') : ''}<br>Dipakai ${used}x${p.max ? ' / maks ' + p.max : ''}</div>`;
+    const tog = document.createElement('button'); tog.className = 'btn-sm'; tog.textContent = p.active === false ? 'Aktifkan' : 'Nonaktif';
+    tog.onclick = async () => { p.active = p.active === false; await savePromos(); renderPromos(); };
+    const del = document.createElement('button'); del.className = 'btn-sm'; del.textContent = 'Hapus'; del.style.color = '#f87171';
+    del.onclick = async () => { if (!confirm('Hapus kode ' + p.code + '?')) return; window._promos = window._promos.filter(x => x !== p); await savePromos(); renderPromos(); };
+    d.appendChild(tog); d.appendChild(del); box.appendChild(d);
+  });
+}
+window.openPromo = async function(){ openModal('modalPromo'); document.getElementById('promoList').textContent = 'Memuat…'; await loadPromos(); renderPromos(); promoTypeChanged(); };
+window.savePromo = async function(){
+  const code = document.getElementById('pCode').value.trim().toUpperCase().replace(/\s+/g,'');
+  const type = document.getElementById('pType').value;
+  const value = type === 'percent' ? Math.min(100, parseFloat(document.getElementById('pValue').value) || 0) : rupiahNum(document.getElementById('pValue').value);
+  if (!/^[A-Z0-9-]{3,15}$/.test(code)) { alert('Kode 3–15 huruf/angka.'); return; }
+  if (/^KV-/.test(code)) { alert('Awalan KV- dipakai untuk voucher bonus. Pakai kode lain.'); return; }
+  if (findPromo(code)) { alert('Kode ' + code + ' sudah ada.'); return; }
+  if (type !== 'free' && !value) { alert('Isi nilai diskon.'); return; }
+  const p = { code, owner: document.getElementById('pOwner').value.trim(), type, value: type === 'free' ? 0 : value, service: type === 'free' ? document.getElementById('pService').value : '', max: parseInt(document.getElementById('pMax').value) || 0, active: true, uses: [], createdAt: todayWIB() };
+  window._promos.push(p);
+  try { await savePromos(); } catch(e) { window._promos.pop(); alert('Gagal menyimpan: ' + e.message); return; }
+  ['pCode','pOwner','pValue','pMax'].forEach(id => document.getElementById(id).value = '');
+  renderPromos();
+};
+// Terapkan kode promo di invoice baru
+function applyPromoToInvoice(p){
+  if (p.type === 'percent') { document.getElementById('invDiskon').value = p.value + '%'; }
+  else if (p.type === 'amount') { document.getElementById('invDiskon').value = Number(p.value).toLocaleString('id-ID'); }
+  else { const harga = pricelistPrice(p.service, document.getElementById('invSize').value) || pricelistPrice(p.service, '') || 0;
+    document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: p.service + ' (Kode ' + p.code + ')', desc: 'Gratis dari kode ' + p.code + '.', qty: 1, harga, discPct: 100, disc: harga })); }
+  const k = document.getElementById('invKet'); if (!k.value) k.value = 'Kode ' + p.code + ': ' + promoBenefit(p);
+  window._invPromo = p.code;
+  invCalc();
+}
+
 // ── KODE VOUCHER DI FORM KENDARAAN BARU ──
 function findVoucher(code){
   code = String(code||'').trim().toUpperCase(); if (!code) return null;
@@ -1823,7 +1924,11 @@ window.checkJobVoucher = function(){
   if (!code) { info.style.display = 'none'; return; }
   const v = findVoucher(code);
   info.style.display = 'block';
-  if (!v) { info.style.color = 'var(--muted)'; info.textContent = code.length >= 8 ? '✗ Kode voucher tidak ditemukan' : ''; return; }
+  if (!v) {
+    const p = findPromo(code);
+    if (p) { const ok = promoUsable(p); info.style.color = ok ? '#4ade80' : '#f87171'; info.textContent = ok ? '✓ Kode ' + p.code + ': ' + promoBenefit(p) + (p.owner ? ' (' + p.owner + ')' : '') + '. Otomatis dipakai di invoice.' : '✗ Kode ' + p.code + ' tidak aktif / sudah mencapai batas'; return; }
+    info.style.color = 'var(--muted)'; info.textContent = code.length >= 4 ? '✗ Kode tidak ditemukan' : ''; return;
+  }
   if (v.used) { info.style.color = '#f87171'; info.textContent = '✗ Voucher sudah dipakai' + (v.usedAt ? ' (' + v.usedAt + ')' : ''); return; }
   const o = v.owner; const nm = o.custName ? (o.custTitle ? o.custTitle + ' ' : '') + titleCase(o.custName) : (o.plate || '');
   info.style.color = '#4ade80'; info.textContent = '✓ Voucher valid: Free ' + v.service + ' (dari ' + nm + '). Otomatis dipakai di invoice.';
@@ -2229,7 +2334,9 @@ window.openInvoice = function(id, d, fromDone){
   }
   invPayChanged();
   window._invData = d;
-  if (!inv && d.voucherCode) { const v = findVoucher(d.voucherCode); if (v && !v.used) redeemVoucher({ code: v.code, service: v.service, jobId: v.jobId }); }
+  window._invPromo = null;
+  if (!inv && d.voucherCode) { const v = findVoucher(d.voucherCode); if (v && !v.used) redeemVoucher({ code: v.code, service: v.service, jobId: v.jobId });
+    else { const pr = findPromo(d.voucherCode); if (promoUsable(pr)) applyPromoToInvoice(pr); } }
   renderVoucherBox(d);
   openModal('modalInvoice');
 };
@@ -2261,6 +2368,7 @@ window.saveInvoice = async function(save){
         else { await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr }); src.vouchers = arr; }
       }
       const j = (window._allJobs||[]).find(x => x.id === id); if (j) { j.invoice = invoice; j.vouchers = vouchers; }
+      if (window._invPromo) { invoice.promo = window._invPromo; const pr = findPromo(window._invPromo); if (pr && !(pr.uses||[]).some(u => u.jobId === id)) { pr.uses = (pr.uses||[]).concat([{ jobId: id, invoiceNo: invoice.no, date: invoice.date }]); try { await savePromos(); } catch(e) {} } await updateDoc(doc(window._db, 'konig_progress', id), { 'invoice.promo': invoice.promo }); }
       if (window._doneJobData && window._doneJobData.id === id) window._doneJobData.invoice = invoice;
     } catch(e) { alert('Gagal menyimpan invoice: ' + e.message); return; }
   }
