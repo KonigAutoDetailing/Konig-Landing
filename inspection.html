@@ -408,7 +408,7 @@ function renderGeneralPhotos() {
   (inspData.general || []).forEach((ph, i) => {
     const t = document.createElement('div');
     t.className = 'photo-thumb';
-    t.innerHTML = `<img src="${ph._src || ph.url || ""}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deleteGeneralPhoto(${i})">✕</button>`}`;
+    t.innerHTML = `<img src="${ph._src || ph.thumb || ph.url || ""}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deleteGeneralPhoto(${i})">✕</button>`}`;
     row.appendChild(t);
   });
   const addBtn = document.createElement('button');
@@ -457,8 +457,15 @@ async function uploadPhotoBg(file, folder, ph, onDone){
     small = await compressImage(file, 1200, 0.7);
     const path = `inspection/${jobCode}/${folder}/${Date.now()}_${Math.random().toString(36).slice(2,6)}_${small.name}`;
     const storRef = ref(storage, path);
-    await withTimeout(uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' }), 20000);
-    ph.url = await withTimeout(getDownloadURL(storRef), 10000); ph.path = path; delete ph.uploading;
+    // Versi kecil (thumbnail) untuk tampilan, versi penuh hanya dibuka saat diperbesar / download
+    const thumb = await compressImage(file, 400, 0.6);
+    const tRef = ref(storage, path.replace(/(\.[^.\/]+)?$/, '_t.jpg'));
+    await withTimeout(Promise.all([
+      uploadBytes(storRef, small, { contentType: small.type || 'image/jpeg' }),
+      uploadBytes(tRef, thumb, { contentType: 'image/jpeg' })
+    ]), 25000);
+    const [u, tu] = await withTimeout(Promise.all([getDownloadURL(storRef), getDownloadURL(tRef)]), 10000);
+    ph.url = u; ph.thumb = tu; ph.path = path; delete ph.uploading;
   } catch(err) {
     console.warn('storage gagal, pakai jalur cadangan', err);
     // Jalur cadangan: simpan foto (lebih kecil) sebagai dokumen Firestore
@@ -652,7 +659,7 @@ function renderSheetPhotos(panelId) {
   photos.forEach((ph, i) => {
     const t = document.createElement('div');
     t.className = 'photo-thumb';
-    t.innerHTML = `<img src="${ph._src || ph.url || ""}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deletePanelPhoto(${i})">✕</button>`}`;
+    t.innerHTML = `<img src="${ph._src || ph.thumb || ph.url || ""}" loading="lazy"/>${ph.uploading ? '<span class="ph-up"><span class="upload-spin"></span></span>' : `<button class="photo-del" onclick="deletePanelPhoto(${i})">✕</button>`}`;
     row.appendChild(t);
   });
   {
