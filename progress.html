@@ -82,6 +82,24 @@
     .job-tab.active{background:var(--purple);color:#fff}
     .job-tab.active span{background:rgba(255,255,255,.2)}
     .hist-search{width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;font-size:15px}
+    .inv-select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:12px;font-size:15px}
+    .inv-select option{background:#111}
+    .inv-lbl{display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin:4px 0 8px}
+    .inv-item{border:1px solid var(--border);padding:10px;margin-bottom:8px;position:relative}
+    .inv-item input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:9px 10px;font-size:14px;margin-bottom:6px}
+    .inv-item .row{display:grid;grid-template-columns:52px 1fr 1fr;gap:6px}
+    .inv-item .row input{margin-bottom:0}
+    .inv-item .del{position:absolute;top:-9px;right:-6px;background:#2a2a35;color:#fff;border:none;width:22px;height:22px;border-radius:50%;cursor:pointer}
+    .inv-item small{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:3px}
+    .inv-add{width:100%;background:transparent;border:1px dashed var(--border);color:var(--purpleB);padding:10px;cursor:pointer;font-weight:700}
+    .inv-pay{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:14px}
+    .inv-pay label{display:flex;align-items:center;gap:6px;cursor:pointer}
+    .inv-sum{border-top:1px solid var(--border);padding-top:10px;font-size:14px;line-height:1.9}
+    .inv-sum div{display:flex;justify-content:space-between}
+    .inv-sum .big{font-weight:800;font-size:16px;color:#fff}
+    .inv-btn-main{flex:1;background:var(--purple);color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer}
+    .inv-btn-ghost{flex:1;background:transparent;color:var(--muted);border:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer}
+    .btn-inv{border:1px solid #38bdf8 !important;color:#38bdf8 !important;background:transparent !important}
     .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
     .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--muted);margin-top:4px}
     .track-service{font-size:13px;color:var(--muted);margin-top:8px}
@@ -588,6 +606,47 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalInvoice">
+  <div class="modal-box" style="max-width:520px">
+    <button class="modal-close" onclick="closeModal('modalInvoice')">×</button>
+    <div class="modal-title">INVOICE</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Kendaraan <strong id="invCarName" style="color:var(--white)">—</strong></p>
+    <div class="form-row2">
+      <div class="form-group"><label>No. Invoice</label><input type="text" id="invNo"/></div>
+      <div class="form-group"><label>Ukuran Mobil</label>
+        <select id="invSize" onchange="invSizeChanged()" class="inv-select"><option value="">—</option><option>Small</option><option selected>Medium</option><option>Large</option><option>X-tra Large</option></select></div>
+    </div>
+    <div class="form-row2">
+      <div class="form-group"><label>Tanggal</label><input type="date" id="invDate" onchange="invDueFromDate()"/></div>
+      <div class="form-group"><label>Jatuh Tempo</label><input type="date" id="invDue"/></div>
+    </div>
+    <label class="inv-lbl">Item</label>
+    <div id="invItems"></div>
+    <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
+    <div class="form-row2" style="margin-top:14px">
+      <div class="form-group"><label>Diskon Tambahan (Rp)</label><input type="text" inputmode="numeric" id="invDiskon" oninput="invNum(this);invCalc()"/></div>
+      <div class="form-group"><label>Keterangan</label><input type="text" id="invKet"/></div>
+    </div>
+    <label class="inv-lbl">Status Pembayaran</label>
+    <div class="inv-pay">
+      <label><input type="radio" name="invPay" value="belum" onchange="invPayChanged()" checked> Belum bayar</label>
+      <label><input type="radio" name="invPay" value="dp" onchange="invPayChanged()"> Sudah DP</label>
+      <label><input type="radio" name="invPay" value="lunas" onchange="invPayChanged()"> Lunas</label>
+    </div>
+    <div id="invDpBox" style="display:none">
+      <div class="form-row2">
+        <div class="form-group"><label>Jumlah DP (Rp)</label><input type="text" inputmode="numeric" id="invDpAmt" oninput="invNum(this);invCalc()"/></div>
+        <div class="form-group"><label>No. DP</label><input type="text" id="invDpNo"/></div>
+      </div>
+    </div>
+    <div class="inv-sum" id="invSum"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button onclick="saveInvoice(true)" class="inv-btn-main">Simpan & Lanjut</button>
+      <button onclick="saveInvoice(false)" class="inv-btn-ghost" id="invSkipBtn">Lewati Invoice</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -872,6 +931,7 @@ window.renderJobList = function(){
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
+          ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
         </div>
       </div>
@@ -902,7 +962,7 @@ function isQuick(j){
   return sv.length > 0 && sv.every(x => /Wash|Interior|Engine|Window|Express Polish/i.test(x));
 }
 function titleCase(t){ return String(t||'').toLowerCase().replace(/(^|[\s\-'])(\S)/g, (m,a,b) => a + b.toUpperCase()); }
-function sapa(j){ const n = String(j.custName||'').trim(); return n ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(n)) : 'Kak'; }
+function sapa(j){ const n = String(j.custName||'').trim(); return n ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(n)) : 'Bapak/Ibu'; }
 const REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
 const REVIEW_TEXT = '\n\nApabila berkenan, kami akan sangat menghargai ulasan Anda di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.';
 // Link tracking hanya untuk Coating (bukan Window Coating) & Premium Polish
@@ -956,7 +1016,8 @@ function waMessage(j){
   const ambil = needsTrackLink(j) ? 'Kendaraan dapat diambil pada jam operasional workshop, Senin–Sabtu hingga pukul 17.00.' : 'Kendaraan dapat diambil hari ini hingga pukul 17.00.';
   const salam = '\n\nSalam,\nKONIG Auto Detailing';
   if(done){
-    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + REVIEW_TEXT + salam;
+    const invLine = j.invoice ? 'Invoice (' + j.invoice.no + '): ' + location.origin + '/invoice?code=' + encodeURIComponent(j.id) + '\n' + (j.invoice.pay === 'lunas' ? 'Status: Lunas\n\n' : 'Jumlah tertagih: Rp ' + Number(j.invoice.tertagih||0).toLocaleString('id-ID') + '\n\n') : '';
+    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + REVIEW_TEXT + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
   let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
@@ -1562,7 +1623,8 @@ window.markDone = async function(id) {
   const fakeJob = { ...d, id, doneSteps: ['done'], activeStep: 'done' };
   const msg = waMessage(fakeJob);
   document.getElementById('doneWaMsg').value = msg;
-  openModal('modalDone');
+  window._doneJobData = { ...d, id };
+  openInvoice(id, d, true);
 };
 
 window.confirmDone = async function() {
@@ -1591,6 +1653,122 @@ async function _markDoneFirestore(id) {
   loadJobs();
   window.openWaUpdate(id);
 }
+
+
+// ── INVOICE ──
+const INV_DESC = sv => /Graphene/i.test(sv) ? 'Graphene coating' : /Matte/i.test(sv) ? 'Matte coating' : /Coating —/i.test(sv) && !/Window/i.test(sv) ? 'Ceramic coating' : /Polish/i.test(sv) ? 'Paint correction' : /Wash/i.test(sv) ? 'Premium wash' : /Interior/i.test(sv) ? 'Interior detailing' : /Engine/i.test(sv) ? 'Engine detailing' : /Window/i.test(sv) ? 'Window coating' : '';
+const INV_SIZED = sv => /Coating —|Polish/i.test(sv) && !/Window/i.test(sv);
+function rupiahNum(v){ return parseInt(String(v||'').replace(/[^0-9]/g,'')) || 0; }
+function fmtRp(n){ return n.toLocaleString('id-ID'); }
+window.invNum = function(el){ const n = rupiahNum(el.value); el.value = n ? fmtRp(n) : ''; };
+function invYmd(d){ return new Date(d.getTime()+7*3600e3).toISOString().slice(0,10); }
+function nextSeq(prefix){
+  const yr = new Date().getFullYear(); let mx = 0;
+  (window._allJobs||[]).forEach(j => { const v = j.invoice && (prefix === 'INV' ? j.invoice.no : j.invoice.dp && j.invoice.dp.no); const m = String(v||'').match(new RegExp('^' + prefix + '/' + yr + '/(\\d+)$')); if (m) mx = Math.max(mx, +m[1]); });
+  if (!mx) mx = prefix === 'INV' ? 159 : 44;
+  return prefix + '/' + yr + '/' + String(mx + 1).padStart(4, '0');
+}
+function lastPrice(produk){
+  let best = null, t = 0;
+  (window._allJobs||[]).forEach(j => { (j.invoice && j.invoice.items || []).forEach(it => { if (it.produk === produk) { const tt = (toDateObj(j.doneAt)||new Date(0)).getTime(); if (tt >= t) { t = tt; best = it.harga; } } }); });
+  return best;
+}
+function invItemHtml(it){
+  return `<div class="inv-item"><button type="button" class="del" onclick="this.parentNode.remove();invCalc()">×</button>
+    <small>PRODUK</small><input class="i-produk" value="${(it.produk||'').replace(/"/g,'&quot;')}" data-base="${(it.base||'').replace(/"/g,'&quot;')}" oninput="invCalc()">
+    <small>DESKRIPSI</small><input class="i-desc" value="${(it.desc||'').replace(/"/g,'&quot;')}">
+    <div class="row"><div><small>QTY</small><input class="i-qty" inputmode="numeric" value="${it.qty||1}" oninput="invCalc()"></div>
+    <div><small>HARGA</small><input class="i-harga" inputmode="numeric" value="${it.harga ? fmtRp(it.harga) : ''}" oninput="invNum(this);invCalc()"></div>
+    <div><small>DISC (RP)</small><input class="i-disc" inputmode="numeric" value="${it.disc ? fmtRp(it.disc) : ''}" oninput="invNum(this);invCalc()"></div></div></div>`;
+}
+window.invAddItem = function(){ document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({qty:1})); };
+window.invSizeChanged = function(){
+  const size = document.getElementById('invSize').value;
+  document.querySelectorAll('#invItems .inv-item').forEach(el => {
+    const p = el.querySelector('.i-produk'), base = p.dataset.base;
+    if (!base) return;
+    p.value = INV_SIZED(base) && size ? base + ' - ' + size : base;
+    const h = el.querySelector('.i-harga'); if (!rupiahNum(h.value)) { const lp = lastPrice(p.value); if (lp) h.value = fmtRp(lp); }
+  });
+  invCalc();
+};
+window.invDueFromDate = function(){ const d = document.getElementById('invDate').value; if (d) { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate()+7); document.getElementById('invDue').value = x.toISOString().slice(0,10); } };
+window.invPayChanged = function(){ const v = document.querySelector('input[name=invPay]:checked').value; document.getElementById('invDpBox').style.display = v === 'dp' ? 'block' : 'none'; invCalc(); };
+function invCollect(){
+  const items = [...document.querySelectorAll('#invItems .inv-item')].map(el => ({
+    produk: el.querySelector('.i-produk').value.trim(), desc: el.querySelector('.i-desc').value.trim(),
+    qty: Math.max(1, rupiahNum(el.querySelector('.i-qty').value) || 1), harga: rupiahNum(el.querySelector('.i-harga').value), disc: rupiahNum(el.querySelector('.i-disc').value)
+  })).filter(it => it.produk);
+  const pay = document.querySelector('input[name=invPay]:checked').value;
+  const subtotal = items.reduce((a,it) => a + it.qty*it.harga - it.disc, 0);
+  const diskon = rupiahNum(document.getElementById('invDiskon').value);
+  const total = Math.max(0, subtotal - diskon);
+  const dpAmt = pay === 'dp' ? rupiahNum(document.getElementById('invDpAmt').value) : 0;
+  const tertagih = pay === 'lunas' ? 0 : Math.max(0, total - dpAmt);
+  return { items, pay, subtotal, diskon, total, dpAmt, tertagih };
+}
+window.invCalc = function(){
+  const c = invCollect();
+  document.getElementById('invSum').innerHTML = `<div><span>Subtotal</span><span>Rp ${fmtRp(c.subtotal)}</span></div>`
+    + (c.diskon ? `<div><span>Diskon Tambahan</span><span>(Rp ${fmtRp(c.diskon)})</span></div>` : '')
+    + `<div><span>Total</span><span>Rp ${fmtRp(c.total)}</span></div>`
+    + (c.dpAmt ? `<div><span>Down Payment</span><span>(Rp ${fmtRp(c.dpAmt)})</span></div>` : '')
+    + `<div class="big"><span>${c.pay === 'lunas' ? 'LUNAS' : 'Jumlah Tertagih'}</span><span>Rp ${fmtRp(c.tertagih)}</span></div>`;
+};
+window.openInvoice = function(id, d, fromDone){
+  window._invId = id; window._invFromDone = !!fromDone;
+  const inv = d.invoice;
+  document.getElementById('invCarName').textContent = (d.car || '—') + (d.plate ? ' · ' + d.plate : '');
+  document.getElementById('invSkipBtn').textContent = fromDone ? 'Lewati Invoice' : 'Batal';
+  const today = invYmd(new Date());
+  document.getElementById('invNo').value = inv ? inv.no : nextSeq('INV');
+  document.getElementById('invDate').value = inv ? inv.date : today;
+  if (inv) document.getElementById('invDue').value = inv.due; else invDueFromDate();
+  document.getElementById('invSize').value = inv ? (inv.size || '') : 'Medium';
+  document.getElementById('invDiskon').value = inv && inv.diskon ? fmtRp(inv.diskon) : '';
+  document.getElementById('invKet').value = inv ? (inv.keterangan || '') : [d.car, d.color ? titleCase(d.color) : '', d.plate].filter(Boolean).join(' - ');
+  const pay = inv ? inv.pay : 'belum';
+  document.querySelectorAll('input[name=invPay]').forEach(r => r.checked = r.value === pay);
+  document.getElementById('invDpAmt').value = inv && inv.dp && inv.dp.amount ? fmtRp(inv.dp.amount) : '';
+  document.getElementById('invDpNo').value = inv && inv.dp && inv.dp.no ? inv.dp.no : nextSeq('INV-DP');
+  const box = document.getElementById('invItems');
+  if (inv) box.innerHTML = inv.items.map(invItemHtml).join('');
+  else {
+    const svs = String(d.service||'').split(', ').filter(Boolean);
+    box.innerHTML = (svs.length ? svs : ['']).map(sv => invItemHtml({ produk: sv, base: sv, desc: INV_DESC(sv), qty: 1 })).join('');
+    invSizeChanged();
+  }
+  invPayChanged();
+  openModal('modalInvoice');
+};
+window.saveInvoice = async function(save){
+  const id = window._invId;
+  if (save) {
+    const c = invCollect();
+    if (!c.items.length) { alert('Isi minimal 1 item.'); return; }
+    if (c.items.some(it => !it.harga) && !confirm('Ada item tanpa harga. Tetap simpan?')) return;
+    const invoice = { no: document.getElementById('invNo').value.trim(), date: document.getElementById('invDate').value, due: document.getElementById('invDue').value,
+      size: document.getElementById('invSize').value, items: c.items, diskon: c.diskon, keterangan: document.getElementById('invKet').value.trim(),
+      pay: c.pay, dp: c.pay === 'dp' ? { amount: c.dpAmt, no: document.getElementById('invDpNo').value.trim(), date: document.getElementById('invDue').value } : null,
+      subtotal: c.subtotal, total: c.total, tertagih: c.tertagih };
+    try {
+      const { doc, updateDoc } = window._fbFns;
+      await updateDoc(doc(window._db, 'konig_progress', id), { invoice });
+      const j = (window._allJobs||[]).find(x => x.id === id); if (j) j.invoice = invoice;
+      if (window._doneJobData && window._doneJobData.id === id) window._doneJobData.invoice = invoice;
+    } catch(e) { alert('Gagal menyimpan invoice: ' + e.message); return; }
+  }
+  closeModal('modalInvoice');
+  if (window._invFromDone) {
+    const d = window._doneJobData;
+    if (d && d.invoice) document.getElementById('doneWaMsg').value = waMessage({ ...d, doneSteps: ['done'], activeStep: 'done' });
+    openModal('modalDone');
+  } else if (save) {
+    window.open('/invoice?code=' + encodeURIComponent(id), '_blank');
+    if (window.renderJobList) renderJobList();
+  }
+};
+window.openInvoiceFor = function(id){ const j = (window._allJobs||[]).find(x => x.id === id); if (j) openInvoice(id, j, false); };
 
 // ── QR CODE ──
 window.showQR = function(code, car) {

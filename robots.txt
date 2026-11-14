@@ -2,6 +2,7 @@ User-agent: *
 Disallow: /progress
 Disallow: /inspection
 Disallow: /print-qr
+Disallow: /invoice
 Allow: /
 
 Sitemap: https://www.konigautodetailing.com/sitemap.xml
