@@ -979,7 +979,7 @@ window.adminLogin = function() {
   const pass = document.getElementById('adminPass').value;
   document.getElementById('loginError').style.display = 'none';
 
-  if (user === 'konig' && pass === '6406506') {
+  if (user === 'konig' && pass === ADMIN_PW) {
     localStorage.setItem('konig_admin', '1');
     showScreen('screenAdmin');
     loadJobs();
@@ -1090,6 +1090,14 @@ window.renderJobList = function(){
 
 
 
+const ADMIN_PW = '6406506';
+// Verifikasi password admin sebelum aksi yang tidak bisa dibatalkan
+function verifyAdmin(what){
+  const pw = prompt('Masukkan password admin untuk ' + what + ':');
+  if (pw === null) return false;
+  if (pw !== ADMIN_PW) { alert('Password salah. ' + what.charAt(0).toUpperCase() + what.slice(1) + ' dibatalkan.'); return false; }
+  return true;
+}
 // ── TANDAI LUNAS LANGSUNG DARI KARTU ──
 function lunasBtn(j){
   const iv = j.invoice; if (!iv) return '';
@@ -1120,6 +1128,7 @@ window.deleteVisit = async function(id, vi){
   const label = (target.service || '-') + (toDateObj(target.doneAt) ? ' (' + toDateObj(target.doneAt).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) + ')' : '');
   if (vi == null && !visits.length) { alert('Ini satu-satunya kunjungan mobil ini. Pakai tombol Hapus Mobil di Update Progress kalau ingin menghapus semuanya.'); return; }
   if (!confirm('Hapus kunjungan ' + label + ' dari history ' + (j.plate || id) + '? Tidak bisa dibatalkan.')) return;
+  if (!verifyAdmin('menghapus kunjungan')) return;
   const { doc, updateDoc } = window._fbFns;
   const inv = target.invoice || null;
   try {
@@ -1682,6 +1691,7 @@ window.deleteJob = async function(){
   if (!id) return;
   const car = document.getElementById('jobCar').value || [document.getElementById('jobBrand').value, document.getElementById('jobModel').value].join(' ');
   if (!confirm('Hapus ' + (car.trim() || 'mobil ini') + ' (kode ' + id + ')?\n\nSemua data, progres, catatan, dan foto inspeksi mobil ini akan terhapus PERMANEN dan tidak bisa dikembalikan.')) return;
+  if (!verifyAdmin('menghapus mobil')) return;
   const btn = document.getElementById('btnDeleteJob');
   btn.textContent = 'Menghapus...'; btn.disabled = true;
   try {
