@@ -1804,12 +1804,12 @@ window.openEditJobModal = async function(id) {
   setCarFields(d);
   document.getElementById('jobPlate').value = d.plate || '';
   document.getElementById('jobWa').value = d.wa || '';
-  document.getElementById('jobVoucher').value = d.voucherCode || ''; window.checkJobVoucher();
   selectedServices = d.service ? d.service.split(', ').filter(Boolean) : [];
   renderServiceTags();
   document.getElementById('jobServiceInput').value = '';
   document.getElementById('jobNote').value = d.note || '';
   renderStepsEditor(d.doneSteps || [], d.activeStep || null);
+  document.getElementById('jobVoucher').value = d.voucherCode || ''; window.checkJobVoucher();
   openModal('modalJob');
 }
 
