@@ -922,7 +922,7 @@ function renderTrack(code, data) {
   document.getElementById('trackService').textContent = data.service || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
   const tv = document.getElementById('trackVouchers'), vv = (data.vouchers||[]).filter(v => !v.used);
-  tv.innerHTML = vv.length ? '<b>🎁 Your Vouchers</b><div style="color:var(--muted);font-size:12px">Free service, no expiry date. Show the code on your next visit.</div>' + vv.map(v => `<div class="vc"><span>Free ${v.service}</span><span>${v.code}</span></div>`).join('') : '';
+  tv.innerHTML = vv.length ? '<b>🎁 Your Vouchers</b><div style="color:var(--muted);font-size:12px">Free service, no expiry date. Show the code on your next visit.<br><i>This voucher can also be used by someone else or for another car.</i></div>' + vv.map(v => `<div class="vc"><span>Free ${v.service}</span><span>${v.code}</span></div>`).join('') : '';
   tv.style.display = vv.length ? 'block' : 'none';
   const isHist = renderHistory(data);
   document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
@@ -1265,7 +1265,7 @@ function waMessage(j){
         + 'Jumlah yang perlu dilunasi: Rp ' + Number(iv.tertagih||0).toLocaleString('id-ID') + (iv.dp && iv.dp.amount ? ' (sudah dikurangi DP Rp ' + Number(iv.dp.amount).toLocaleString('id-ID') + ')' : '') + '\n'
         + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
     const vList = iv ? (iv.items||[]).filter(it => it.voucherCode) : [];
-    const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.\n\n' : '';
+    const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang. (Catatan: voucher ini juga bisa dipakai oleh orang lain atau untuk mobil lain.)\n\n' : '';
     return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
@@ -2459,7 +2459,7 @@ window.redeemVoucher = function(v){
 window.toggleBonus = function(){ const b = document.getElementById('bonusOpts'); b.style.display = b.style.display === 'block' ? 'none' : 'block'; };
 window.invAddBonus = function(base){
   const harga = pricelistPrice(base, '') || 0;
-  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: 'VOUCHER - Free ' + base, desc: 'Voucher gratis 1x ' + base + ', tanpa batas waktu.', qty: 1, harga, discPct: 100, disc: harga, bonus: base }));
+  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: 'VOUCHER - Free ' + base, desc: 'Voucher gratis 1x ' + base + ', tanpa batas waktu. Bisa dipakai orang lain / mobil lain.', qty: 1, harga, discPct: 100, disc: harga, bonus: base }));
   document.getElementById('bonusOpts').style.display = 'none';
   invCalc();
 };
