@@ -10,6 +10,7 @@
   *{box-sizing:border-box}
   body{margin:0;background:#e9eaee;font-family:Helvetica,Arial,sans-serif;color:#333;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .bar{position:sticky;top:0;z-index:5;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px;background:#16161d}
+  .bar button:disabled{opacity:.6}
   .bar button,.bar a{background:#7B2FBE;color:#fff;border:none;padding:10px 16px;font-size:14px;font-weight:700;border-radius:4px;text-decoration:none;cursor:pointer}
   .bar .wa{background:#25D366}
   .wrap{padding:16px 8px 40px}
@@ -77,8 +78,8 @@
 </head>
 <body>
 <div class="bar" id="bar" style="display:none">
-  <button onclick="window.print()">Download PDF / Print</button>
-  <a class="wa" id="waBtn" href="#" target="_blank">Kirim via WhatsApp</a>
+  <button id="dlBtn" onclick="downloadPdf()">Download PDF</button>
+  <button class="wa" id="waBtn" onclick="sharePdf()">Kirim PDF ke WhatsApp</button>
 </div>
 <div class="wrap"><div id="root" class="msg">Memuat invoice...</div></div>
 
@@ -169,14 +170,44 @@ a.n. PT KONIG MOBIL INDONESIA</div>
   const msg = 'Halo ' + nama + ',\n\nBerikut invoice ' + inv.no + ' untuk ' + (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '') + ':\n' + location.href + '\n\n'
     + (inv.pay === 'lunas' ? 'Status: Lunas. Terima kasih.' : 'Jumlah tertagih: Rp ' + Number(inv.tertagih||0).toLocaleString('id-ID') + '\nPembayaran ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.')
     + '\n\nSalam,\nKONIG Auto Detailing';
-  document.getElementById('waBtn').href = 'https://wa.me/' + waNum(j.wa) + '?text=' + encodeURIComponent(msg);
+  window.__invNo = inv.no; window.__invMsg = msg;
   const fit = () => { const pg = document.querySelector('.page'); if (!pg) return; const w = document.querySelector('.wrap').clientWidth - 16; pg.style.zoom = w < 794 ? (w / 794).toFixed(3) : ''; };
   fit(); addEventListener('resize', fit);
   addEventListener('beforeprint', () => { const pg = document.querySelector('.page'); if (pg) pg.style.zoom = ''; });
   addEventListener('afterprint', fit);
+  window.__invReady = true;
+  if (new URLSearchParams(location.search).get('embed')) { document.getElementById('bar').style.display = 'none'; return; }
   if (localStorage.getItem('konig_admin')) document.getElementById('bar').style.display = 'flex';
   else { document.getElementById('bar').style.display = 'flex'; document.getElementById('waBtn').style.display = 'none'; }
 })();
+</script>
+
+<script>
+function loadScript(src){ return new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); }); }
+async function buildPdf(){
+  if (!window.html2canvas) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  if (!window.jspdf) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  const pg = document.querySelector('.page');
+  const z = pg.style.zoom; pg.style.zoom = '';
+  try {
+    const canvas = await html2canvas(pg, { scale: 2, backgroundColor: '#ffffff', useCORS: true, windowWidth: 900 });
+    const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+    const h = Math.min(297, canvas.height * 210 / canvas.width);
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, h);
+    return pdf.output('blob');
+  } finally { pg.style.zoom = z; }
+}
+function pdfName(){ return 'Invoice ' + String(window.__invNo || 'KONIG').replace(/\//g, '-') + '.pdf'; }
+async function withBusy(btn, fn){ const t = btn.textContent; btn.disabled = true; btn.textContent = 'Menyiapkan PDF...'; try { await fn(); } catch(e) { if (e && e.name !== 'AbortError') alert('Gagal membuat PDF: ' + e.message); } btn.disabled = false; btn.textContent = t; }
+function saveBlob(blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = pdfName(); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+window.downloadPdf = () => withBusy(document.getElementById('dlBtn'), async () => saveBlob(await buildPdf()));
+window.sharePdf = () => withBusy(document.getElementById('waBtn'), async () => {
+  const blob = await buildPdf();
+  const file = new File([blob], pdfName(), { type: 'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: pdfName() });
+  else { saveBlob(blob); alert('HP ini tidak mendukung kirim file langsung. PDF sudah di-download, silakan lampirkan manual di WhatsApp.'); }
+});
+window.buildPdf = buildPdf; window.pdfName = pdfName;
 </script>
 </body>
 </html>
