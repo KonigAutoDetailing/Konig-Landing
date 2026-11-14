@@ -646,7 +646,7 @@
     </div>
     <div class="inv-sum" id="invSum"></div>
     <div style="display:flex;gap:10px;margin-top:14px">
-      <button onclick="saveInvoice(true)" class="inv-btn-main">Simpan & Lanjut</button>
+      <button onclick="saveInvoice(true)" class="inv-btn-main" id="invSaveBtn">Simpan & Kirim ke Customer</button>
       <button onclick="saveInvoice(false)" class="inv-btn-ghost" id="invSkipBtn">Lewati Invoice</button>
     </div>
   </div>
@@ -1021,7 +1021,12 @@ function waMessage(j){
   const ambil = needsTrackLink(j) ? 'Kendaraan dapat diambil pada jam operasional workshop, Senin–Sabtu hingga pukul 17.00.' : 'Kendaraan dapat diambil hari ini hingga pukul 17.00.';
   const salam = '\n\nSalam,\nKONIG Auto Detailing';
   if(done){
-    const invLine = j.invoice ? 'Invoice (' + j.invoice.no + '): ' + location.origin + '/invoice?code=' + encodeURIComponent(j.id) + '\n' + (j.invoice.pay === 'lunas' ? 'Status: Lunas\n\n' : 'Jumlah tertagih: Rp ' + Number(j.invoice.tertagih||0).toLocaleString('id-ID') + '\n\n') : '';
+    const iv = j.invoice, ivUrl = iv ? location.origin + '/invoice?code=' + encodeURIComponent(j.id) : '';
+    const invLine = !iv ? '' : iv.pay === 'lunas'
+      ? 'Berikut kami lampirkan invoice ' + iv.no + ' untuk pengerjaan ini (status: lunas):\n' + ivUrl + '\n\n'
+      : 'Berikut kami lampirkan invoice pelunasan ' + iv.no + ':\n' + ivUrl + '\n'
+        + 'Jumlah yang perlu dilunasi: Rp ' + Number(iv.tertagih||0).toLocaleString('id-ID') + (iv.dp && iv.dp.amount ? ' (sudah dikurangi DP Rp ' + Number(iv.dp.amount).toLocaleString('id-ID') + ')' : '') + '\n'
+        + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
     return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + REVIEW_TEXT + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
@@ -1767,6 +1772,7 @@ window.openInvoice = function(id, d, fromDone){
   const inv = d.invoice;
   document.getElementById('invCarName').textContent = (d.car || '—') + (d.plate ? ' · ' + d.plate : '');
   document.getElementById('invSkipBtn').textContent = fromDone ? 'Lewati Invoice' : 'Batal';
+  document.getElementById('invSaveBtn').textContent = fromDone ? 'Simpan & Kirim ke Customer' : 'Simpan Invoice';
   const today = invYmd(new Date());
   document.getElementById('invNo').value = inv ? inv.no : nextSeq('INV');
   document.getElementById('invDate').value = inv ? inv.date : today;
