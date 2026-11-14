@@ -100,6 +100,8 @@
     .inv-btn-main{flex:1;background:var(--purple);color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer}
     .inv-btn-ghost{flex:1;background:transparent;color:var(--muted);border:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer}
     .btn-inv{border:1px solid #38bdf8 !important;color:#38bdf8 !important;background:transparent !important}
+    .code-opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
+    .code-opts button{background:rgba(124,58,237,.15);border:1px solid rgba(167,139,250,.4);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;padding:10px 4px;cursor:pointer;line-height:1.3}
     .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
     .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--muted);margin-top:4px}
     .track-service{font-size:13px;color:var(--muted);margin-top:8px}
@@ -484,7 +486,13 @@
           style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;text-transform:uppercase;flex:1"
           oninput="this.value=this.value.toUpperCase()"/>
       </div>
-      <button type="button" class="btn-new" style="width:100%;margin-top:8px;padding:12px" onclick="openScanner()">📷 Scan QR Stiker</button>
+      <div class="code-opts">
+        <button type="button" onclick="openScanner()">📷 Scan<br>Kamera</button>
+        <button type="button" onclick="document.getElementById('qrPhotoInput').click()">🖼️ Dari<br>Foto</button>
+        <button type="button" onclick="toggleCodeList()">📋 Pilih<br>dari List</button>
+      </div>
+      <input type="file" id="qrPhotoInput" accept="image/*" style="display:none" onchange="scanFromPhoto(this)"/>
+      <select id="codeList" class="inv-select" style="display:none;margin-top:8px" onchange="if(this.value){document.getElementById('jobCode').value=this.value;document.getElementById('jobCodeError').style.display='none';}"></select>
       <div id="jobCodeError" style="display:none;color:var(--red);font-size:12px;margin-top:4px">Kode sudah dipakai atau tidak valid</div>
     </div>
     <input type="hidden" id="jobCar"/>
@@ -1337,6 +1345,38 @@ window.closeScanner = function(){
   if (_scanStream) { _scanStream.getTracks().forEach(t => t.stop()); _scanStream = null; }
   document.getElementById('scanOverlay').classList.remove('open');
 };
+
+// QR dari foto (galeri / kamera foto)
+window.scanFromPhoto = async function(input){
+  const f = input.files && input.files[0]; input.value = '';
+  if (!f) return;
+  const err = document.getElementById('jobCodeError');
+  try {
+    const bmp = await createImageBitmap(f);
+    const scale = Math.min(1, 1400 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    let text = null;
+    if ('BarcodeDetector' in window) { try { const r = await new BarcodeDetector({ formats: ['qr_code'] }).detect(c); if (r && r[0]) text = r[0].rawValue; } catch(e) {} }
+    if (!text) { await loadJsQR(); const img = ctx.getImageData(0, 0, c.width, c.height); const r = window.jsQR(img.data, img.width, img.height); if (r) text = r.data; }
+    const code = text && codeFromText(text);
+    if (code) handleScannedCode(code);
+    else { err.textContent = text ? 'Ini bukan QR KONIG.' : 'QR tidak terbaca dari foto. Coba foto lebih dekat & terang.'; err.style.display = 'block'; }
+  } catch(e) { err.textContent = 'Gagal membaca foto.'; err.style.display = 'block'; }
+};
+// Daftar kode stiker yang belum terpakai
+window.toggleCodeList = function(){
+  const sel = document.getElementById('codeList');
+  if (sel.style.display === 'block') { sel.style.display = 'none'; return; }
+  const used = new Set((window._allJobs||[]).map(j => j.id.toUpperCase()));
+  const nums = [...used].map(id => { const m = id.match(/^([A-Z]+)-(\d+)$/); return m ? { p: m[1], n: +m[2], w: m[2].length } : null; }).filter(Boolean);
+  const prefix = nums.length ? nums[nums.length - 1].p : 'KNG', width = nums.length ? nums[0].w : 5;
+  const max = nums.filter(x => x.p === prefix).reduce((a, x) => Math.max(a, x.n), 0);
+  const free = [];
+  for (let n = 1; n <= max + 40 && free.length < 40; n++) { const c = prefix + '-' + String(n).padStart(width, '0'); if (!used.has(c)) free.push(c); }
+  sel.innerHTML = '<option value="">— Pilih kode stiker yang belum terpakai —</option>' + free.map(c => `<option>${c}</option>`).join('');
+  sel.style.display = 'block';
+};
 async function handleScannedCode(code){
   const inp = document.getElementById('jobCode');
   inp.value = code;
@@ -1344,7 +1384,7 @@ async function handleScannedCode(code){
   try {
     const { doc, getDoc } = window._fbFns;
     const snap = await getDoc(doc(window._db, 'konig_progress', code));
-    if (err) err.style.display = snap.exists() ? 'block' : 'none';
+    if (err) { err.textContent = 'Kode sudah dipakai atau tidak valid'; err.style.display = snap.exists() ? 'block' : 'none'; }
   } catch(e) {}
 }
 // ── DATA MOBIL (autocomplete) ──
@@ -1825,7 +1865,11 @@ window.openInvoice = function(id, d, fromDone){
   const masuk = toDateObj(d.createdAt);
   document.getElementById('invDpDate').value = inv && inv.dp && inv.dp.date && inv.dp.date !== inv.due ? inv.dp.date : (masuk ? invYmd(masuk) : today);
   const box = document.getElementById('invItems');
-  if (inv) box.innerHTML = inv.items.map(invItemHtml).join('');
+  if (inv) box.innerHTML = inv.items.map(it => {
+    const base = String(it.produk||'').replace(/ - (Small|Medium|Large|X-tra Large)$/,'').replace(/ - /g, ' — ');
+    const nd = DESC_MAP[base];
+    return invItemHtml(nd && (!it.desc || it.desc.length < 25) ? { ...it, desc: nd } : it);
+  }).join('');
   else {
     const svs = String(d.service||'').split(', ').filter(Boolean);
     box.innerHTML = (svs.length ? svs : ['']).map(sv => invItemHtml({ produk: sv, base: sv, desc: INV_DESC(sv), qty: 1 })).join('');
