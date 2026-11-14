@@ -185,6 +185,8 @@
       color:var(--white);background:var(--purple);border:none;cursor:pointer;padding:12px 24px;transition:background 0.2s;
     }
     .btn-new:hover{background:var(--purple2)}
+    .btn-tpl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;border-radius:2px;transition:all 0.15s}
+    .btn-tpl:hover{border-color:var(--purpleB);color:var(--purpleB)}
     .btn-logout{
       font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
       color:var(--muted);background:none;border:1px solid var(--border);cursor:pointer;padding:8px 16px;transition:all 0.2s;
@@ -548,6 +550,25 @@
         <button class="btn-copy" onclick="copyWA()">Copy WA</button>
         <button class="btn-print" onclick="printQR()">🖨️ Print Sticker</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Konfirmasi Selesai -->
+<div class="modal-overlay" id="modalDone">
+  <div class="modal-box" style="max-width:440px">
+    <button class="modal-close" onclick="closeModal('modalDone')">×</button>
+    <div class="modal-title">TANDAI SELESAI</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Kendaraan <strong id="doneCarName" style="color:var(--white)">—</strong> akan ditandai selesai. Edit pesan jika perlu sebelum dikirim ke customer.</p>
+
+    <div style="margin-bottom:16px">
+      <label style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Preview Pesan WA</label>
+      <textarea id="doneWaMsg" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:13px;padding:12px;resize:vertical;min-height:140px;outline:none;border-radius:2px;line-height:1.6"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="confirmDone()" style="flex:1;background:var(--success);color:#080810;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;border-radius:2px">Selesai & Kirim WA</button>
+      <button onclick="confirmDoneNoSend()" style="flex:1;background:transparent;color:var(--muted);border:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;border-radius:2px">Selesai Tanpa Kirim</button>
     </div>
   </div>
 </div>
@@ -1410,7 +1431,37 @@ window.saveJob = async function() {
 
 // ── MARK DONE ──
 window.markDone = async function(id) {
-  if (!confirm('Tandai kendaraan ini sudah selesai?')) return;
+  const { doc: fbDoc, getDoc } = window._fbFns;
+  const snap = await getDoc(fbDoc(window._db, 'konig_progress', id));
+  if (!snap.exists()) return;
+  const d = snap.data();
+  window._doneId = id;
+  window._doneWa = d.wa || '';
+  document.getElementById('doneCarName').textContent = (d.car || '—') + (d.plate ? ' · ' + d.plate : '');
+  // Pesan selesai tanpa emoticon
+  const msg = `Halo, kendaraan ${d.car || ''}${d.plate ? ' (' + d.plate + ')' : ''} sudah selesai dikerjakan dan siap untuk diambil.\n\nTerima kasih sudah mempercayakan kendaraan Anda ke KONIG Auto Detailing.\n\nSampai jumpa di kunjungan berikutnya.`;
+  document.getElementById('doneWaMsg').value = msg;
+  openModal('modalDone');
+};
+
+window.confirmDone = async function() {
+  const id = window._doneId;
+  const wa = window._doneWa;
+  const msg = document.getElementById('doneWaMsg').value.trim();
+  await _markDoneFirestore(id);
+  closeModal('modalDone');
+  if (wa && msg) {
+    const phone = wa.replace(/\D/g, '').replace(/^0/, '62');
+    window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+  }
+};
+
+window.confirmDoneNoSend = async function() {
+  await _markDoneFirestore(window._doneId);
+  closeModal('modalDone');
+};
+
+async function _markDoneFirestore(id) {
   const { doc, updateDoc, serverTimestamp } = window._fbFns;
   const allSteps = window.ALL_STEP_IDS;
   await updateDoc(doc(window._db, 'konig_progress', id), {
