@@ -1558,7 +1558,7 @@ window.openNewJobModal = function() {
   setCarFields({});
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
-  window._repeatOf = null; document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
+  window._repeatOf = null; window._ownerChoice = null; document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   selectedServices = [];
   renderServiceTags();
   document.getElementById('jobServiceInput').value = '';
@@ -1676,8 +1676,7 @@ window.saveJob = async function() {
         const prevVisit = { service: old.service || '', car: old.car || '', color: old.color || '', plate: old.plate || '', note: old.note || '',
           createdAt: old.createdAt || null, doneAt: old.doneAt || null, invoice: old.invoice || null };
         carry = { visits: (old.visits || []).concat([prevVisit]) };
-        if (old.reviewed) carry.reviewed = old.reviewed;
-        if (old.reviewReminder) carry.reviewReminder = old.reviewReminder;
+        if (window._ownerChoice !== 'new' && normWa(old.wa) === normWa(wa)) { if (old.reviewed) carry.reviewed = old.reviewed; if (old.reviewReminder) carry.reviewReminder = old.reviewReminder; }
       }
       await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       window._repeatOf = null;
@@ -1720,9 +1719,18 @@ function applyRepeat(j){
   document.getElementById('jobModel').value = j.brand ? (j.model || '') : (j.model || j.car || '');
   document.getElementById('jobColor').value = j.color || '';
   window.updateModelList && window.updateModelList();
-  if (!nm && j.custName) { document.getElementById('jobCustName').value = j.custName; document.getElementById('jobCustTitle').value = j.custTitle || 'Mr.'; }
-  if (!wa && j.wa) { document.getElementById('jobWa').value = j.wa; window.updateContactBtns && window.updateContactBtns(); }
 }
+window.useOldOwner = function(useOld){
+  const j = (window._allJobs||[]).find(x => x.id === window._repeatOf); if (!j) return;
+  window._ownerChoice = useOld ? 'old' : 'new';
+  document.getElementById('jobCustName').value = useOld ? (j.custName || '') : '';
+  document.getElementById('jobCustTitle').value = useOld ? (j.custTitle || 'Mr.') : 'Mr.';
+  document.getElementById('jobWa').value = useOld ? (j.wa || '') : '';
+  window._waPicked = useOld && !!j.wa;
+  window.updateContactBtns && window.updateContactBtns();
+  checkRepeat();
+  if (!useOld) document.getElementById('jobWa').focus();
+};
 function checkRepeat(){
   if (document.getElementById('editJobId').value) return;
   const box = document.getElementById('repeatNotice');
@@ -1740,8 +1748,13 @@ function checkRepeat(){
       html.push(`⚠️ Mobil <b>${byPlate.plate}</b> masih tercatat <b>dalam pengerjaan</b> (kode ${byPlate.id}). Selesaikan dulu job sebelumnya.`);
       if (window._repeatOf) { window._repeatOf = null; document.getElementById('jobCode').value = ''; }
     } else {
-      applyRepeat(byPlate);
-      html.push(`🔁 <b>Mobil ini pernah masuk ke KONIG</b> ${sejakLabel(d)} (${tglPanjang(d)}) dengan layanan <b>${byPlate.service || '-'}</b>${n > 1 ? ` · total ${n} kunjungan` : ''}.<br>Tipe, warna & kode QR otomatis mengikuti data sebelumnya: <b>${byPlate.id}</b>.`);
+      if (window._repeatOf !== byPlate.id) { window._ownerChoice = null; applyRepeat(byPlate); }
+      const owner = byPlate.custName ? (byPlate.custTitle ? byPlate.custTitle + ' ' : '') + titleCase(byPlate.custName) : 'tanpa nama';
+      const ch = window._ownerChoice;
+      html.push(`🔁 <b>Mobil ini pernah masuk ke KONIG</b> ${sejakLabel(d)} (${tglPanjang(d)}) dengan layanan <b>${byPlate.service || '-'}</b>${n > 1 ? ` · total ${n} kunjungan` : ''}.<br>Tipe, warna & kode QR otomatis mengikuti data sebelumnya: <b>${byPlate.id}</b>.`
+        + `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(250,204,21,.4)">Pemilik sebelumnya: <b>${owner}</b> · ${byPlate.wa || 'tanpa nomor'}<br>`
+        + (ch === 'old' ? '✓ Memakai data pemilik lama.' : ch === 'new' ? '✓ Pemilik baru, isi nomor & nama di bawah.' : 'Mobil bisa saja sudah dijual. Pemiliknya masih sama?')
+        + `<div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="btn-sm" style="flex:1;${ch === 'old' ? 'background:#facc15;color:#111' : ''}" onclick="useOldOwner(true)">Pemilik sama</button><button type="button" class="btn-sm" style="flex:1;${ch === 'new' ? 'background:#facc15;color:#111' : ''}" onclick="useOldOwner(false)">Pemilik baru</button></div></div>`);
     }
   } else if (window._repeatOf) {
     window._repeatOf = null; document.getElementById('jobCode').value = '';
