@@ -216,6 +216,21 @@
 
     /* Photo section */
     .photos-section{margin-top:28px}
+    .insp-sec{margin-top:24px;border:1px solid var(--border);background:rgba(255,255,255,.02);text-align:left}
+    .insp-toggle{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:none;color:#fff;padding:14px 16px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:2px;text-transform:uppercase;text-align:left}
+    .insp-toggle #inspCount{color:var(--purpleB);font-size:12px;letter-spacing:1px}
+    .insp-arrow{margin-left:auto;font-size:20px;color:var(--purpleB);line-height:1}
+    #inspBody{padding:0 16px 14px}
+    .insp-intro{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+    .insp-item{border-top:1px solid var(--border)}
+    .insp-row{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;background:transparent;border:none;color:#fff;padding:12px 0;cursor:pointer;font-size:14px;text-align:left}
+    .insp-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;border:1px solid;white-space:nowrap}
+    .insp-detail{display:none;padding:0 0 12px}
+    .insp-note{font-size:13px;color:#d4cef0;margin-bottom:8px;line-height:1.5}
+    .insp-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .insp-photos img{width:100%;aspect-ratio:1;object-fit:cover;display:block;cursor:zoom-in;background:#15151d}
+    .insp-lb{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);align-items:center;justify-content:center;padding:16px}
+    .insp-lb img{max-width:100%;max-height:100%;object-fit:contain}
     .photos-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
     .photos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .photo-card{background:var(--panel);border:1px solid var(--border);aspect-ratio:16/9;overflow:hidden;position:relative}
@@ -471,6 +486,15 @@
       </div>
       <a class="hist-wa" href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20mau%20booking%20lagi" target="_blank" rel="noopener">Book Again via WhatsApp</a>
     </div>
+
+    <div class="insp-sec" id="trackInsp" style="display:none">
+      <button type="button" class="insp-toggle" onclick="toggleInsp()"><span>Vehicle Inspection</span><span id="inspCount"></span><span class="insp-arrow" id="inspArrow">+</span></button>
+      <div id="inspBody" style="display:none">
+        <div class="insp-intro">Condition of your car recorded by our team on arrival. Tap a panel to see the photos.</div>
+        <div id="inspList"></div>
+      </div>
+    </div>
+    <div class="insp-lb" id="inspLb" onclick="this.style.display='none'"><img id="inspLbImg" alt=""></div>
 
     <div class="photos-section" id="photosSection" style="display:none">
       <div class="photos-title">Documentation</div>
@@ -914,6 +938,51 @@ function renderHistory(data){
   return true;
 }
 
+// ── TEMUAN INSPEKSI (halaman customer) ──
+const INSP_PANELS = { bumper_depan:'Front Bumper', kap_mesin:'Hood', kaca_depan:'Windshield', fender_kiri_depan:'Front Left Fender', fender_kanan_depan:'Front Right Fender', pintu_kiri_depan:'Front Left Door', pintu_kanan_depan:'Front Right Door', atap:'Roof', pintu_kiri_belakang:'Rear Left Door', pintu_kanan_belakang:'Rear Right Door', fender_kiri_belakang:'Rear Left Fender', fender_kanan_belakang:'Rear Right Fender', kaca_belakang:'Rear Window', bagasi:'Trunk', bumper_belakang:'Rear Bumper', velg_kiri_depan:'Front Left Wheel', velg_kanan_depan:'Front Right Wheel', velg_kiri_belakang:'Rear Left Wheel', velg_kanan_belakang:'Rear Right Wheel', interior:'Interior' };
+const INSP_STATUS = { minor:['Minor Scratch','#facc15'], deep:['Deep Scratch','#f87171'], dent:['Dent','#fb923c'], other:['Note','#a78bfa'], ok:['Good','#4ade80'] };
+async function inspPhotoSrc(ph){
+  if (ph._src || ph.url) return ph._src || ph.url;
+  if (ph.fs) { try { const { doc, getDoc } = window._fbFns; const sn = await getDoc(doc(window._db, 'konig_progress', ph.fs)); if (sn.exists()) return (ph._src = sn.data().photo); } catch(e) {} }
+  return '';
+}
+window.toggleInsp = function(){ const b = document.getElementById('inspBody'), open = b.style.display === 'none'; b.style.display = open ? '' : 'none'; document.getElementById('inspArrow').textContent = open ? '−' : '+'; };
+function renderTrackInspection(data){
+  const sec = document.getElementById('trackInsp'), list = document.getElementById('inspList');
+  const ins = data.inspection || {};
+  const items = [];
+  Object.keys(INSP_PANELS).forEach(k => { const pd = (ins.panels||{})[k]; if (pd && ((pd.status && pd.status !== 'ok') || (pd.photos||[]).length || String(pd.note||'').trim())) items.push({ label: INSP_PANELS[k], pd }); });
+  Object.keys(ins.panels||{}).filter(k => !INSP_PANELS[k]).forEach(k => { const pd = ins.panels[k]; if (pd && ((pd.status && pd.status !== 'ok') || (pd.photos||[]).length)) items.push({ label: k.replace(/_/g,' '), pd }); });
+  if ((ins.general||[]).length) items.push({ label: 'General Photos', pd: { photos: ins.general } });
+  if (!items.length) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  document.getElementById('inspBody').style.display = 'none'; document.getElementById('inspArrow').textContent = '+';
+  const n = items.filter(it => it.label !== 'General Photos').length;
+  document.getElementById('inspCount').textContent = n ? n + (n === 1 ? ' finding' : ' findings') : '';
+  list.innerHTML = '';
+  items.forEach(it => {
+    const st = INSP_STATUS[it.pd.status] || null;
+    const wrap = document.createElement('div'); wrap.className = 'insp-item';
+    const row = document.createElement('button'); row.type = 'button'; row.className = 'insp-row';
+    const nm = document.createElement('span'); nm.textContent = it.label + ((it.pd.photos||[]).length ? '  (' + it.pd.photos.length + ' photo' + (it.pd.photos.length > 1 ? 's' : '') + ')' : '');
+    row.appendChild(nm);
+    if (st) { const tg = document.createElement('span'); tg.className = 'insp-tag'; tg.textContent = st[0]; tg.style.color = st[1]; tg.style.borderColor = st[1]; row.appendChild(tg); }
+    const det = document.createElement('div'); det.className = 'insp-detail';
+    if (String(it.pd.note||'').trim()) { const nt = document.createElement('div'); nt.className = 'insp-note'; nt.textContent = it.pd.note; det.appendChild(nt); }
+    const grid = document.createElement('div'); grid.className = 'insp-photos'; det.appendChild(grid);
+    let loaded = false;
+    row.onclick = async () => {
+      const open = det.style.display !== 'block'; det.style.display = open ? 'block' : 'none';
+      if (!open || loaded) return; loaded = true;
+      for (const ph of (it.pd.photos||[])) {
+        const img = document.createElement('img'); img.alt = it.label; img.loading = 'lazy'; grid.appendChild(img);
+        inspPhotoSrc(ph).then(src => { if (src) { img.src = src; img.onclick = () => { document.getElementById('inspLbImg').src = src; document.getElementById('inspLb').style.display = 'flex'; }; } else img.remove(); });
+      }
+    };
+    wrap.appendChild(row); wrap.appendChild(det); list.appendChild(wrap);
+  });
+}
+
 function renderTrack(code, data) {
   document.getElementById('trackCode').textContent = 'Code: ' + code;
   document.getElementById('trackCar').textContent = data.car || '-';
@@ -927,6 +996,7 @@ function renderTrack(code, data) {
   const tv = document.getElementById('trackVouchers'), vv = (data.vouchers||[]).filter(v => !v.used);
   tv.innerHTML = vv.length ? '<b>🎁 Your Vouchers</b><div style="color:var(--muted);font-size:12px">Free service, no expiry date. Show the code on your next visit.<br><i>This voucher can also be used by someone else or for another car.</i></div>' + vv.map(v => `<div class="vc"><span>Free ${v.service}</span><span>${v.code}</span></div>`).join('') : '';
   tv.style.display = vv.length ? 'block' : 'none';
+  renderTrackInspection(data);
   const isHist = renderHistory(data);
   document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
   document.getElementById('trackHelloSub').textContent = isHist ? 'Thank you for trusting your car to KONIG.' : 'Your car is in good hands. Track its progress here.';
