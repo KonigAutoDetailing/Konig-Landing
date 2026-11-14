@@ -2123,7 +2123,8 @@ window.invSizeChanged = function(){
   });
   invCalc();
 };
-window.invDueFromDate = function(){ const d = document.getElementById('invDate').value; if (d) { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate()+7); document.getElementById('invDue').value = x.toISOString().slice(0,10); } };
+// Jatuh tempo = hari mobil selesai / diambil
+window.invDueFromDate = function(){ const done = window._invData && toDateObj(window._invData.doneAt); document.getElementById('invDue').value = done ? invYmd(done) : document.getElementById('invDate').value; };
 window.invPayChanged = function(){
   document.getElementById('invDpBox').style.display = document.getElementById('invHasDp').checked ? 'block' : 'none';
   const l = document.getElementById('invLunas').checked;
@@ -2163,6 +2164,7 @@ window.invCalc = function(){
   const la = document.getElementById('invLunasAmt'); if (la) la.value = c.lunas ? 'Rp ' + fmtRp(c.pelunasan) : '';
 };
 window.openInvoice = function(id, d, fromDone){
+  window._invData = d;
   window._invId = id; window._invFromDone = !!fromDone;
   const inv = d.invoice;
   document.getElementById('invCarName').textContent = (d.car || '—') + (d.plate ? ' · ' + d.plate : '');
