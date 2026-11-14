@@ -179,7 +179,7 @@ a.n. PT KONIG MOBIL INDONESIA</div>
   if (new URLSearchParams(location.search).get('embed')) { document.getElementById('bar').style.display = 'none'; return; }
   document.getElementById('bar').style.display = 'flex';
   // Tombol kirim WA hanya untuk admin (HP workshop yang sudah login)
-  if (localStorage.getItem('konig_admin')) { const wb = document.getElementById('waBtn'); wb.href = 'https://wa.me/' + waNum(j.wa) + '?text=' + encodeURIComponent(msg); wb.style.display = ''; }
+  if (new URLSearchParams(location.search).get('a') === '1' && localStorage.getItem('konig_admin')) { const wb = document.getElementById('waBtn'); wb.href = 'https://wa.me/' + waNum(j.wa) + '?text=' + encodeURIComponent(msg); wb.style.display = ''; }
 })();
 </script>
 

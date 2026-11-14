@@ -1000,7 +1000,7 @@ window.renderJobList = function(){
         ${j.custName ? `<div style="font-size:12px;color:var(--muted);letter-spacing:1px">${j.custTitle || ''} ${j.custName}</div>` : ''}<div class="job-car">${j.car || '-'}${j.color ? ' · ' + j.color : ''} <span style="font-size:13px;color:var(--muted);font-family:'Barlow',sans-serif">${j.plate || ''}</span></div>
         <div class="job-service">${j.service || '-'}</div>
         <div class="job-date">WA: ${j.wa || '-'}${isDone && toDateObj(j.doneAt) ? ' · Selesai ' + toDateObj(j.doneAt).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : ''}</div>
-        ${(j.visits||[]).length ? `<div class="job-date" style="color:#facc15">🔁 Kunjungan ke-${j.visits.length + 1} · sebelumnya: ${j.visits.map((v,vi) => (v.service || '-').split(',')[0] + (v.invoice ? ` (<a href="/invoice?code=${j.id}&v=${vi}" target="_blank" style="color:#facc15">invoice</a>)` : '')).reverse().join(' · ')}</div>` : ''}
+        ${(j.visits||[]).length ? `<div class="job-date" style="color:#facc15">🔁 Kunjungan ke-${j.visits.length + 1} · sebelumnya: ${j.visits.map((v,vi) => (v.service || '-').split(',')[0] + (v.invoice ? ` (<a href="/invoice?code=${j.id}&v=${vi}&a=1" target="_blank" style="color:#facc15">invoice</a>)` : '')).reverse().join(' · ')}</div>` : ''}
         <div class="job-progress-mini">
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
@@ -1009,7 +1009,7 @@ window.renderJobList = function(){
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
-          ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : ''}
+          ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
         </div>
       </div>
@@ -2180,7 +2180,7 @@ window.saveInvoice = async function(save){
     if (d && d.invoice) document.getElementById('doneWaMsg').value = waMessage({ ...d, doneSteps: ['done'], activeStep: 'done' });
     openModal('modalDone');
   } else if (save) {
-    window.open('/invoice?code=' + encodeURIComponent(id), '_blank');
+    window.open('/invoice?code=' + encodeURIComponent(id) + '&a=1', '_blank');
     if (window.renderJobList) renderJobList();
   }
 };
