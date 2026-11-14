@@ -1100,7 +1100,7 @@ function waMessage(j){
       : 'Berikut kami lampirkan invoice pelunasan ' + iv.no + ':\n' + ivUrl + '\n'
         + 'Jumlah yang perlu dilunasi: Rp ' + Number(iv.tertagih||0).toLocaleString('id-ID') + (iv.dp && iv.dp.amount ? ' (sudah dikurangi DP Rp ' + Number(iv.dp.amount).toLocaleString('id-ID') + ')' : '') + '\n'
         + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
-    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + REVIEW_TEXT + salam;
+    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + REVIEW_TEXT.replace(/^\n+/, '') + '\n\n' + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
   let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;

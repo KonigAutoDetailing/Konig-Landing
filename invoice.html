@@ -79,6 +79,7 @@
 <body>
 <div class="bar" id="bar" style="display:none">
   <button id="dlBtn" onclick="downloadPdf()">Download PDF</button>
+  <a class="wa" id="waBtn" href="#" target="_blank" style="display:none">Kirim via WhatsApp</a>
 </div>
 <div class="wrap"><div id="root" class="msg">Memuat invoice...</div></div>
 
@@ -177,6 +178,8 @@ a.n. PT KONIG MOBIL INDONESIA</div>
   window.__invReady = true;
   if (new URLSearchParams(location.search).get('embed')) { document.getElementById('bar').style.display = 'none'; return; }
   document.getElementById('bar').style.display = 'flex';
+  // Tombol kirim WA hanya untuk admin (HP workshop yang sudah login)
+  if (localStorage.getItem('konig_admin')) { const wb = document.getElementById('waBtn'); wb.href = 'https://wa.me/' + waNum(j.wa) + '?text=' + encodeURIComponent(msg); wb.style.display = ''; }
 })();
 </script>
 
