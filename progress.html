@@ -624,7 +624,7 @@
     <div id="invItems"></div>
     <button type="button" class="inv-add" onclick="invAddItem()">+ Tambah Item</button>
     <div class="form-row2" style="margin-top:14px">
-      <div class="form-group"><label>Diskon Tambahan (Rp)</label><input type="text" inputmode="numeric" id="invDiskon" oninput="invNum(this);invCalc()"/></div>
+      <div class="form-group"><label>Diskon Tambahan (Rp / %)</label><input type="text" id="invDiskon" placeholder="contoh: 500.000 atau 10%" oninput="invDiscFmt(this);invCalc()"/></div>
       <div class="form-group"><label>Keterangan</label><input type="text" id="invKet"/></div>
     </div>
     <label class="inv-lbl">Pembayaran</label>
@@ -1731,6 +1731,9 @@ const INV_SIZED = sv => /Coating —|Polish/i.test(sv) && !/Window/i.test(sv);
 function rupiahNum(v){ return parseInt(String(v||'').replace(/[^0-9]/g,'')) || 0; }
 function fmtRp(n){ return n.toLocaleString('id-ID'); }
 window.invNum = function(el){ const n = rupiahNum(el.value); el.value = n ? fmtRp(n) : ''; };
+// Diskon: boleh Rp (500.000) atau persen (10%)
+window.invDiscFmt = function(el){ if (/%/.test(el.value)) { const v = String(el.value).replace(/[^0-9.,]/g,'').replace(',', '.'); el.value = v ? v + '%' : ''; } else invNum(el); };
+function discValue(raw, base){ const t = String(raw||''); if (/%/.test(t)) { const p = Math.min(100, parseFloat(t.replace(/[^0-9.,]/g,'').replace(',', '.')) || 0); return { amount: Math.round(base * p / 100), pct: p }; } return { amount: rupiahNum(t), pct: 0 }; }
 function invYmd(d){ return new Date(d.getTime()+7*3600e3).toISOString().slice(0,10); }
 function nextSeq(prefix){
   const yr = new Date().getFullYear(); let mx = 0;
@@ -1749,7 +1752,7 @@ function invItemHtml(it){
     <small>DESKRIPSI</small><input class="i-desc" value="${(it.desc||'').replace(/"/g,'&quot;')}">
     <div class="row"><div><small>QTY</small><input class="i-qty" inputmode="numeric" value="${it.qty||1}" oninput="invCalc()"></div>
     <div><small>HARGA</small><input class="i-harga" inputmode="numeric" value="${it.harga ? fmtRp(it.harga) : ''}" oninput="invNum(this);invCalc()"></div>
-    <div><small>DISC (RP)</small><input class="i-disc" inputmode="numeric" value="${it.disc ? fmtRp(it.disc) : ''}" oninput="invNum(this);invCalc()"></div></div></div>`;
+    <div><small>DISC (RP / %)</small><input class="i-disc" placeholder="0 / 10%" value="${it.discPct ? it.discPct + '%' : (it.disc ? fmtRp(it.disc) : '')}" oninput="invDiscFmt(this);invCalc()"></div></div></div>`;
 }
 window.invAddItem = function(){ document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({qty:1})); };
 window.invSizeChanged = function(){
@@ -1775,25 +1778,26 @@ window.invPayChanged = function(){
   invCalc();
 };
 function invCollect(){
-  const items = [...document.querySelectorAll('#invItems .inv-item')].map(el => ({
-    produk: el.querySelector('.i-produk').value.trim(), desc: el.querySelector('.i-desc').value.trim(),
-    qty: Math.max(1, rupiahNum(el.querySelector('.i-qty').value) || 1), harga: rupiahNum(el.querySelector('.i-harga').value), disc: rupiahNum(el.querySelector('.i-disc').value)
-  })).filter(it => it.produk);
+  const items = [...document.querySelectorAll('#invItems .inv-item')].map(el => {
+    const qty = Math.max(1, rupiahNum(el.querySelector('.i-qty').value) || 1), harga = rupiahNum(el.querySelector('.i-harga').value);
+    const dv = discValue(el.querySelector('.i-disc').value, qty * harga);
+    return { produk: el.querySelector('.i-produk').value.trim(), desc: el.querySelector('.i-desc').value.trim(), qty, harga, disc: dv.amount, discPct: dv.pct };
+  }).filter(it => it.produk);
   const hasDp = document.getElementById('invHasDp').checked, lunas = document.getElementById('invLunas').checked;
   const pay = lunas ? 'lunas' : hasDp ? 'dp' : 'belum';
   const subtotal = items.reduce((a,it) => a + it.qty*it.harga - it.disc, 0);
-  const diskon = rupiahNum(document.getElementById('invDiskon').value);
+  const dTam = discValue(document.getElementById('invDiskon').value, subtotal), diskon = dTam.amount, diskonPct = dTam.pct;
   const total = Math.max(0, subtotal - diskon);
   const dpAmt = hasDp ? rupiahNum(document.getElementById('invDpAmt').value) : 0;
   const sisa = Math.max(0, total - dpAmt);
   const pelunasan = lunas ? sisa : 0;
   const tertagih = lunas ? 0 : sisa;
-  return { items, pay, hasDp, lunas, subtotal, diskon, total, dpAmt, pelunasan, tertagih };
+  return { items, pay, hasDp, lunas, subtotal, diskon, diskonPct, total, dpAmt, pelunasan, tertagih };
 }
 window.invCalc = function(){
   const c = invCollect();
   document.getElementById('invSum').innerHTML = `<div><span>Subtotal</span><span>Rp ${fmtRp(c.subtotal)}</span></div>`
-    + (c.diskon ? `<div><span>Diskon Tambahan</span><span>(Rp ${fmtRp(c.diskon)})</span></div>` : '')
+    + (c.diskon ? `<div><span>Diskon Tambahan${c.diskonPct ? ' (' + c.diskonPct + '%)' : ''}</span><span>(Rp ${fmtRp(c.diskon)})</span></div>` : '')
     + `<div><span>Total</span><span>Rp ${fmtRp(c.total)}</span></div>`
     + (c.dpAmt ? `<div><span>Down Payment</span><span>(Rp ${fmtRp(c.dpAmt)})</span></div>` : '')
     + (c.lunas ? `<div><span>Pelunasan</span><span>(Rp ${fmtRp(c.pelunasan)})</span></div>` : '')
@@ -1811,7 +1815,7 @@ window.openInvoice = function(id, d, fromDone){
   document.getElementById('invDate').value = inv ? inv.date : today;
   if (inv) document.getElementById('invDue').value = inv.due; else invDueFromDate();
   document.getElementById('invSize').value = inv ? (inv.size || '') : 'Medium';
-  document.getElementById('invDiskon').value = inv && inv.diskon ? fmtRp(inv.diskon) : '';
+  document.getElementById('invDiskon').value = inv && inv.diskonPct ? inv.diskonPct + '%' : (inv && inv.diskon ? fmtRp(inv.diskon) : '');
   document.getElementById('invKet').value = inv ? (inv.keterangan || '') : [d.car, d.color ? titleCase(d.color) : '', d.plate].filter(Boolean).join(' - ');
   document.getElementById('invHasDp').checked = !!(inv && inv.dp && inv.dp.amount);
   document.getElementById('invLunas').checked = !!(inv && inv.pay === 'lunas');
@@ -1837,7 +1841,7 @@ window.saveInvoice = async function(save){
     if (!c.items.length) { alert('Isi minimal 1 item.'); return; }
     if (c.items.some(it => !it.harga) && !confirm('Ada item tanpa harga. Tetap simpan?')) return;
     const invoice = { no: document.getElementById('invNo').value.trim(), date: document.getElementById('invDate').value, due: document.getElementById('invDue').value,
-      size: document.getElementById('invSize').value, items: c.items, diskon: c.diskon, keterangan: document.getElementById('invKet').value.trim(),
+      size: document.getElementById('invSize').value, items: c.items, diskon: c.diskon, diskonPct: c.diskonPct, keterangan: document.getElementById('invKet').value.trim(),
       pay: c.pay, dp: c.hasDp && c.dpAmt ? { amount: c.dpAmt, no: document.getElementById('invDpNo').value.trim(), date: document.getElementById('invDpDate').value } : null,
       pelunasan: c.lunas ? { amount: c.pelunasan, date: document.getElementById('invLunasDate').value } : null,
       subtotal: c.subtotal, total: c.total, tertagih: c.tertagih };

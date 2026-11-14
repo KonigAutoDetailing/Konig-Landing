@@ -109,7 +109,7 @@ const code = new URLSearchParams(location.search).get('code');
   const j = snap.data(), inv = j.invoice;
   const nama = j.custName ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(j.custName)) : '-';
   document.title = 'Invoice ' + inv.no + ' — KONÏG';
-  const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.disc ? money(it.disc) : 0}</td><td>-</td><td>${money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
+  const rows = (inv.items||[]).map(it => `<tr><td>${esc(it.produk)}</td><td>${esc(it.desc)}</td><td>${it.qty}</td><td>${money(it.harga)}</td><td>${it.discPct ? it.discPct + '%' : (it.disc ? money(it.disc) : 0)}</td><td>-</td><td>${money(it.qty*it.harga - (it.disc||0))}</td></tr>`).join('');
   const dmy2 = v => /^\d{4}-\d{2}-\d{2}$/.test(v||'') ? dmy(v) : esc(v||'');
   const hasDp = inv.dp && inv.dp.amount;
   const pel = inv.pay === 'lunas' ? (inv.pelunasan || { amount: Math.max(0, inv.total - (hasDp ? inv.dp.amount : 0)), date: inv.date }) : null;
@@ -144,7 +144,7 @@ a.n. PT KONIG MOBIL INDONESIA</div>
       <div class="sum">
         <table class="st">
           <tr><td>Subtotal</td><td>Rp ${money(inv.subtotal)}</td></tr>
-          ${inv.diskon ? `<tr><td>Diskon Tambahan</td><td>- Rp ${money(inv.diskon)}</td></tr>` : ''}
+          ${inv.diskon ? `<tr><td>Diskon Tambahan${inv.diskonPct ? ' (' + inv.diskonPct + '%)' : ''}</td><td>- Rp ${money(inv.diskon)}</td></tr>` : ''}
           <tr><td>Pajak</td><td>Rp 0.00</td></tr>
           <tr class="tot"><td>Total</td><td>Rp ${money(inv.total)}</td></tr>
           ${payRows ? `<tr class="sec"><td colspan="2">Pembayaran</td></tr>` + payRows : ''}
