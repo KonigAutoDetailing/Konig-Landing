@@ -582,6 +582,11 @@
       <div id="serviceDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);border-top:none;z-index:50;max-height:220px;overflow-y:auto;"></div>
     </div>
     <div class="form-group">
+      <label>Kode Voucher (opsional)</label>
+      <input type="text" id="jobVoucher" placeholder="KV-XXXXX" autocomplete="off" oninput="checkJobVoucher()" style="text-align:center;letter-spacing:2px"/>
+      <div id="jobVoucherInfo" style="display:none;font-size:12px;margin-top:2px"></div>
+    </div>
+    <div class="form-group">
       <label>Catatan</label>
       <input type="text" id="jobNote" placeholder="Ada minor scratch di kap"/>
     </div>
@@ -1629,6 +1634,7 @@ window.openNewJobModal = function() {
   setCarFields({});
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
+  document.getElementById('jobVoucher').value = ''; document.getElementById('jobVoucherInfo').style.display = 'none';
   window._repeatOf = null; window._ownerChoice = null; setCodeLocked(false); window.fillCustList(); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   selectedServices = [];
   renderServiceTags();
@@ -1655,6 +1661,7 @@ window.openEditJobModal = async function(id) {
   setCarFields(d);
   document.getElementById('jobPlate').value = d.plate || '';
   document.getElementById('jobWa').value = d.wa || '';
+  document.getElementById('jobVoucher').value = d.voucherCode || ''; window.checkJobVoucher();
   selectedServices = d.service ? d.service.split(', ').filter(Boolean) : [];
   renderServiceTags();
   document.getElementById('jobServiceInput').value = '';
@@ -1705,6 +1712,7 @@ window.saveJob = async function() {
   const wa = document.getElementById('jobWa').value.trim();
   const service = document.getElementById('jobService').value.trim();
   const note = document.getElementById('jobNote').value.trim().toUpperCase();
+  const voucherCode = (document.getElementById('jobVoucher').value || '').trim().toUpperCase();
   const editId = document.getElementById('editJobId').value;
 
   if (!car) { alert('Isi merk atau tipe mobil'); return; }
@@ -1726,7 +1734,7 @@ window.saveJob = async function() {
     if (editId) {
       let wasDone = false;
       try { const prev = await window._fbFns.getDoc(doc(window._db, 'konig_progress', editId)); const pd = prev.exists() ? prev.data() : {}; wasDone = (pd.doneSteps || []).includes('done') || pd.activeStep === 'done'; } catch(e) {}
-      const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
+      const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
       if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); justDone = editId; }
       await updateDoc(doc(window._db, 'konig_progress', editId), upd);
     } else {
@@ -1749,7 +1757,7 @@ window.saveJob = async function() {
         carry = { visits: (old.visits || []).concat([prevVisit]) };
         if (window._ownerChoice !== 'new' && normWa(old.wa) === normWa(wa)) { if (old.reviewed) carry.reviewed = old.reviewed; if (old.reviewReminder) carry.reviewReminder = old.reviewReminder; }
       }
-      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
+      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       window._repeatOf = null;
       if (nowDone) justDone = code;
       else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName };
@@ -1799,6 +1807,26 @@ function pickCust(c){
   if (c.wa) { document.getElementById('jobWa').value = c.wa; window._waPicked = true; window.updateContactBtns && window.updateContactBtns(); scheduleRepeatCheck(); }
   hideCustSuggest();
 }
+
+
+// ── KODE VOUCHER DI FORM KENDARAAN BARU ──
+function findVoucher(code){
+  code = String(code||'').trim().toUpperCase(); if (!code) return null;
+  for (const j of (window._allJobs||[])) for (const v of (j.vouchers||[])) if (v.code === code) return { ...v, jobId: j.id, owner: j };
+  return null;
+}
+window.checkJobVoucher = function(){
+  const el = document.getElementById('jobVoucher'), info = document.getElementById('jobVoucherInfo');
+  el.value = el.value.toUpperCase();
+  const code = el.value.trim();
+  if (!code) { info.style.display = 'none'; return; }
+  const v = findVoucher(code);
+  info.style.display = 'block';
+  if (!v) { info.style.color = 'var(--muted)'; info.textContent = code.length >= 8 ? '✗ Kode voucher tidak ditemukan' : ''; return; }
+  if (v.used) { info.style.color = '#f87171'; info.textContent = '✗ Voucher sudah dipakai' + (v.usedAt ? ' (' + v.usedAt + ')' : ''); return; }
+  const o = v.owner; const nm = o.custName ? (o.custTitle ? o.custTitle + ' ' : '') + titleCase(o.custName) : (o.plate || '');
+  info.style.color = '#4ade80'; info.textContent = '✓ Voucher valid: Free ' + v.service + ' (dari ' + nm + '). Otomatis dipakai di invoice.';
+};
 
 // ── DETEKSI MOBIL / CUSTOMER LAMA ──
 const normPlate = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -2199,7 +2227,9 @@ window.openInvoice = function(id, d, fromDone){
     invSizeChanged();
   }
   invPayChanged();
-  window._invData = d; renderVoucherBox(d);
+  window._invData = d;
+  if (!inv && d.voucherCode) { const v = findVoucher(d.voucherCode); if (v && !v.used) redeemVoucher({ code: v.code, service: v.service, jobId: v.jobId }); }
+  renderVoucherBox(d);
   openModal('modalInvoice');
 };
 window.saveInvoice = async function(save){
