@@ -1558,7 +1558,7 @@ window.openNewJobModal = function() {
   setCarFields({});
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
-  window._repeatOf = null; window._ownerChoice = null; document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
+  window._repeatOf = null; window._ownerChoice = null; setCodeLocked(false); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   selectedServices = [];
   renderServiceTags();
   document.getElementById('jobServiceInput').value = '';
@@ -1710,8 +1710,15 @@ function visitDate(j){ return toDateObj(j.doneAt) || toDateObj(j.createdAt); }
 function tglPanjang(d){ return d ? d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : ''; }
 let _repTimer = null;
 window.scheduleRepeatCheck = function(){ clearTimeout(_repTimer); _repTimer = setTimeout(checkRepeat, 450); };
+function setCodeLocked(on){
+  document.querySelector('#jobCodeGroup .code-opts').style.display = on ? 'none' : '';
+  if (on) document.getElementById('codeList').style.display = 'none';
+  let t = document.getElementById('codeLockNote');
+  if (!t) { t = document.createElement('div'); t.id = 'codeLockNote'; t.style.cssText = 'font-size:12px;color:#facc15;margin-top:6px'; document.getElementById('jobCodeGroup').appendChild(t); }
+  t.textContent = on ? '🔒 Mengikuti kode QR mobil ini sebelumnya' : '';
+}
 function applyRepeat(j){
-  window._repeatOf = j.id;
+  window._repeatOf = j.id; setCodeLocked(true);
   document.getElementById('jobCode').value = j.id;
   document.getElementById('jobCodeError').style.display = 'none';
   const wa = document.getElementById('jobWa').value, nm = document.getElementById('jobCustName').value;
@@ -1746,7 +1753,7 @@ function checkRepeat(){
     if (!done) {
       cls = 'rep-box warn';
       html.push(`⚠️ Mobil <b>${byPlate.plate}</b> masih tercatat <b>dalam pengerjaan</b> (kode ${byPlate.id}). Selesaikan dulu job sebelumnya.`);
-      if (window._repeatOf) { window._repeatOf = null; document.getElementById('jobCode').value = ''; }
+      if (window._repeatOf) { window._repeatOf = null; document.getElementById('jobCode').value = ''; setCodeLocked(false); }
     } else {
       if (window._repeatOf !== byPlate.id) { window._ownerChoice = null; applyRepeat(byPlate); }
       const owner = byPlate.custName ? (byPlate.custTitle ? byPlate.custTitle + ' ' : '') + titleCase(byPlate.custName) : 'tanpa nama';
@@ -1757,7 +1764,7 @@ function checkRepeat(){
         + `<div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="btn-sm" style="flex:1;${ch === 'old' ? 'background:#facc15;color:#111' : ''}" onclick="useOldOwner(true)">Pemilik sama</button><button type="button" class="btn-sm" style="flex:1;${ch === 'new' ? 'background:#facc15;color:#111' : ''}" onclick="useOldOwner(false)">Pemilik baru</button></div></div>`);
     }
   } else if (window._repeatOf) {
-    window._repeatOf = null; document.getElementById('jobCode').value = '';
+    window._repeatOf = null; document.getElementById('jobCode').value = ''; setCodeLocked(false);
   }
   let waHtml = '';
   if (wa.length >= 9) {
