@@ -1137,7 +1137,8 @@ function reviewReminders(jobs, today){
     .sort((a, b) => b.age - a.age);
 }
 function reviewMessage(r){
-  return 'Halo ' + sapa(r.j) + ',\n\nTerima kasih telah mempercayakan ' + (r.j.car || 'kendaraan Anda') + ' kepada KONIG Auto Detailing. Kami harap Anda puas dengan hasilnya.\n\nApabila berkenan, kami akan sangat menghargai ulasan Anda di Google melalui tautan berikut:\n' + REVIEW_URL + '\n\nTerima kasih atas waktunya.\n\nSalam,\nKONIG Auto Detailing';
+  const mobil = (r.j.car || 'kendaraan Anda') + (r.j.plate ? ' (' + r.j.plate + ')' : '');
+  return 'Halo ' + sapa(r.j) + ',\n\nTerima kasih telah mempercayakan ' + mobil + ' kepada KONIG Auto Detailing. Bagaimana hasil pengerjaannya setelah beberapa hari ini? Apabila ada keluhan atau hal yang ingin ditanyakan, silakan sampaikan kepada kami. Kami siap membantu.\n\nKami juga akan sangat menghargai apabila Anda berkenan memberikan ulasan di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
 }
 function renderReviewSection(list, due, today){
   const h = document.createElement('div');
