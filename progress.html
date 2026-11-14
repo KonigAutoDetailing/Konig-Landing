@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-  <title>KONÏG — Track Progress Kendaraan</title>
+  <title>KONÏG — Vehicle Progress Tracker</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="manifest" href="/progress-manifest.json?v=3">
@@ -385,13 +385,13 @@
 <div class="screen active" id="screenEnter">
   <div class="enter-box">
     <div style="font-size:36px;margin-bottom:16px">🔍</div>
-    <h1 class="enter-title">CEK PROGRESS<br/>KENDARAAN</h1>
-    <p class="enter-desc">Masukkan kode dari QR sticker yang ditempel di kendaraan kamu, atau scan QR code langsung.</p>
+    <h1 class="enter-title">TRACK YOUR<br/>VEHICLE</h1>
+    <p class="enter-desc">Enter the code from the QR sticker on your vehicle, or scan the QR code directly.</p>
     <div class="code-input-wrap">
-      <input type="text" class="code-input" id="codeInput" placeholder="Masukkan kode..." maxlength="8" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"/>
+      <input type="text" class="code-input" id="codeInput" placeholder="Enter code..." maxlength="10" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"/>
     </div>
-    <button class="btn-track" onclick="lookupCode()">Cek Sekarang →</button>
-    <div class="code-error" id="codeError">Kode tidak ditemukan. Coba periksa kembali.</div>
+    <button class="btn-track" onclick="lookupCode()">Check Now →</button>
+    <div class="code-error" id="codeError">Code not found. Please check and try again.</div>
     <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
       <a href="?admin=1" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none" onclick="showAdmin(event)">Admin Login →</a>
     </div>
@@ -416,37 +416,37 @@
     </div>
     <div class="prog-pct" id="progPct">0%</div>
     <div class="prog-status" id="progStatus">-</div>
-    <div class="prog-note" id="progNote">Memuat data...</div>
-    <div class="stage-info" id="stageInfo" style="display:none"><div class="stage-info-title">Tahap terlama dalam pengerjaan</div><div id="stageInfoText">Paint correction adalah tahap paling lama dalam proses pengerjaan, umumnya memakan waktu 3–4 hari. Setiap panel dipoles secara bertahap untuk menghilangkan swirl dan baret halus. Mohon kesabarannya, hasil akhirnya akan sepadan.</div></div>
+    <div class="prog-note" id="progNote">Loading...</div>
+    <div class="stage-info" id="stageInfo" style="display:none"><div class="stage-info-title">The longest stage of the process</div><div id="stageInfoText"></div></div>
 
     <div class="steps" id="trackSteps"></div>
     </div>
 
     <div id="trackHistory" style="display:none">
-      <div class="hist-badge">RIWAYAT PENGERJAAN</div>
+      <div class="hist-badge">SERVICE HISTORY</div>
       <div class="hist-grid">
-        <div class="hist-item"><div class="hist-k">Mobil masuk</div><div class="hist-v" id="histIn">-</div></div>
-        <div class="hist-item"><div class="hist-k">Selesai</div><div class="hist-v" id="histOut">-</div></div>
-        <div class="hist-item"><div class="hist-k">Lama pengerjaan</div><div class="hist-v" id="histDur">-</div></div>
-        <div class="hist-item"><div class="hist-k">Warna</div><div class="hist-v" id="histColor">-</div></div>
+        <div class="hist-item"><div class="hist-k">Checked in</div><div class="hist-v" id="histIn">-</div></div>
+        <div class="hist-item"><div class="hist-k">Completed</div><div class="hist-v" id="histOut">-</div></div>
+        <div class="hist-item"><div class="hist-k">Duration</div><div class="hist-v" id="histDur">-</div></div>
+        <div class="hist-item"><div class="hist-k">Color</div><div class="hist-v" id="histColor">-</div></div>
       </div>
-      <div class="hist-k" style="margin-top:18px">Layanan & produk</div>
+      <div class="hist-k" style="margin-top:18px">Services & products</div>
       <div class="hist-tags" id="histServices"></div>
       <div class="hist-review">
-        <div class="hist-review-t">Bagaimana hasilnya?</div>
-        <div class="hist-review-d">Setiap review sangat berharga buat perkembangan KONIG.</div>
-        <a id="histReviewBtn" class="hist-review-btn" target="_blank" rel="noopener">Tulis Review di Google</a>
+        <div class="hist-review-t">How was the result?</div>
+        <div class="hist-review-d">Every review means a lot to the growth of KONIG.</div>
+        <a id="histReviewBtn" class="hist-review-btn" target="_blank" rel="noopener">Write a Google Review</a>
       </div>
-      <a class="hist-wa" href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20mau%20booking%20lagi" target="_blank" rel="noopener">Booking Lagi via WhatsApp</a>
+      <a class="hist-wa" href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20mau%20booking%20lagi" target="_blank" rel="noopener">Book Again via WhatsApp</a>
     </div>
 
     <div class="photos-section" id="photosSection" style="display:none">
-      <div class="photos-title">Dokumentasi</div>
+      <div class="photos-title">Documentation</div>
       <div class="photos-grid" id="photosGrid"></div>
     </div>
 
     <div style="text-align:center;margin-top:28px">
-      <button class="btn-back" onclick="showScreen('screenEnter')">← Kembali</button>
+      <button class="btn-back" onclick="showScreen('screenEnter')">← Back</button>
     </div>
   </div>
 </div>
@@ -553,7 +553,7 @@
     <div class="form-group">
       <label>Nama Customer</label>
       <div style="display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px">
-        <select id="jobCustTitle" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;padding:12px 8px;outline:none">
+        <select id="jobCustTitle" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;padding:0 6px;align-self:stretch;outline:none;text-align:center;text-align-last:center;-webkit-appearance:none;appearance:none;border-radius:0;width:100%;box-sizing:border-box">
           <option value="Mr.">Mr.</option><option value="Ms.">Ms.</option>
         </select>
         <input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off" list="custList" oninput="custPicked()"/><datalist id="custList"></datalist>
@@ -723,9 +723,9 @@ window.STEPS = [
 ];
 // Layanan cepat (Premium Wash, Interior, Window Coating, Engine) cukup 3 tahap
 window.SIMPLE_STEPS = [
-  { id: 'received', name: 'Diterima',   pct: 5,   icon: '📋' },
-  { id: 'working',  name: 'Pengerjaan', pct: 50,  icon: '🧽' },
-  { id: 'done',     name: 'Selesai',    pct: 100, icon: '🎉' },
+  { id: 'received', name: 'Received',    pct: 5,   icon: '📋' },
+  { id: 'working',  name: 'In Progress', pct: 50,  icon: '🧽' },
+  { id: 'done',     name: 'Completed',   pct: 100, icon: '🎉' },
 ];
 // Express Polish: received → interior cleaning + wash → 1 step paint correction → final qc → done
 window.EXPRESS_STEPS = [
@@ -740,7 +740,7 @@ window.WASH_STEPS = [
   { id: 'received', name: 'Received',                 pct: 5,   icon: '📋' },
   { id: 'washing',  name: 'Interior Cleaning + Wash', pct: 45,  icon: '🧽' },
   { id: 'qc',       name: 'Final QC',                 pct: 90,  icon: '✨' },
-  { id: 'done',     name: 'Selesai',                  pct: 100, icon: '🎉' },
+  { id: 'done',     name: 'Completed',                pct: 100, icon: '🎉' },
 ];
 window.isPremiumWash = function(service){
   const sv = String(service||'').split(', ').filter(Boolean);
@@ -797,7 +797,9 @@ window.lookupCode = async function() {
 
 // Setelah 5 hari sejak selesai, halaman customer berubah jadi riwayat
 function toDateObj(t){ try { return t && t.toDate ? t.toDate() : (t ? new Date(t) : null); } catch(e) { return null; } }
-function fmtTgl(d){ return d ? d.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta' }) : '-'; }
+const COLOR_EN = { 'HITAM':'Black','PUTIH':'White','PEARL WHITE':'Pearl White','SILVER':'Silver','ABU-ABU':'Grey','ABU-ABU GELAP':'Dark Grey','MERAH':'Red','MAROON':'Maroon','BIRU':'Blue','NAVY':'Navy','HIJAU':'Green','KUNING':'Yellow','ORANYE':'Orange','COKLAT':'Brown','GOLD':'Gold','CHAMPAGNE':'Champagne','UNGU':'Purple','HITAM DOFF':'Matte Black','ABU-ABU DOFF':'Matte Grey','TWO TONE':'Two Tone' };
+function colorEn(c){ const k = String(c||'').trim().toUpperCase(); return COLOR_EN[k] || titleCase(k); }
+function fmtTgl(d){ return d ? d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta' }) : '-'; }
 function renderHistory(data){
   const done = (data.doneSteps||[]).includes('done');
   const out = toDateObj(data.doneAt) || (done ? toDateObj(data.updatedAt) : null);
@@ -808,9 +810,9 @@ function renderHistory(data){
   document.getElementById('histIn').textContent = fmtTgl(inn);
   document.getElementById('histOut').textContent = fmtTgl(out);
   let dur = '-';
-  if (inn) { const l = lamaKerja({ createdAt: inn, doneAt: out }); dur = l.charAt(0).toUpperCase() + l.slice(1); }
+  if (inn) { const d0 = new Date(inn.getFullYear(), inn.getMonth(), inn.getDate()), d1 = new Date(out.getFullYear(), out.getMonth(), out.getDate()); const n = Math.round((d1 - d0) / 864e5); dur = n <= 0 ? 'Same day' : n + (n === 1 ? ' day' : ' days'); }
   document.getElementById('histDur').textContent = dur;
-  document.getElementById('histColor').textContent = data.color || '-';
+  document.getElementById('histColor').textContent = data.color ? colorEn(data.color) : '-';
   const tags = document.getElementById('histServices'); tags.textContent = '';
   String(data.service||'').split(', ').filter(Boolean).forEach(x => { const sp = document.createElement('span'); sp.textContent = x; tags.appendChild(sp); });
   if (!tags.children.length) tags.textContent = '-';
@@ -820,18 +822,18 @@ function renderHistory(data){
 }
 
 function renderTrack(code, data) {
-  document.getElementById('trackCode').textContent = 'Kode: ' + code;
+  document.getElementById('trackCode').textContent = 'Code: ' + code;
   document.getElementById('trackCar').textContent = data.car || '-';
   const tc = document.getElementById('trackColor');
   const warna = String(data.color||'').trim();
-  tc.textContent = warna ? 'Warna: ' + titleCase(warna) : '';
+  tc.textContent = warna ? 'Color: ' + colorEn(warna) : '';
   tc.style.display = warna ? 'block' : 'none';
   document.getElementById('trackPlate').textContent = data.plate || '-';
   document.getElementById('trackService').textContent = data.service || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
   const isHist = renderHistory(data);
   document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
-  document.getElementById('trackHelloSub').textContent = isHist ? 'Terima kasih sudah mempercayakan mobil Anda ke KONIG.' : 'Mobil Anda ada di tangan yang tepat. Pantau progresnya di sini.';
+  document.getElementById('trackHelloSub').textContent = isHist ? 'Thank you for trusting your car to KONIG.' : 'Your car is in good hands. Track its progress here.';
   if (isHist) { showScreen('screenTrack'); return; }
   document.getElementById('trackLive').style.display = ''; document.getElementById('trackHistory').style.display = 'none';
 
@@ -841,7 +843,7 @@ function renderTrack(code, data) {
   const activeStep = data.activeStep || null;
 
   let pct = 0;
-  let statusName = 'Menunggu';
+  let statusName = 'Waiting';
   let note = data.note || '';
 
   if (activeStep) {
@@ -858,12 +860,12 @@ function renderTrack(code, data) {
   const countUp = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); pctEl.textContent = Math.round(pct * e) + '%'; if (k < 1) requestAnimationFrame(countUp); };
   requestAnimationFrame(countUp);
   document.getElementById('progStatus').textContent = statusName;
-  document.getElementById('progNote').textContent = note || (pct === 100 ? 'Kendaraan sudah selesai dan siap untuk diambil.' : 'Kendaraan sedang dalam proses pengerjaan.');
+  document.getElementById('progNote').textContent = note || (pct === 100 ? 'Your vehicle is completed and ready for pickup.' : 'Your vehicle is currently being worked on.');
 
   document.getElementById('stageInfo').style.display = (activeStep === 'correction' && pct < 100) ? 'block' : 'none';
   document.getElementById('stageInfoText').textContent = window.isExpressPolish(data.service)
-    ? 'Paint correction adalah tahap paling lama dalam proses Express Polish, umumnya memakan waktu beberapa jam. Kendaraan tetap dijadwalkan selesai dan dapat diambil di hari yang sama. Mohon kesabarannya, hasil akhirnya akan sepadan.'
-    : 'Paint correction adalah tahap paling lama dalam proses pengerjaan, umumnya memakan waktu 3–4 hari. Setiap panel dipoles secara bertahap untuk menghilangkan swirl dan baret halus. Mohon kesabarannya, hasil akhirnya akan sepadan.';
+    ? 'Paint correction is the longest stage of the Express Polish process and usually takes a few hours. Your vehicle is still scheduled to be completed and ready for pickup on the same day. Thank you for your patience, the result will be worth it.'
+    : 'Paint correction is the longest stage of the process and usually takes 3–4 days. Every panel is polished step by step to remove swirl marks and fine scratches. Thank you for your patience, the result will be worth it.';
 
   // Steps list
   const stepsEl = document.getElementById('trackSteps');
@@ -878,7 +880,7 @@ function renderTrack(code, data) {
       <div class="step-dot">${isDone ? '✓' : stepIcon(s)}</div>
       <div class="step-info">
         <div class="step-name">${s.name}</div>
-        <div class="step-time">${isDone ? (data.stepTimes?.[s.id] || '') : isActive ? 'Sedang dikerjakan' : 'Menunggu'}</div>
+        <div class="step-time">${isDone ? (data.stepTimes?.[s.id] || '') : isActive ? 'In progress' : 'Waiting'}</div>
       </div>
       <div class="step-pct">${s.pct}%</div>
     `;
