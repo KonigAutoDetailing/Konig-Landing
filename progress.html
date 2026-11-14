@@ -618,7 +618,7 @@ window.SIMPLE_STEPS = [
 window.EXPRESS_STEPS = [
   { id: 'received',   name: 'Received',              pct: 5,   icon: '📋' },
   { id: 'washing',    name: 'Interior Cleaning & Wash', pct: 25,  icon: '🧽' },
-  { id: 'correction', name: '1 Step Paint Correction', pct: 60,  icon: '⚙️' },
+  { id: 'correction', name: '1 Step Paint Correction', pct: 60,  icon: '🔄' },
   { id: 'qc',         name: 'Final QC',              pct: 90,  icon: '✨' },
   { id: 'done',       name: 'Ready for Pickup',      pct: 100, icon: '🎉' },
 ];
@@ -832,7 +832,7 @@ window.loadJobs = async function() {
 
 
 // ── UPDATE SORE VIA WA ──
-const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'⚙️ Paint correction (mesin poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
+const STEP_ID = { working:'Sedang dikerjakan', received:'Kendaraan diterima & dicek', washing:'Cuci & dekontaminasi', correction:'🔄 Paint correction (mesin poles)', finalwash:'Final wash', coating:'Coating & curing', qc:'Final QC', done:'Selesai, siap diambil' };
 function waNumber(raw){
   let n = String(raw||'').replace(/[^0-9]/g,'');
   if(n.startsWith('0')) n = '62' + n.slice(1);
