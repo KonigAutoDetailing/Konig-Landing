@@ -365,7 +365,7 @@
     <div class="prog-pct" id="progPct">0%</div>
     <div class="prog-status" id="progStatus">-</div>
     <div class="prog-note" id="progNote">Memuat data...</div>
-    <div class="stage-info" id="stageInfo" style="display:none"><div class="stage-info-title">Tahap terlama dalam pengerjaan</div><div>Paint correction adalah tahap paling lama dalam proses pengerjaan, umumnya memakan waktu 3–4 hari. Setiap panel dipoles secara bertahap untuk menghilangkan swirl dan baret halus. Mohon kesabarannya, hasil akhirnya akan sepadan.</div></div>
+    <div class="stage-info" id="stageInfo" style="display:none"><div class="stage-info-title">Tahap terlama dalam pengerjaan</div><div id="stageInfoText">Paint correction adalah tahap paling lama dalam proses pengerjaan, umumnya memakan waktu 3–4 hari. Setiap panel dipoles secara bertahap untuk menghilangkan swirl dan baret halus. Mohon kesabarannya, hasil akhirnya akan sepadan.</div></div>
 
     <div class="steps" id="trackSteps"></div>
     </div>
@@ -740,6 +740,9 @@ function renderTrack(code, data) {
   document.getElementById('progNote').textContent = note || (pct === 100 ? 'Kendaraan sudah selesai dan siap untuk diambil.' : 'Kendaraan sedang dalam proses pengerjaan.');
 
   document.getElementById('stageInfo').style.display = (activeStep === 'correction' && pct < 100) ? 'block' : 'none';
+  document.getElementById('stageInfoText').textContent = window.isExpressPolish(data.service)
+    ? 'Paint correction adalah tahap paling lama dalam proses Express Polish, umumnya memakan waktu beberapa jam. Kendaraan tetap dijadwalkan selesai dan dapat diambil di hari yang sama. Mohon kesabarannya, hasil akhirnya akan sepadan.'
+    : 'Paint correction adalah tahap paling lama dalam proses pengerjaan, umumnya memakan waktu 3–4 hari. Setiap panel dipoles secara bertahap untuk menghilangkan swirl dan baret halus. Mohon kesabarannya, hasil akhirnya akan sepadan.';
 
   // Steps list
   const stepsEl = document.getElementById('trackSteps');
