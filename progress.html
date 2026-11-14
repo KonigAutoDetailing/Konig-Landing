@@ -604,7 +604,7 @@
     </div>
     <div class="form-group">
       <label>Kode Voucher / Referral (opsional)</label>
-      <input type="text" id="jobVoucher" placeholder="KV-XXXXX / kode referral" autocomplete="off" oninput="checkJobVoucher()" style="text-align:center;letter-spacing:2px"/>
+      <div style="position:relative;min-width:0"><input type="text" id="jobVoucher" placeholder="KV-XXXXX / kode referral" autocomplete="off" oninput="checkJobVoucher();voucherSuggest()" onfocus="voucherSuggest()" onblur="setTimeout(hideVoucherSuggest,180)" style="text-align:center;letter-spacing:2px"/><div id="voucherSuggest" class="cust-sug"></div></div>
       <div id="jobVoucherInfo" style="display:none;font-size:12px;margin-top:2px"></div>
     </div>
     <div class="form-group">
@@ -1951,6 +1951,33 @@ function customerIndex(){
   return [...map.values()].sort((a,b) => (b.t||0) - (a.t||0));
 }
 window.fillCustList = function(){ window._custIdx = customerIndex(); };
+// Dropdown voucher & kode promo yang masih berlaku
+window.hideVoucherSuggest = function(){ const b = document.getElementById('voucherSuggest'); if (b) b.style.display = 'none'; };
+window.voucherSuggest = function(){
+  const box = document.getElementById('voucherSuggest'); if (!box) return;
+  const q = document.getElementById('jobVoucher').value.trim().toUpperCase();
+  const plate = normPlate(document.getElementById('jobPlate') ? document.getElementById('jobPlate').value : ''), wa = normWa(document.getElementById('jobWa') ? document.getElementById('jobWa').value : '');
+  const editId = (document.getElementById('editJobId') || {}).value || '';
+  const items = [];
+  (window._allJobs||[]).forEach(j => jobVouchers(j).forEach(v => {
+    if (v.used) return;
+    const mine = (plate && normPlate(j.plate) === plate) || (wa.length >= 9 && normWa(j.wa) === wa);
+    const owner = [j.custTitle, j.custName].filter(Boolean).join(' ') || '-';
+    items.push({ code: v.code, title: 'Free ' + v.service, sub: (mine ? '★ Milik mobil ini · ' : 'Dari ') + owner + (j.plate ? ' · ' + j.plate : ''), mine });
+  }));
+  (window._promos||[]).filter(promoUsable).forEach(p => items.push({ code: p.code, title: promoBenefit(p), sub: 'Kode promo/referral' + (p.owner ? ' · ' + p.owner : '') + (p.max ? ' · sisa ' + (p.max - (p.uses||[]).length) + 'x' : ''), mine: false }));
+  const list = items.filter(it => !q || it.code.includes(q) || it.title.toUpperCase().includes(q) || it.sub.toUpperCase().includes(q))
+    .sort((a,b) => (b.mine - a.mine)).slice(0, 12);
+  if (!list.length || (list.length === 1 && list[0].code === q)) { box.style.display = 'none'; return; }
+  box.innerHTML = '';
+  list.forEach(it => {
+    const d = document.createElement('div');
+    d.innerHTML = `<b style="letter-spacing:1px">${it.code}</b> — ${it.title.replace(/</g,'&lt;')}<small>${it.sub.replace(/</g,'&lt;')}</small>`;
+    d.onmousedown = e => { e.preventDefault(); document.getElementById('jobVoucher').value = it.code; hideVoucherSuggest(); checkJobVoucher(); if (typeof checkRepeat === 'function') checkRepeat(); };
+    box.appendChild(d);
+  });
+  box.style.display = 'block';
+};
 window.hideCustSuggest = function(){ const b = document.getElementById('custSuggest'); if (b) b.style.display = 'none'; };
 window.custSuggest = function(){
   const box = document.getElementById('custSuggest');
