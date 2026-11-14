@@ -126,6 +126,10 @@
     #modalInvoice .inv-pay label{white-space:normal;font-size:14px}
     #modalInvoice #invDpNo, #modalInvoice #invNo{font-size:13px;padding:0 6px}
     #modalInvoice .inv-btn-main, #modalInvoice .inv-btn-ghost{min-height:52px;letter-spacing:1px;white-space:nowrap;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2}
+    .cust-sug{display:none;position:absolute;left:0;right:0;top:100%;z-index:50;background:#15151d;border:1px solid var(--purple);border-top:none;max-height:220px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .cust-sug div{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:14px;color:#fff;text-align:left}
+    .cust-sug div small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+    .cust-sug div:active{background:rgba(124,58,237,.25)}
     .code-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
     .code-opts button{background:rgba(124,58,237,.15);border:1px solid rgba(167,139,250,.4);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px;padding:9px 4px;cursor:pointer;line-height:1.2;white-space:nowrap}
     .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
@@ -556,7 +560,7 @@
         <select id="jobCustTitle" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;padding:0 6px;align-self:stretch;outline:none;text-align:center;text-align-last:center;-webkit-appearance:none;appearance:none;border-radius:0;width:100%;box-sizing:border-box">
           <option value="Mr.">Mr.</option><option value="Ms.">Ms.</option>
         </select>
-        <input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off" list="custList" oninput="custPicked()"/><datalist id="custList"></datalist>
+        <div style="position:relative;min-width:0"><input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off" oninput="custSuggest()" onfocus="custSuggest()" onblur="setTimeout(hideCustSuggest,180)"/><div id="custSuggest" class="cust-sug"></div></div>
       </div>
     </div>
     <div class="form-group" style="position:relative;">
@@ -1740,16 +1744,28 @@ function customerIndex(){
   });
   return [...map.values()].sort((a,b) => (b.t||0) - (a.t||0));
 }
-window.fillCustList = function(){
-  const dl = document.getElementById('custList'); if (!dl) return;
-  dl.innerHTML = customerIndex().map(c => `<option value="${c.name.replace(/"/g,'&quot;')}">${c.title} ${c.name} · ${c.wa || '-'}${c.car ? ' · ' + c.car + ' ' + c.plate : ''}</option>`).join('');
+window.fillCustList = function(){ window._custIdx = customerIndex(); };
+window.hideCustSuggest = function(){ const b = document.getElementById('custSuggest'); if (b) b.style.display = 'none'; };
+window.custSuggest = function(){
+  const box = document.getElementById('custSuggest');
+  const q = document.getElementById('jobCustName').value.trim().toUpperCase();
+  const list = (window._custIdx || customerIndex()).filter(c => !q || c.name.includes(q)).slice(0, 8);
+  if (!list.length || (list.length === 1 && list[0].name === q)) { box.style.display = 'none'; return; }
+  box.innerHTML = '';
+  list.forEach(c => {
+    const d = document.createElement('div');
+    d.innerHTML = `${c.title} ${c.name.replace(/</g,'&lt;')}<small>${c.wa || '-'}${c.car ? ' · ' + c.car + ' ' + c.plate : ''}</small>`;
+    d.onmousedown = d.ontouchstart = e => { e.preventDefault(); pickCust(c); };
+    box.appendChild(d);
+  });
+  box.style.display = 'block';
 };
-window.custPicked = function(){
-  const nm = document.getElementById('jobCustName').value.trim().toUpperCase(); if (!nm) return;
-  const c = customerIndex().find(x => x.name === nm); if (!c) return;
+function pickCust(c){
+  document.getElementById('jobCustName').value = c.name;
   document.getElementById('jobCustTitle').value = c.title;
   if (c.wa) { document.getElementById('jobWa').value = c.wa; window._waPicked = true; window.updateContactBtns && window.updateContactBtns(); scheduleRepeatCheck(); }
-};
+  hideCustSuggest();
+}
 
 // ── DETEKSI MOBIL / CUSTOMER LAMA ──
 const normPlate = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
