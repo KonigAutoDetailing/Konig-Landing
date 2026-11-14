@@ -543,7 +543,7 @@
     </div>
     <div class="form-group">
       <label>Plat Nomor</label>
-      <input type="text" id="jobPlate" placeholder="B 1234 ABC" style="text-transform:uppercase;font-size:18px;letter-spacing:2px" oninput="scheduleRepeatCheck()"/>
+      <div style="position:relative;min-width:0"><input type="text" id="jobPlate" placeholder="B 1234 ABC" autocomplete="off" style="text-transform:uppercase;font-size:18px;letter-spacing:2px" oninput="scheduleRepeatCheck(); plateSuggest()" onfocus="plateSuggest()" onblur="setTimeout(()=>{document.getElementById('plateSuggest').style.display='none'},180)"/><div id="plateSuggest" class="cust-sug"></div></div>
     </div>
     <div id="repeatNotice" style="display:none"></div>
     <input type="hidden" id="jobCar"/>
@@ -1177,9 +1177,11 @@ function isWashJob(j){ return isQuick(j) && /Wash|Interior/i.test(String(j.servi
 // Premium Wash / Interior Detailing yang tidak ditandai selesai dianggap selesai jam 17:00 di hari mobil masuk
 function autoWashDone(j){
   if (!isWashJob(j) || (j.doneSteps||[]).includes('done')) return false;
-  const created = tsDay(j.createdAt); if (!created) return false;
-  const now = new Date(Date.now()+7*3600e3), today = now.toISOString().slice(0,10);
-  return created < today || (created === today && now.getUTCHours() >= 17);
+  const c = toDateObj(j.createdAt); if (!c) return false;
+  // Selesai otomatis jam 17:00 WIB di hari mobil masuk; kalau masuk setelah 17:00, jam 17:00 besoknya
+  const cw = new Date(c.getTime() + 7*3600e3);
+  const close = Date.UTC(cw.getUTCFullYear(), cw.getUTCMonth(), cw.getUTCDate() + (cw.getUTCHours() >= 17 ? 1 : 0), 17) - 7*3600e3;
+  return Date.now() >= close;
 }
 window.autoCloseWashJobs = async function(jobs){
   const { doc, updateDoc } = window._fbFns;
@@ -1848,11 +1850,41 @@ window.custSuggest = function(){
   });
   box.style.display = 'block';
 };
+
+// Mobil milik customer yang dipilih (dropdown di kolom plat)
+function carsOfCustomer(){
+  const wa = normWa(document.getElementById('jobWa').value), nm = document.getElementById('jobCustName').value.trim().toUpperCase();
+  if (wa.length < 6 && !nm) return [];
+  const seen = new Map();
+  (window._allJobs||[]).filter(isRealCustomer).forEach(j => {
+    if ((wa.length >= 6 && normWa(j.wa) === wa) || (nm && String(j.custName||'').trim().toUpperCase() === nm)) {
+      const k = normPlate(j.plate); if (!k) return;
+      const prev = seen.get(k); if (!prev || (visitDate(j)||0) > (visitDate(prev)||0)) seen.set(k, j);
+    }
+  });
+  return [...seen.values()].sort((a,b) => (visitDate(b)||0) - (visitDate(a)||0));
+}
+window.plateSuggest = function(){
+  const box = document.getElementById('plateSuggest'); if (!box) return;
+  if (document.getElementById('editJobId').value) { box.style.display = 'none'; return; }
+  const q = normPlate(document.getElementById('jobPlate').value);
+  const cars = carsOfCustomer().filter(j => !q || normPlate(j.plate).includes(q));
+  if (!cars.length || (cars.length === 1 && normPlate(cars[0].plate) === q)) { box.style.display = 'none'; return; }
+  box.innerHTML = '';
+  cars.forEach(j => {
+    const d = document.createElement('div');
+    d.innerHTML = `${j.plate}<small>${j.car || '-'}${j.color ? ' · ' + titleCase(j.color) : ''} · ${sejakLabel(visitDate(j))}</small>`;
+    d.onmousedown = d.ontouchstart = e => { e.preventDefault(); document.getElementById('jobPlate').value = j.plate; box.style.display = 'none'; checkRepeat(); };
+    box.appendChild(d);
+  });
+  box.style.display = 'block';
+};
 function pickCust(c){
   document.getElementById('jobCustName').value = c.name;
   document.getElementById('jobCustTitle').value = c.title;
   if (c.wa) { document.getElementById('jobWa').value = c.wa; window._waPicked = true; window.updateContactBtns && window.updateContactBtns(); scheduleRepeatCheck(); }
   hideCustSuggest();
+  if (!document.getElementById('jobPlate').value.trim() && carsOfCustomer().length) { const pl = document.getElementById('jobPlate'); pl.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => { pl.focus(); plateSuggest(); }, 350); }
 }
 
 
