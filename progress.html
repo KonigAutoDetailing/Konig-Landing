@@ -534,7 +534,7 @@
         <select id="jobCustTitle" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;padding:12px 8px;outline:none">
           <option value="Mr.">Mr.</option><option value="Ms.">Ms.</option>
         </select>
-        <input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off"/>
+        <input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off" list="custList" oninput="custPicked()"/><datalist id="custList"></datalist>
       </div>
     </div>
     <div class="form-group" style="position:relative;">
@@ -1570,7 +1570,7 @@ window.openNewJobModal = function() {
   setCarFields({});
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
-  window._repeatOf = null; window._ownerChoice = null; setCodeLocked(false); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
+  window._repeatOf = null; window._ownerChoice = null; setCodeLocked(false); window.fillCustList(); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   selectedServices = [];
   renderServiceTags();
   document.getElementById('jobServiceInput').value = '';
@@ -1705,6 +1705,27 @@ window.saveJob = async function() {
   btn.textContent = 'Simpan →'; btn.disabled = false;
 }
 
+
+
+// ── DAFTAR CUSTOMER (dropdown nama → isi nomor WA otomatis) ──
+function customerIndex(){
+  const map = new Map();
+  (window._allJobs||[]).slice().sort((a,b) => (visitDate(a)||0) - (visitDate(b)||0)).forEach(j => {
+    const nm = String(j.custName||'').trim().toUpperCase(); if (!nm) return;
+    map.set(nm + '|' + normWa(j.wa), { name: nm, title: j.custTitle || 'Mr.', wa: j.wa || '', car: j.car || '', plate: j.plate || '', t: visitDate(j) });
+  });
+  return [...map.values()].sort((a,b) => (b.t||0) - (a.t||0));
+}
+window.fillCustList = function(){
+  const dl = document.getElementById('custList'); if (!dl) return;
+  dl.innerHTML = customerIndex().map(c => `<option value="${c.name.replace(/"/g,'&quot;')}">${c.title} ${c.name} · ${c.wa || '-'}${c.car ? ' · ' + c.car + ' ' + c.plate : ''}</option>`).join('');
+};
+window.custPicked = function(){
+  const nm = document.getElementById('jobCustName').value.trim().toUpperCase(); if (!nm) return;
+  const c = customerIndex().find(x => x.name === nm); if (!c) return;
+  document.getElementById('jobCustTitle').value = c.title;
+  if (c.wa) { document.getElementById('jobWa').value = c.wa; window._waPicked = true; window.updateContactBtns && window.updateContactBtns(); scheduleRepeatCheck(); }
+};
 
 // ── DETEKSI MOBIL / CUSTOMER LAMA ──
 const normPlate = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
