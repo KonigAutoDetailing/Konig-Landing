@@ -1070,7 +1070,7 @@ window.renderJobList = function(){
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
         </div>
-        ${j._vi != null ? `<div class="job-actions">${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&v=${j._vi}&a=1" target="_blank">📄 Invoice</a>` : '<span style="font-size:12px;color:var(--muted)">Tanpa invoice</span>'}</div>` : `<div class="job-actions">
+        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions">${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span style="font-size:12px;color:var(--muted)">Tanpa invoice</span>'}<span style="font-size:11px;color:var(--muted);align-self:center">🔒 Terkunci (lebih dari 3 hari)</span></div>` : `<div class="job-actions">
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
