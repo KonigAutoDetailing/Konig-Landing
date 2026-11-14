@@ -1087,7 +1087,7 @@ function isCoatingJob(service){ return String(service||'').split(', ').some(x =>
 function welcomeMessage(j){
   const mobil = (j.car || 'mobilnya') + (j.plate ? ' (' + j.plate + ')' : '');
   const url = location.origin + '/progress?code=' + j.id;
-  return 'Halo ' + sapa(j) + ', selamat datang di KONIG Auto Detailing 🙏\n\nMakasih sudah mempercayakan ' + mobil + ' ke kami. Tenang aja, mobilnya ada di tangan yang tepat — tim kami kerjakan dengan teliti sesuai standar KONIG.\n\nProgres pengerjaannya bisa Kakak pantau kapan aja di sini:\n' + url + '\n\nKami juga akan kirim update setiap beberapa hari ya.\n\n— KONIG Auto Detailing';
+  return 'Halo ' + sapa(j) + ', selamat datang di KONIG Auto Detailing 🙏\n\nMakasih sudah mempercayakan ' + mobil + ' ke kami. Tenang aja, mobilnya ada di tangan yang tepat — tim kami kerjakan dengan teliti sesuai standar KONIG.\n\nProgres pengerjaannya bisa dipantau kapan aja di sini:\n' + url + '\n\n' + (isCoatingJob(j.service) ? 'Kami juga akan kirim update setiap beberapa hari ya.' : 'Nanti kami kabari lagi begitu mobilnya selesai ya.') + '\n\n— KONIG Auto Detailing';
 }
 window.openWelcome = function(j){
   const list = document.getElementById('waList');
@@ -1497,7 +1497,7 @@ window.saveJob = async function() {
       }
       await setDoc(doc(window._db, 'konig_progress', code), { car, brand, model, color, custTitle, custName, plate, wa, service, note, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       if (nowDone) justDone = code;
-      else if (isCoatingJob(service)) window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName };
+      else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName };
     }
     closeModal('modalJob');
     loadJobs();
