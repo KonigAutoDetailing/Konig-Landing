@@ -1658,8 +1658,8 @@ window.openWaUpdate = async function(onlyId){
     if(onlyId){ if(j.id === onlyId) jobs.push(j); return; }
     if(j.lastWaUpdate === today) return; // sudah dikirim / dihapus dari daftar hari ini
     if(done){ if((tsDay(j.doneAt) || tsDay(j.updatedAt)) === today) jobs.push(j); return; }
-    if(isQuick(j) || autoWashDone(j)) return;
-    // Coating: update 1x di hari ke-7 (sekalian reminder boleh dicuci); poles: tiap 3 hari
+    if(autoWashDone(j)) return;
+    // Coating: update hari ke-7 (sekalian reminder boleh dicuci); semua lainnya: 3 hari
     const base = j.lastWaUpdate || tsDay(j.createdAt);
     const interval = isCoatingJob(j.service) ? 7 : 3;
     if (base && dayDiff(base, today) >= interval) jobs.push(j); });
