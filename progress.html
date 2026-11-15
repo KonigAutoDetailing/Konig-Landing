@@ -603,7 +603,7 @@
     <datalist id="brandList"></datalist><datalist id="modelList"></datalist><datalist id="colorList"></datalist>
     <div class="form-group">
       <label>No. WhatsApp</label>
-      <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel" oninput="window._waPicked=false; updateContactBtns(); scheduleRepeatCheck()"/>
+      <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel" oninput="window._waPicked=false; updateContactBtns(); scheduleRepeatCheck(); window.showCarHistory && window.showCarHistory()"/>
     </div>
     <div style="display:flex;gap:8px;margin:-6px 0 14px;flex-wrap:wrap">
       <button type="button" id="btnPickContact" style="display:none;background:transparent;border:1px solid var(--border);color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:9px 12px;cursor:pointer" onclick="pickContact()">📇 Ambil dari Kontak HP</button>
@@ -616,14 +616,24 @@
         <select id="jobCustTitle" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;padding:0 6px;align-self:stretch;outline:none;text-align:center;text-align-last:center;-webkit-appearance:none;appearance:none;border-radius:0;width:100%;box-sizing:border-box">
           <option value="Mr.">Mr.</option><option value="Ms.">Ms.</option>
         </select>
-        <div style="position:relative;min-width:0"><input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off" oninput="custSuggest()" onfocus="custSuggest()" onblur="setTimeout(hideCustSuggest,180)"/><div id="custSuggest" class="cust-sug"></div></div>
+        <div style="position:relative;min-width:0"><input type="text" id="jobCustName" placeholder="Nama customer" autocomplete="off" oninput="custSuggest(); window.showCarHistory && window.showCarHistory()" onfocus="custSuggest()" onblur="setTimeout(hideCustSuggest,180)"/><div id="custSuggest" class="cust-sug"></div></div>
       </div>
     </div>
     <div style="margin:-4px 0 14px;padding:10px 12px;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:6px">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--orange)">
         <input type="checkbox" id="jobDpOnly" onchange="toggleDpOnly(this.checked)" style="width:16px;height:16px;accent-color:var(--orange)"/>
-        💰 DP dulu — kendaraan & layanan belum ditentukan
+        💰 DP dulu — kendaraan & layanan bisa belum ditentukan
       </label>
+      <div id="dpNominalRow" style="display:none;margin-top:10px">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:1px">NOMINAL DP (Rp)</label>
+        <input type="number" id="jobDpNominal" placeholder="500000" inputmode="numeric" min="0"
+          style="width:100%;background:var(--dark);border:1px solid rgba(251,146,60,0.4);border-radius:6px;padding:10px 12px;color:var(--white);font-size:15px;font-family:'Barlow',sans-serif"/>
+      </div>
+    </div>
+    <!-- Pilih mobil dari history customer -->
+    <div id="carHistoryRow" style="display:none;margin:-4px 0 14px;padding:10px 12px;background:rgba(123,47,190,0.08);border:1px solid rgba(123,47,190,0.25);border-radius:6px">
+      <div style="font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">🚗 PILIH MOBIL DARI HISTORY</div>
+      <div id="carHistoryList" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
     <div class="form-group" style="position:relative;">
       <label>Layanan</label>
@@ -1906,17 +1916,53 @@ window.deleteJob = async function(){
 
 // ── KONTAK HP ──
 window.toggleDpOnly = function(on){
-  const carFields = ['jobBrand','jobModel','jobColor','jobPlate'];
-  const carRows = document.querySelectorAll('#modalJob .form-group');
-  // hide/show car-related groups
+  // Show/hide nominal DP field
+  const dpRow = document.getElementById('dpNominalRow');
+  if (dpRow) dpRow.style.display = on ? 'block' : 'none';
+  if (!on) { const n = document.getElementById('jobDpNominal'); if(n) n.value = ''; }
+  // Update car field labels to show optional when DP mode
   ['jobBrand','jobModel','jobColor','jobPlate'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      let grp = el.closest('.form-group') || el.closest('.form-row2');
-      if (grp) grp.style.display = on ? 'none' : '';
+      const grp = el.closest('.form-group') || el.closest('.form-row2');
+      if (grp) {
+        const lbl = grp.querySelector('label');
+        if (lbl) {
+          if (on) { if (!lbl.dataset.origText) lbl.dataset.origText = lbl.textContent; lbl.textContent = lbl.dataset.origText + ' (opsional)'; }
+          else if (lbl.dataset.origText) { lbl.textContent = lbl.dataset.origText; }
+        }
+      }
     }
   });
-  document.getElementById('jobCar').value = '';
+};
+
+// Show car history dropdown when WA or name is known
+window.showCarHistory = function(){
+  const cars = carsOfCustomer();
+  const row = document.getElementById('carHistoryRow');
+  const list = document.getElementById('carHistoryList');
+  if (!row || !list) return;
+  if (!cars.length) { row.style.display = 'none'; return; }
+  // Don't show if already editing a job
+  if (document.getElementById('editJobId').value) { row.style.display = 'none'; return; }
+  list.innerHTML = cars.map(c => {
+    const lbl = [c.brand, c.model].filter(Boolean).join(' ') || c.car || 'Unknown';
+    const info = [c.color, c.plate].filter(Boolean).join(' · ');
+    return `<button type="button" onclick="pickCarHistory(${JSON.stringify(c).replace(/"/g,'&quot;')})"
+      style="background:rgba(123,47,190,0.15);border:1px solid rgba(123,47,190,0.3);border-radius:6px;padding:8px 12px;cursor:pointer;text-align:left;color:var(--white);font-family:'Barlow',sans-serif;font-size:13px">
+      <span style="font-weight:600">${lbl}</span>${info ? '<span style="color:var(--muted);margin-left:8px;font-size:12px">'+info+'</span>' : ''}
+    </button>`;
+  }).join('');
+  row.style.display = 'block';
+};
+window.pickCarHistory = function(c){
+  document.getElementById('jobBrand').value = c.brand || '';
+  document.getElementById('jobModel').value = c.brand ? (c.model || '') : (c.model || c.car || '');
+  document.getElementById('jobColor').value = c.color || '';
+  document.getElementById('jobPlate').value = c.plate || '';
+  document.getElementById('jobCar').value = c.car || '';
+  document.getElementById('carHistoryRow').style.display = 'none';
+  scheduleRepeatCheck();
 };
 window.updateContactBtns = function(){
   const pick = document.getElementById('btnPickContact'), save = document.getElementById('btnSaveContact');
@@ -1973,6 +2019,8 @@ window.openNewJobModal = function() {
   document.getElementById('jobPlate').value = '';
   document.getElementById('jobWa').value = '';
   const dpOnly = document.getElementById('jobDpOnly'); if(dpOnly){ dpOnly.checked = false; window.toggleDpOnly(false); }
+  const dpNom = document.getElementById('jobDpNominal'); if(dpNom) dpNom.value = '';
+  const chr = document.getElementById('carHistoryRow'); if(chr) chr.style.display = 'none';
   document.getElementById('jobVoucher').value = ''; document.getElementById('jobVoucherInfo').style.display = 'none'; loadPromos();
   window._repeatOf = null; window._ownerChoice = null; window._skipVouchers = []; setCodeLocked(false); window.fillCustList(); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
   selectedServices = [];
@@ -2007,6 +2055,12 @@ window.openEditJobModal = async function(id) {
   document.getElementById('jobNote').value = d.note || '';
   renderStepsEditor(d.doneSteps || [], d.activeStep || null);
   document.getElementById('jobVoucher').value = d.voucherCode || ''; window.checkJobVoucher();
+  // If existing job had DP, show DP nominal row
+  if (d.dp) {
+    const dpCb = document.getElementById('jobDpOnly'); if(dpCb) { dpCb.checked = true; window.toggleDpOnly(true); }
+    const dpNomEl = document.getElementById('jobDpNominal'); if(dpNomEl) dpNomEl.value = d.dp;
+  }
+  const chr = document.getElementById('carHistoryRow'); if(chr) chr.style.display = 'none';
   openModal('modalJob');
 }
 
@@ -2056,6 +2110,8 @@ window.saveJob = async function() {
   const editId = document.getElementById('editJobId').value;
 
   const dpOnly = document.getElementById('jobDpOnly') && document.getElementById('jobDpOnly').checked;
+  const dpNominalRaw = document.getElementById('jobDpNominal') ? parseInt(document.getElementById('jobDpNominal').value) : 0;
+  const dpNominal = isNaN(dpNominalRaw) ? 0 : dpNominalRaw;
   if (!car) {
     if (dpOnly) { car = 'TBD'; }
     else { alert('Isi merk atau tipe mobil'); return; }
@@ -2079,6 +2135,7 @@ window.saveJob = async function() {
       let wasDone = false;
       try { const prev = await window._fbFns.getDoc(doc(window._db, 'konig_progress', editId)); const pd = prev.exists() ? prev.data() : {}; wasDone = (pd.doneSteps || []).includes('done') || pd.activeStep === 'done'; } catch(e) {}
       const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
+      if (dpOnly && dpNominal) upd.dp = dpNominal;
       if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); justDone = editId; }
       await updateDoc(doc(window._db, 'konig_progress', editId), upd);
     } else {
@@ -2101,7 +2158,7 @@ window.saveJob = async function() {
         carry = { visits: (old.visits || []).concat([prevVisit]), vouchers: jobVouchers({ ...old, id: code }) };
         if (window._ownerChoice !== 'new' && normWa(old.wa) === normWa(wa)) { if (old.reviewed) carry.reviewed = old.reviewed; if (old.reviewReminder) carry.reviewReminder = old.reviewReminder; }
       }
-      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
+      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(dpOnly && dpNominal ? { dp: dpNominal } : {}), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       window._repeatOf = null;
       if (nowDone) justDone = code;
       else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName, voucherCode };
@@ -2206,7 +2263,8 @@ function pickCust(c){
   document.getElementById('jobCustTitle').value = c.title;
   if (c.wa) { document.getElementById('jobWa').value = c.wa; window._waPicked = true; window.updateContactBtns && window.updateContactBtns(); scheduleRepeatCheck(); }
   hideCustSuggest();
-  if (!document.getElementById('jobPlate').value.trim() && carsOfCustomer().length) { const pl = document.getElementById('jobPlate'); pl.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(() => { pl.focus(); plateSuggest(); }, 350); }
+  window.showCarHistory && window.showCarHistory();
+  if (!document.getElementById('jobPlate').value.trim() && carsOfCustomer().length) { const pl = document.getElementById('carHistoryRow') || document.getElementById('jobPlate'); pl.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
 }
 
 
