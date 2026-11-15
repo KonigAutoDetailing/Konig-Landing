@@ -1172,7 +1172,7 @@ window.renderJobList = function(){
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
-          ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : ''}
+          ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : (j.invoice && j.invoice.pay === 'dp' ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice DP</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice DP</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">💰 Invoice DP</button>`)}
           ${isDone ? lunasBtn(j) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
           ${isDone ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
