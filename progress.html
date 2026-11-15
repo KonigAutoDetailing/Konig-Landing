@@ -1961,8 +1961,15 @@ window.showCarHistory = function(){
   row.style.display = 'block';
 };
 window.pickCarHistory = function(c){
-  document.getElementById('jobBrand').value = c.brand || '';
-  document.getElementById('jobModel').value = c.brand ? (c.model || '') : (c.model || c.car || '');
+  let brand = c.brand || '', model = c.model || '';
+  // Kalau brand/model kosong, parse dari field car (misal "VOLVO EX30" → brand=VOLVO, model=EX30)
+  if (!brand && c.car && c.car !== 'TBD') {
+    const parts = c.car.trim().split(/\s+/);
+    brand = parts[0] || '';
+    model = parts.slice(1).join(' ') || '';
+  }
+  document.getElementById('jobBrand').value = brand;
+  document.getElementById('jobModel').value = model;
   document.getElementById('jobColor').value = c.color || '';
   document.getElementById('jobPlate').value = c.plate || '';
   document.getElementById('jobCar').value = c.car || '';
