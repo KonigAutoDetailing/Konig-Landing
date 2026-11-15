@@ -1563,7 +1563,11 @@ function reviewReminders(jobs, today){
 }
 function reviewMessage(r){
   const mobil = (r.j.car || 'kendaraan Anda') + (r.j.plate ? ' (' + r.j.plate + ')' : '');
-  return 'Halo ' + sapa(r.j) + ',\n\nTerima kasih telah mempercayakan ' + mobil + ' kepada KONIG Auto Detailing. Bagaimana hasil pengerjaannya setelah beberapa hari ini? Apabila ada keluhan atau hal yang ingin ditanyakan, silakan sampaikan kepada kami. Kami siap membantu.\n\nKami juga akan sangat menghargai apabila Anda berkenan memberikan ulasan di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
+  const isCoating = isCoatingJob(r.j.service);
+  const intro = isCoating
+    ? 'Sudah 7 hari sejak ' + mobil + ' selesai di-coating di KONIG. Masa curing sudah lewat, jadi mobil Anda sekarang sudah boleh dicuci seperti biasa ya.\n\nBagaimana hasilnya sejauh ini? Apabila ada pertanyaan atau hal yang ingin dikonsultasikan mengenai perawatan coating, jangan ragu untuk menghubungi kami.'
+    : 'Bagaimana hasil pengerjaan ' + mobil + ' sejauh ini? Apabila ada keluhan atau hal yang ingin dikonsultasikan, silakan sampaikan kepada kami — kami siap membantu.';
+  return 'Halo ' + sapa(r.j) + ',\n\n' + intro + '\n\nApabila berkenan, kami juga akan sangat menghargai ulasan Anda di Google:\n' + REVIEW_URL + '\nSetiap ulasan sangat berarti bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
 }
 function renderReviewSection(list, due, today){
   const h = document.createElement('div');
