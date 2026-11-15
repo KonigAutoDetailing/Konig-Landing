@@ -1544,6 +1544,67 @@ function renderCoatWashSection(list, due, today){
   });
 }
 
+// ── REMINDER COATING MAINTENANCE (6 bulan / 180 hari setelah selesai, 1x) ──
+function coatingMaintenanceReminders(jobs, today){
+  const sent = new Set(jobs.filter(j => j.coatMainReminder).map(j => j.id));
+  // Per-customer: ambil job coating terbaru yang sudah selesai
+  const latest = {};
+  jobs.forEach(j => {
+    if (!isCoatingJob(j.service)) return;
+    if (!(j.doneSteps||[]).includes('done')) return;
+    const k = custKey(j);
+    if (!k) return;
+    const d = tsDay(j.doneAt) || tsDay(j.updatedAt);
+    if (!d) return;
+    if (!latest[k] || d > latest[k].d) latest[k] = { j, d };
+  });
+  const due = [];
+  Object.values(latest).forEach(({ j, d }) => {
+    if (j.coatMainReminder) return; // sudah dikirim
+    const age = dayDiff(d, today);
+    if (age >= 180 && age <= 365) due.push({ j, age, d });
+  });
+  return due.sort((a, b) => b.age - a.age);
+}
+function coatingMaintenanceMessage(r){
+  const j = r.j;
+  const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
+  const bulan = Math.round(r.age / 30);
+  return 'Halo ' + sapa(j) + ',\n\nSudah sekitar ' + bulan + ' bulan sejak ' + mobil + ' di-coating di KONIG Auto Detailing. Pada usia ini, coating mulai memerlukan perawatan agar proteksinya tetap optimal.\n\nKami mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk *Coating Maintenance* — kami akan inspeksi kondisi coating, bersihkan kontaminan, dan lakukan top-up jika diperlukan, agar coating tetap bekerja maksimal melindungi cat mobil Anda.\n\nSilakan balas pesan ini untuk menjadwalkan kedatangan.\n\nSalam,\nKONIG Auto Detailing';
+}
+function renderCoatMainSection(list, due, today){
+  const h = document.createElement('div');
+  h.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white);margin:22px 0 4px";
+  h.textContent = '🛡️ REMINDER MAINTENANCE COATING (' + due.length + ')';
+  if (!due.length) return;
+  list.appendChild(h);
+  due.forEach(r => {
+    const j = r.j;
+    const box = document.createElement('div');
+    box.style.cssText = 'border:1px solid var(--border);border-left:3px solid #7b2fbe;padding:14px;margin-bottom:12px';
+    const head = document.createElement('div');
+    head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
+    head.textContent = (j.car || '-') + ' ' + (j.plate || '') + ' · ' + Math.round(r.age / 30) + ' bulan sejak coating';
+    const ta = document.createElement('textarea'); ta.value = coatingMaintenanceMessage(r); ta.rows = 8;
+    ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
+    const nomor = waNumber(j.wa);
+    const mark = async (txt) => { box.style.opacity = '.5'; head.textContent += '  ✓ ' + txt; row.remove();
+      try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { coatMainReminder: today }); } catch(e) {} };
+    const btn = document.createElement('a');
+    btn.className = 'btn-sm'; btn.style.cssText = 'background:#25D366;color:#fff;text-decoration:none;border:none';
+    btn.textContent = nomor ? '💬 Kirim via WA' : 'Nomor WA kosong'; btn.target = '_blank'; btn.rel = 'noopener';
+    if (nomor) btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+    btn.onclick = () => { setTimeout(() => mark('terkirim'), 1500); };
+    const skip = document.createElement('button');
+    skip.className = 'btn-sm'; skip.style.cssText = 'background:var(--border);color:var(--text)';
+    skip.textContent = 'Lewati'; skip.onclick = () => mark('dilewati');
+    row.appendChild(btn); row.appendChild(skip);
+    box.appendChild(head); box.appendChild(ta); box.appendChild(row);
+    list.appendChild(box);
+  });
+}
+
 // ── REMINDER REVIEW GOOGLE (1x per customer, 3–14 hari setelah selesai) ──
 function custKey(j){ return waNumber(j.wa) || String(j.plate||'').replace(/\s+/g,'').toUpperCase(); }
 function reviewReminders(jobs, today){
@@ -1671,7 +1732,8 @@ window.openWaUpdate = async function(onlyId){
   const washDue = onlyId ? [] : washReminders(allJobs, today);
   const reviewDue = onlyId ? [] : reviewReminders(allJobs, today);
   const coatDue = onlyId ? [] : coatingWashReminders(allJobs, today);
-  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada update progres yang perlu dikirim hari ini.</div>'; if(!onlyId){ renderCoatWashSection(list, coatDue, today); renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); } return; }
+  const coatMainDue = onlyId ? [] : coatingMaintenanceReminders(allJobs, today);
+  if(!jobs.length){ list.innerHTML = '<div class="empty-state">Tidak ada update progres yang perlu dikirim hari ini.</div>'; if(!onlyId){ renderCoatWashSection(list, coatDue, today); renderCoatMainSection(list, coatMainDue, today); renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); } return; }
   jobs.forEach(j => {
     const sent = j.lastWaUpdate === today;
     const box = document.createElement('div');
@@ -1708,7 +1770,7 @@ window.openWaUpdate = async function(onlyId){
     box.appendChild(head); box.appendChild(ta); box.appendChild(row);
     list.appendChild(box);
   });
-  if(!onlyId){ renderCoatWashSection(list, coatDue, today); renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); }
+  if(!onlyId){ renderCoatWashSection(list, coatDue, today); renderCoatMainSection(list, coatMainDue, today); renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); }
 };
 // Buka otomatis lewat link ?update=sore (dari notifikasi jam 16:00)
 if (new URLSearchParams(location.search).get('update') === 'sore') {
