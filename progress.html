@@ -603,7 +603,7 @@
     <datalist id="brandList"></datalist><datalist id="modelList"></datalist><datalist id="colorList"></datalist>
     <div class="form-group">
       <label>No. WhatsApp</label>
-      <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel" oninput="window._waPicked=false; updateContactBtns(); scheduleRepeatCheck(); window.showCarHistory && window.showCarHistory()"/>
+      <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel" oninput="window._waPicked=false; updateContactBtns(); scheduleRepeatCheck(); window.showCarHistory && window.showCarHistory()" onblur="window.showCarHistory && window.showCarHistory()"/>
     </div>
     <div style="display:flex;gap:8px;margin:-6px 0 14px;flex-wrap:wrap">
       <button type="button" id="btnPickContact" style="display:none;background:transparent;border:1px solid var(--border);color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:9px 12px;cursor:pointer" onclick="pickContact()">📇 Ambil dari Kontak HP</button>
@@ -1130,6 +1130,11 @@ window.loadJobs = async function() {
   syncVoucherStatus(jobs);
   loadPromos();
   renderJobList();
+  // Kalau modal kendaraan sedang terbuka, refresh history mobil sekarang data sudah ada
+  const modal = document.getElementById('modalJob');
+  if (modal && modal.classList.contains('open')) {
+    window.showCarHistory && window.showCarHistory();
+  }
 }
 
 window._jobTab = window._jobTab || 'active';
@@ -2237,7 +2242,7 @@ function carsOfCustomer(){
   const seen = new Map();
   (window._allJobs||[]).filter(isRealCustomer).forEach(j => {
     if ((wa.length >= 6 && normWa(j.wa) === wa) || (nm && String(j.custName||'').trim().toUpperCase() === nm)) {
-      const k = normPlate(j.plate); if (!k) return;
+      const k = normPlate(j.plate) || (j.car && j.car !== 'TBD' ? j.car : null); if (!k) return;
       const prev = seen.get(k); if (!prev || (visitDate(j)||0) > (visitDate(prev)||0)) seen.set(k, j);
     }
   });
