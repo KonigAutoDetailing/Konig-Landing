@@ -1659,9 +1659,10 @@ window.openWaUpdate = async function(onlyId){
     if(j.lastWaUpdate === today) return; // sudah dikirim / dihapus dari daftar hari ini
     if(done){ if((tsDay(j.doneAt) || tsDay(j.updatedAt)) === today) jobs.push(j); return; }
     if(isQuick(j) || autoWashDone(j)) return;
-    // Coating/poles: update tiap 3 hari sejak mobil masuk / sejak update terakhir
+    // Coating: update 1x di hari ke-7 (sekalian reminder boleh dicuci); poles: tiap 3 hari
     const base = j.lastWaUpdate || tsDay(j.createdAt);
-    if (base && dayDiff(base, today) >= 3) jobs.push(j); });
+    const interval = isCoatingJob(j.service) ? 7 : 3;
+    if (base && dayDiff(base, today) >= interval) jobs.push(j); });
   list.textContent = '';
   const washDue = onlyId ? [] : washReminders(allJobs, today);
   const reviewDue = onlyId ? [] : reviewReminders(allJobs, today);
