@@ -1375,10 +1375,10 @@ function waMessage(j){
         + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
     const vList = iv ? (iv.items||[]).filter(it => it.voucherCode) : [];
     const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang. (Catatan: voucher ini juga bisa dipakai oleh orang lain atau untuk mobil lain.)\n\n' : '';
-    return sapa(j) + ', kami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
+    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
-  let msg = sapa(j) + ', berikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
+  let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
   if(j.note) msg += '\nCatatan: ' + j.note;
   if (needsTrackLink(j)) msg += '\n\nDetail progres dapat dipantau melalui tautan berikut:\n' + url;
   return msg + salam;
@@ -1438,7 +1438,7 @@ function washMessage(r){
   const kerja = /Wash/i.test(sv) ? 'dicuci' : 'dibersihkan interiornya';
   const ajak = /Wash/i.test(sv) ? 'pencucian berikutnya' : 'pembersihan interior berikutnya';
   const sejak = r.stage === 14 ? '2 minggu' : 'sekitar ' + Math.round(r.stage / 30) + ' bulan';
-  return sapa(r.j) + ', sudah ' + sejak + ' sejak ' + mobil + ' terakhir ' + kerja + ' di KONIG Auto Detailing. Apabila Anda ingin menjadwalkan ' + ajak + ', silakan balas pesan ini dan kami akan siapkan slotnya.\n\nSalam,\nKONIG Auto Detailing';
+  return 'Halo ' + sapa(r.j) + ',\n\nSudah ' + sejak + ' sejak ' + mobil + ' terakhir ' + kerja + ' di KONIG Auto Detailing. Apabila Anda ingin menjadwalkan ' + ajak + ', silakan balas pesan ini dan kami akan siapkan slotnya.\n\nSalam,\nKONIG Auto Detailing';
 }
 async function markWashReminder(j, stage, today){
   try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { ['washReminders.' + stage]: today }); } catch(e) {}
@@ -1490,7 +1490,7 @@ function coatingWashReminders(jobs, today){
 function coatingWashMessage(r){
   const j = r.j, mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const fw = jobVouchers(j).filter(v => !v.used && /Wash/i.test(v.service||''));
-  let msg = sapa(j) + ', sudah ' + (r.age <= 9 ? '1 minggu' : r.age + ' hari') + ' sejak ' + mobil + ' selesai di-coating di KONIG Auto Detailing. Masa curing coating sudah lewat, jadi mobil Anda sekarang sudah boleh dicuci.\n\n';
+  let msg = 'Halo ' + sapa(j) + ',\n\nSudah ' + (r.age <= 9 ? '1 minggu' : r.age + ' hari') + ' sejak ' + mobil + ' selesai di-coating di KONIG Auto Detailing. Masa curing coating sudah lewat, jadi mobil Anda sekarang sudah boleh dicuci.\n\n';
   if (fw.length) {
     const v = fw[0];
     msg += 'Anda memiliki voucher *Free ' + v.service + '* (kode ' + v.code + ') yang bisa dipakai untuk cuci pertama ini. Cuci pertama di KONIG sangat kami sarankan, karena sekaligus kami cek kondisi coating-nya dan kami bersihkan dengan metode yang aman untuk coating.\n\n'
@@ -1563,7 +1563,7 @@ function reviewReminders(jobs, today){
 }
 function reviewMessage(r){
   const mobil = (r.j.car || 'kendaraan Anda') + (r.j.plate ? ' (' + r.j.plate + ')' : '');
-  return sapa(r.j) + ', terima kasih telah mempercayakan ' + mobil + ' kepada KONIG Auto Detailing. Bagaimana hasil pengerjaannya setelah beberapa hari ini? Apabila ada keluhan atau hal yang ingin ditanyakan, silakan sampaikan kepada kami. Kami siap membantu.\n\nKami juga akan sangat menghargai apabila Anda berkenan memberikan ulasan di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
+  return 'Halo ' + sapa(r.j) + ',\n\nTerima kasih telah mempercayakan ' + mobil + ' kepada KONIG Auto Detailing. Bagaimana hasil pengerjaannya setelah beberapa hari ini? Apabila ada keluhan atau hal yang ingin ditanyakan, silakan sampaikan kepada kami. Kami siap membantu.\n\nKami juga akan sangat menghargai apabila Anda berkenan memberikan ulasan di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
 }
 function renderReviewSection(list, due, today){
   const h = document.createElement('div');
@@ -1609,8 +1609,7 @@ function isCoatingJob(service){ return String(service||'').split(', ').some(x =>
 function welcomeMessage(j){
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const url = location.origin + '/progress?code=' + j.id;
-  return sapa(j) + ', selamat datang di KONIG Auto Detailing. Terima kasih telah mempercayakan ' + mobil + ' kepada kami.\n\n'
-    + ''
+  return 'Halo ' + sapa(j) + ',\n\nSelamat datang di KONIG Auto Detailing. Terima kasih telah mempercayakan ' + mobil + ' kepada kami.\n\n'
     + (j.service ? 'Layanan: ' + j.service + '\n\n' : '')
     + 'Kendaraan Anda akan dikerjakan oleh tim kami sesuai standar KONIG. Progres pengerjaan dapat dipantau secara langsung melalui tautan berikut:\n' + url + '\n\n'
     + (isCoatingJob(j.service) ? 'Kami juga akan mengirimkan update progres secara berkala.' : 'Kami akan menginformasikan kembali setelah kendaraan selesai dikerjakan.')
@@ -2795,10 +2794,12 @@ window.openInvoice = function(id, d, fromDone){
   document.getElementById('invDiskon').value = inv && inv.diskonPct ? inv.diskonPct + '%' : (inv && inv.diskon ? fmtRp(inv.diskon) : '');
   const autoKet = [d.car, d.color ? titleCase(d.color) : '', d.plate].filter(Boolean).join(' - ');
   document.getElementById('invKet').value = inv && inv.keterangan && inv.keterangan !== autoKet ? inv.keterangan : '';
-  document.getElementById('invHasDp').checked = !!(inv && inv.dp && inv.dp.amount);
+  // Kalau invoice baru & job punya nominal DP → auto pre-fill DP
+  const jobDpAmt = !inv && d.dp ? d.dp : 0;
+  document.getElementById('invHasDp').checked = !!(inv && inv.dp && inv.dp.amount) || !!jobDpAmt;
   document.getElementById('invLunas').checked = !!(inv && inv.pay === 'lunas'); document.getElementById('invLunas').dataset.auto = '';
   document.getElementById('invLunasDate').value = inv && inv.pelunasan && inv.pelunasan.date || '';
-  document.getElementById('invDpAmt').value = inv && inv.dp && inv.dp.amount ? fmtRp(inv.dp.amount) : '';
+  document.getElementById('invDpAmt').value = inv && inv.dp && inv.dp.amount ? fmtRp(inv.dp.amount) : (jobDpAmt ? fmtRp(jobDpAmt) : '');
   document.getElementById('invDpNo').value = inv && inv.dp && inv.dp.no ? inv.dp.no : nextSeq('INV-DP');
   const masuk = toDateObj(d.createdAt);
   document.getElementById('invDpDate').value = inv && inv.dp && inv.dp.date && inv.dp.date !== inv.due ? inv.dp.date : (masuk ? invYmd(masuk) : today);
@@ -2810,8 +2811,13 @@ window.openInvoice = function(id, d, fromDone){
   }).join('');
   else {
     const svs = String(d.service||'').split(', ').filter(Boolean);
-    box.innerHTML = (svs.length ? svs : ['']).map(sv => invItemHtml({ produk: sv, base: sv, desc: INV_DESC(sv), qty: 1 })).join('');
-    invSizeChanged();
+    // Kalau job DP-only (service kosong/TBD), isi item "Down Payment" dengan nominal DP
+    if (jobDpAmt && (!svs.length || svs[0] === '')) {
+      box.innerHTML = invItemHtml({ produk: 'Down Payment', desc: 'Down payment untuk layanan detailing KONIG', qty: 1, harga: jobDpAmt });
+    } else {
+      box.innerHTML = (svs.length ? svs : ['']).map(sv => invItemHtml({ produk: sv, base: sv, desc: INV_DESC(sv), qty: 1 })).join('');
+      invSizeChanged();
+    }
   }
   invPayChanged();
   window._invData = d;
