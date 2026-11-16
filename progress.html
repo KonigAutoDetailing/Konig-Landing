@@ -3493,7 +3493,9 @@ window.fixOldInvoices = async function(dryRun = true) {
         desc: '',
         qty: it.qty,
         harga: it.harga,
-        disc: it.disc || 0,
+        // disc <= 100 tanpa desimal = persen, convert ke nominal
+        disc: (it.disc > 0 && it.disc <= 100 && Number.isInteger(it.disc)) ? Math.round(it.qty * it.harga * it.disc / 100) : (it.disc || 0),
+        discPct: (it.disc > 0 && it.disc <= 100 && Number.isInteger(it.disc)) ? it.disc : 0,
       })),
       diskon: inv.diskon,
       diskonPct: 0,
@@ -3744,6 +3746,50 @@ window.fixOldInvoices2 = async function(dryRun = true) {
   }
   console.log(`\n🏁 Selesai: ${ok} berhasil, ${fail} gagal`);
   if (ok > 0) loadJobs();
+};
+
+// Fix invoice yang disc-nya tersimpan sebagai persen (bukan nominal)
+// INV/2026/0040 (disc:33), INV/2026/0043 (disc:10), INV/2026/0112 (disc:15)
+window.fixDiscPersen = async function(dryRun = true) {
+  const { doc, updateDoc } = window._fbFns;
+  const allJobs = window._allJobs || [];
+  const toFix = ['INV/2026/0040','INV/2026/0043','INV/2026/0112'];
+  let ok = 0, fail = 0;
+  for (const ref of toFix) {
+    const job = allJobs.find(j => j.invoice && j.invoice.no === ref);
+    if (!job) { console.warn(`⚠️ Job tidak ditemukan untuk ${ref}`); continue; }
+    const inv = job.invoice;
+    // Fix items: jika disc item <= 100 dan integer = persen, convert ke nominal
+    const fixedItems = (inv.items || []).map(it => {
+      const d = it.disc || 0;
+      const isPercent = d > 0 && d <= 100 && Number.isInteger(d);
+      if (isPercent) {
+        const nominalDisc = Math.round((it.qty||1) * it.harga * d / 100);
+        console.log(`  ${ref} item "${it.produk}": disc ${d}% → Rp ${nominalDisc.toLocaleString('id-ID')}`);
+        return { ...it, disc: nominalDisc, discPct: d };
+      }
+      return it;
+    });
+    const updatedInvoice = { ...inv, items: fixedItems };
+    if (dryRun) {
+      console.log(`✅ DRY RUN ${ref} → job ${job.id}`);
+      continue;
+    }
+    try {
+      await updateDoc(doc(window._db, 'konig_progress', job._mainId || job.id), { invoice: updatedInvoice });
+      console.log(`✅ ${ref} berhasil diupdate`);
+      ok++;
+    } catch(e) {
+      console.error(`❌ GAGAL ${ref}:`, e);
+      fail++;
+    }
+  }
+  if (!dryRun) {
+    console.log(`\n🏁 Selesai: ${ok} berhasil, ${fail} gagal`);
+    if (ok > 0) loadJobs();
+  } else {
+    console.log('\nKalau OK → fixDiscPersen(false)');
+  }
 };
 </script>
 </body>
