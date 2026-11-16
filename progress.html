@@ -548,6 +548,7 @@
         </div>
         <button class="btn-promo" onclick="openPromo()">🎟️ Kode Referral & Promo</button>
         <button class="btn-logout" onclick="adminLogout()">Logout</button>
+        <button type="button" id="btnCleanupNames" onclick="cleanupCustomerNames()" style="display:none;margin-top:6px;width:100%;background:transparent;color:#f59e0b;border:1px solid rgba(245,158,11,.4);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:8px;cursor:pointer">🧹 Cleanup Nama Customer</button>
       </div>
     </div>
     <div class="job-tabs">
@@ -2279,6 +2280,44 @@ window.saveJob = async function() {
 }
 
 
+
+// ── CLEANUP NAMA CUSTOMER (hapus prefix MR./MS. yang nyangkut di custName) ──
+window.cleanupCustomerNames = async function(){
+  const { doc, updateDoc } = window._fbFns;
+  const all = window._allJobs || [];
+  const PREFIX = /^(MR\.?|MS\.?|MRS\.?|BPK\.?|IBU?)\s+/i;
+  const toFix = [];
+  all.forEach(j => {
+    if (!j.custName) return;
+    let name = j.custName.trim();
+    let found = null;
+    while (true) {
+      const m = PREFIX.exec(name);
+      if (!m) break;
+      if (!found) found = m[1].replace('.','').toUpperCase();
+      name = name.slice(m[0].length).trim();
+    }
+    if (found) {
+      const newTitle = (j.custTitle && j.custTitle.trim()) ? j.custTitle : found;
+      toFix.push({ j, newName: name, newTitle });
+    }
+  });
+  if (!toFix.length) { alert('Tidak ada nama yang perlu diperbaiki.'); return; }
+  const preview = toFix.slice(0,10).map(x => `• "${x.j.custName}" → title="${x.newTitle}" name="${x.newName}"`).join('\n');
+  if (!confirm(`Ditemukan ${toFix.length} nama yang perlu diperbaiki:\n\n${preview}${toFix.length > 10 ? '\n...(dan lainnya)' : ''}\n\nLanjutkan?`)) return;
+  let ok = 0, fail = 0;
+  for (const { j, newName, newTitle } of toFix) {
+    try {
+      await updateDoc(doc(window._db, 'konig_progress', j.id), { custName: newName, custTitle: newTitle });
+      ok++;
+    } catch(e) { fail++; console.error(j.id, e); }
+  }
+  alert(`Selesai: ${ok} berhasil${fail ? ', ' + fail + ' gagal' : ''}.`);
+  loadJobs();
+  document.getElementById('btnCleanupNames').style.display = 'none';
+};
+
+// Tampilkan tombol cleanup lewat console: document.getElementById('btnCleanupNames').style.display='block'
 
 // ── DAFTAR CUSTOMER (dropdown nama → isi nomor WA otomatis) ──
 function isRealCustomer(j){ return (j.doneSteps||[]).includes('done') || (j.visits||[]).length > 0; }
