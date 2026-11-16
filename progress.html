@@ -2244,10 +2244,10 @@ window.saveJob = async function() {
     // ── UPDATE NAMA di semua job lama dengan WA yang sama ──
     if (!editId && wa && custName) {
       const normNew = normWa(wa);
-      const sameWa = (window._allJobs || []).filter(j => normWa(j.wa) === normNew && j.custName && j.custName !== custName);
+      const sameWa = (window._allJobs || []).filter(j => normWa(j.wa) === normNew && (j.custName !== custName || j.custTitle !== custTitle));
       if (sameWa.length) {
         try {
-          await Promise.all(sameWa.map(j => updateDoc(doc(window._db, 'konig_progress', j.id), { custName })));
+          await Promise.all(sameWa.map(j => updateDoc(doc(window._db, 'konig_progress', j.id), { custName, custTitle })));
         } catch(e) { console.warn('update nama lama gagal:', e); }
       }
     }
