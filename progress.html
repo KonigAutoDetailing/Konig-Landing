@@ -3791,6 +3791,123 @@ window.fixDiscPersen = async function(dryRun = true) {
     console.log('\nKalau OK → fixDiscPersen(false)');
   }
 };
+
+</script>
+<script>
+// DISC FIX DATA - dari PDF asli 56 invoice
+const DISC_FIX = [
+  {no:"INV/2026/0002",wa:"6281317427181",diskon:1000000,total:1500000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0003",wa:"6287775577497",diskon:1200000,total:1800000,item_discs:[{disc:0,harga:3000000}]},
+  {no:"INV/2026/0005",wa:"6281280957500",diskon:1575000,total:2925000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0007",wa:"6281218184888",diskon:2500000,total:3000000,item_discs:[{disc:0,harga:5500000}]},
+  {no:"INV/2026/0008",wa:"628561404218",diskon:750000,total:1750000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0009",wa:"6281387882348",diskon:400000,total:1600000,item_discs:[{disc:0,harga:2000000}]},
+  {no:"INV/2026/0010",wa:"6287881644633",diskon:900000,total:3600000,item_discs:[{disc:0,harga:2000000},{disc:0,harga:2500000}]},
+  {no:"INV/2026/0016",wa:"6281210680447",diskon:3200000,total:4800000,item_discs:[{disc:0,harga:8000000}]},
+  {no:"INV/2026/0020",wa:"6281233160694",diskon:1050000,total:2450000,item_discs:[{disc:0,harga:3500000},{disc:0,harga:3500000}]},
+  {no:"INV/2026/0022",wa:"628978335661",diskon:625000,total:1875000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0025",wa:"6287771201510",diskon:1575000,total:2925000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0027",wa:"6281517209493",diskon:500000,total:2000000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0029",wa:"6281327094972",diskon:500000,total:2000000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0034",wa:"628119316889",diskon:600000,total:2400000,item_discs:[{disc:0,harga:3000000}]},
+  {no:"INV/2026/0037",wa:"6285310027353",diskon:750000,total:500000,item_discs:[{disc:0,harga:1250000},{disc:0,harga:1250000}]},
+  {no:"INV/2026/0038",wa:"6281213588265",diskon:350000,total:400000,item_discs:[]},
+  {no:"INV/2026/0039",wa:"6285780020234",diskon:250000,total:2250000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0040",wa:"6282112020100",diskon:0,total:2000000,item_discs:[{disc:1000000,harga:3000000}]},
+  {no:"INV/2026/0043",wa:"6281235016007",diskon:405000,total:3645000,item_discs:[{disc:450000,harga:4500000}]},
+  {no:"INV/2026/0046",wa:"6282112020100",diskon:0,total:1750000,item_discs:[{disc:750000,harga:2500000},{disc:0,harga:1750000}]},
+  {no:"INV/2026/0047",wa:"6287888750153",diskon:250000,total:2250000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0049",wa:"6281320414151",diskon:500000,total:2000000,item_discs:[{disc:0,harga:2500000}]},
+  {no:"INV/2026/0051",wa:"628118789992",diskon:500000,total:4500000,item_discs:[{disc:0,harga:5000000}]},
+  {no:"INV/2026/0053",wa:"6281372778855",diskon:550000,total:200000,item_discs:[]},
+  {no:"INV/2026/0055",wa:"628118608894",diskon:500000,total:500000,item_discs:[{disc:0,harga:1000000},{disc:0,harga:1000000}]},
+  {no:"INV/2026/0059",wa:"6281217771719",diskon:300000,total:700000,item_discs:[]},
+  {no:"INV/2026/0060",wa:"628127347897",diskon:350000,total:3150000,item_discs:[{disc:0,harga:3500000}]},
+  {no:"INV/2026/0065",wa:"6285832156164",diskon:675000,total:3825000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0066",wa:"62817717789",diskon:750000,total:4250000,item_discs:[{disc:0,harga:5000000}]},
+  {no:"INV/2026/0068",wa:"628129667562",diskon:675000,total:3825000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0070",wa:"6281285526578",diskon:675000,total:3825000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0072",wa:"6287776107986",diskon:900000,total:3600000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0085",wa:"6287797130394",diskon:875000,total:2625000,item_discs:[{disc:0,harga:3500000},{disc:0,harga:3500000}]},
+  {no:"INV/2026/0087",wa:"62811967996",diskon:1375000,total:4125000,item_discs:[{disc:0,harga:5500000}]},
+  {no:"INV/2026/0088",wa:"6287808072871",diskon:1375000,total:4125000,item_discs:[{disc:0,harga:5500000},{disc:0,harga:5500000}]},
+  {no:"INV/2026/0093",wa:"6289699702699",diskon:1000000,total:3000000,item_discs:[{disc:0,harga:4000000}]},
+  {no:"INV/2026/0094",wa:"6281299020450",diskon:1375000,total:4125000,item_discs:[{disc:0,harga:5500000}]},
+  {no:"INV/2026/0098",wa:"6281299020450",diskon:1375000,total:4125000,item_discs:[{disc:0,harga:5500000},{disc:0,harga:5500000}]},
+  {no:"INV/2026/0099",wa:"6281383333015",diskon:1250000,total:3750000,item_discs:[{disc:0,harga:5000000}]},
+  {no:"INV/2026/0104",wa:"628161885572",diskon:1500000,total:6500000,item_discs:[{disc:0,harga:8000000},{disc:0,harga:8000000}]},
+  {no:"INV/2026/0112",wa:"6281295786603",diskon:0,total:4675000,item_discs:[{disc:825000,harga:5500000}]},
+  {no:"INV/2026/0115",wa:"6282147549777",diskon:510000,total:4590000,item_discs:[{disc:900000,harga:6000000}]},
+  {no:"INV/2026/0116",wa:"6281288291008",diskon:600000,total:3400000,item_discs:[{disc:0,harga:4000000}]},
+  {no:"INV/2026/0118",wa:"6281318026661",diskon:825000,total:4675000,item_discs:[{disc:0,harga:5500000}]},
+  {no:"INV/2026/0122",wa:"6285363171315",diskon:900000,total:5100000,item_discs:[{disc:0,harga:6000000},{disc:0,harga:6000000}]},
+  {no:"INV/2026/0123",wa:"6285353992255",diskon:600000,total:3400000,item_discs:[{disc:0,harga:4000000}]},
+  {no:"INV/2026/0125",wa:"6287818232668",diskon:765000,total:3735000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0131",wa:"6281906258585",diskon:833000,total:4067000,item_discs:[{disc:0,harga:4900000}]},
+  {no:"INV/2026/0132",wa:"601131489780",diskon:680000,total:3320000,item_discs:[{disc:0,harga:4000000}]},
+  {no:"INV/2026/0133",wa:"628118200737",diskon:1190000,total:5810000,item_discs:[{disc:0,harga:7000000}]},
+  {no:"INV/2026/0134",wa:"6282278077772",diskon:510000,total:2490000,item_discs:[{disc:0,harga:3000000},{disc:0,harga:3000000}]},
+  {no:"INV/2026/0137",wa:"6285179892797",diskon:935000,total:4565000,item_discs:[{disc:0,harga:5500000}]},
+  {no:"INV/2026/0151",wa:"62817168892",diskon:450000,total:4050000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0154",wa:"6282211116980",diskon:1100000,total:4400000,item_discs:[{disc:0,harga:5500000},{disc:0,harga:5500000}]},
+  {no:"INV/2026/0155",wa:"6289658273373",diskon:1000000,total:3500000,item_discs:[{disc:0,harga:4500000}]},
+  {no:"INV/2026/0159",wa:"62818462888",diskon:1100000,total:4400000,item_discs:[{disc:0,harga:5500000}]}
+];
+
+window.fixAllDisc = async function(dryRun = true) {
+  const { doc, updateDoc } = window._fbFns;
+  const allJobs = window._allJobs || [];
+  const normWa = wa => { let s = String(wa||'').replace(/[\s\-\(\)]/g,''); if(s.startsWith('0'))s='62'+s.slice(1); if(s.startsWith('8'))s='62'+s; return s; };
+  const byInvNo = {};
+  const byWa = {};
+  for (const j of allJobs) {
+    if (j.invoice && j.invoice.no) byInvNo[j.invoice.no] = j;
+    const wa = normWa(j.wa || j.custWa || '');
+    if (wa) { if (!byWa[wa]) byWa[wa] = []; byWa[wa].push(j); }
+  }
+  let updated=0, skipped=0, notFound=0;
+  for (const fix of DISC_FIX) {
+    let job = byInvNo[fix.no];
+    if (!job) {
+      const wa = normWa(fix.wa);
+      const candidates = byWa[wa] || [];
+      job = candidates.find(j => j.invoice && j.invoice.no === fix.no);
+      if (!job) job = candidates.find(j => j.invoice && j.invoice.total === fix.total);
+      if (!job && candidates.length === 1) job = candidates[0];
+    }
+    if (!job) { console.warn(`⚠️ Tidak ditemukan: ${fix.no} (WA: ${fix.wa})`); notFound++; continue; }
+    const inv = job.invoice || {};
+    const currentDiskon = inv.diskon || 0;
+    const currentItemDiscs = (inv.items||[]).map(it=>it.disc||0);
+    const needItemDisc = fix.item_discs.some(id=>id.disc>0);
+    const targetItemDiscs = fix.item_discs.map(id=>id.disc);
+    const diskonOK = currentDiskon === fix.diskon;
+    const itemDiscOK = !needItemDisc || (currentItemDiscs.length === targetItemDiscs.length && targetItemDiscs.every((d,i)=>currentItemDiscs[i]===d));
+    if (diskonOK && itemDiscOK) { if(dryRun) console.log(`⏭ Skip: ${fix.no}`); skipped++; continue; }
+    const updInv = { ...inv };
+    updInv.diskon = fix.diskon;
+    if (fix.item_discs.length > 0 && inv.items && inv.items.length > 0) {
+      updInv.items = inv.items.map((it, i) => {
+        const fi = fix.item_discs[i]; if (!fi) return it;
+        return { ...it, disc: fi.disc, harga: fi.harga || it.harga };
+      });
+    }
+    const subtotal = (updInv.items||[]).reduce((s,it)=>s+((it.qty||1)*it.harga-(it.disc||0)),0);
+    updInv.subtotal = subtotal; updInv.total = fix.total; updInv.tertagih = 0;
+    if (dryRun) {
+      const itemInfo = fix.item_discs.filter(x=>x.disc>0).map(x=>`disc=${x.disc.toLocaleString('id-ID')}`).join(', ');
+      console.log(`🔄 ${fix.no}: diskon_tambahan=${fix.diskon.toLocaleString('id-ID')} ${itemInfo?'| item '+itemInfo:''} → job ${job.id}`);
+      updated++; continue;
+    }
+    try {
+      await updateDoc(doc(window._db,'konig_progress',job._mainId||job.id),{invoice:updInv});
+      console.log(`✅ ${fix.no}`); updated++;
+    } catch(e) { console.error(`❌ GAGAL ${fix.no}:`,e); }
+  }
+  console.log(`\n📊 ${dryRun?'DRY RUN':'UPDATE'}: ${updated} perlu diupdate, ${skipped} sudah benar, ${notFound} tidak ditemukan`);
+  if (!dryRun && updated>0) loadJobs();
+  if (dryRun) console.log('Kalau OK → fixAllDisc(false)');
+};
 </script>
 </body>
 </html>
