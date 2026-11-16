@@ -2241,6 +2241,33 @@ window.saveJob = async function() {
       if (nowDone) justDone = code;
       else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName, voucherCode };
     }
+    // ── UPDATE NAMA di semua job lama dengan WA yang sama ──
+    if (!editId && wa && custName) {
+      const normNew = normWa(wa);
+      const sameWa = (window._allJobs || []).filter(j => normWa(j.wa) === normNew && j.custName && j.custName !== custName);
+      if (sameWa.length) {
+        try {
+          await Promise.all(sameWa.map(j => updateDoc(doc(window._db, 'konig_progress', j.id), { custName })));
+        } catch(e) { console.warn('update nama lama gagal:', e); }
+      }
+    }
+
+    // ── AUTO-SAVE KONTAK ke HP (vCard download) ──
+    if (!editId && wa && custName) {
+      try {
+        const normNum = normWa(wa); // format 628xxx
+        const displayNum = '+' + normNum;
+        const fullName = (custTitle ? custTitle + ' ' : '') + custName;
+        const vcf = 'BEGIN:VCARD\r\nVERSION:3.0\r\nFN:' + fullName + '\r\nTEL;TYPE=CELL:' + displayNum + '\r\nORG:KONIG Customer\r\nEND:VCARD';
+        const blob = new Blob([vcf], { type: 'text/vcard' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fullName.replace(/\s+/g, '_') + '.vcf';
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+      } catch(e) { console.warn('vcf gagal:', e); }
+    }
+
     closeModal('modalJob');
     loadJobs();
     if (justDone) window.openWaUpdate(justDone);
