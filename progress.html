@@ -3908,6 +3908,32 @@ window.fixAllDisc = async function(dryRun = true) {
   if (!dryRun && updated>0) loadJobs();
   if (dryRun) console.log('Kalau OK → fixAllDisc(false)');
 };
+
+window.exportCustomers = function() {
+  const jobs = window._allJobs || [];
+  // Deduplicate by WA number, keep latest job per customer
+  const byWa = {};
+  for (const j of jobs) {
+    const wa = j.wa || j.custWa || '';
+    if (!wa) continue;
+    if (!byWa[wa] || (j.createdAt > (byWa[wa].createdAt||''))) byWa[wa] = j;
+  }
+  const rows = [['Nama', 'No WhatsApp', 'Mobil']];
+  for (const j of Object.values(byWa)) {
+    const nama = (j.custTitle ? j.custTitle + ' ' : '') + (j.custName || '');
+    const wa = j.wa || j.custWa || '';
+    const mobil = [j.brand||j.car||'', j.model||'', j.color||''].filter(Boolean).join(' ');
+    rows.push([nama.trim(), wa, mobil.trim()]);
+  }
+  // Sort by name
+  rows.sort((a,b) => a[0] === 'Nama' ? -1 : a[0].localeCompare(b[0]));
+  // Build CSV
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='KONIG_Customers.csv'; a.click();
+  console.log(`✅ Export ${rows.length-1} customer`);
+};
 </script>
 </body>
 </html>
