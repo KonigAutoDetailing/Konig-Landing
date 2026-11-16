@@ -2181,8 +2181,8 @@ window.openEditJobModal = async function(id) {
     const dpNomEl = document.getElementById('jobDpNominal'); if(dpNomEl) dpNomEl.value = d.dp;
   }
   const chr = document.getElementById('carHistoryRow'); if(chr) chr.style.display = 'none';
-  // Load size (dari invoice atau guess berdasarkan model)
-  const savedSize = (d.invoice && d.invoice.size) ? d.invoice.size : guessSize(d);
+  // Load size (dari jobSize yg disimpan, atau invoice, atau guess)
+  const savedSize = d.jobSize || (d.invoice && d.invoice.size) ? (d.jobSize || d.invoice.size) : guessSize(d);
   setJobSize(savedSize);
   window._pendingMarkDone = false;
   openModal('modalJob');
