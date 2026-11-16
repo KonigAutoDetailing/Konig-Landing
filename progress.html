@@ -3670,9 +3670,18 @@ window.fixOldInvoices2 = async function(dryRun = true) {
     const wa = normWaLocal(inv.cust_wa);
     const candidates = (byWa[wa] || []);
 
-    // Skip if job already has this exact invoice number (Phase 1 may have set it)
-    const alreadyPatched = candidates.some(c => c.invoice && c.invoice.no === inv.inv_ref);
-    if (alreadyPatched) { console.log(`⏭ Skip (sudah ada): ${inv.inv_ref}`); continue; }
+    // Skip hanya jika sudah ada DAN data diskon sudah lengkap (tidak perlu update)
+    const hasDisc = inv.items.some(x => x.disc > 0) || inv.diskon > 0;
+    const existingJob = candidates.find(c => c.invoice && c.invoice.no === inv.inv_ref);
+    if (existingJob) {
+      if (!hasDisc) { console.log(`⏭ Skip (sudah ada): ${inv.inv_ref}`); continue; }
+      // Ada disc — cek apakah existing sudah benar
+      const exInv = existingJob.invoice;
+      const itemDiscOK = inv.items.every((it,i) => (exInv.items||[])[i] && (exInv.items[i].disc||0) === it.disc);
+      const diskonOK = (exInv.diskon||0) === inv.diskon;
+      if (itemDiscOK && diskonOK) { console.log(`⏭ Skip (diskon sudah benar): ${inv.inv_ref}`); continue; }
+      console.log(`🔄 Update diskon: ${inv.inv_ref} diskon=${inv.diskon} itemDisc=${inv.items.filter(x=>x.disc>0).map(x=>x.disc)}`);
+    }
 
     if (!candidates.length) { unmatched.push(inv); continue; }
 
