@@ -3650,6 +3650,7 @@ window.fixOldInvoices2 = async function(dryRun = true) {
   const { doc, updateDoc } = window._fbFns;
   const allJobs = window._allJobs || [];
   const normWaLocal = wa => { let s = String(wa||'').replace(/[\s\-\(\)]/g,''); if (s.startsWith('0')) s = '62' + s.slice(1); if (s.startsWith('8')) s = '62' + s; return s; };
+  const toDate = t => { try { return t && t.toDate ? t.toDate() : (t ? new Date(t) : null); } catch(e) { return null; } };
 
   // Index jobs by WA number (all visits included)
   const byWa = {};
@@ -3678,8 +3679,8 @@ window.fixOldInvoices2 = async function(dryRun = true) {
     // Pick closest job by date
     const invDate = new Date(inv.inv_date);
     const best = candidates.sort((a,b) => {
-      const da = Math.abs((toDateObj(a.doneAt || a.createdAt) || new Date(0)) - invDate);
-      const db = Math.abs((toDateObj(b.doneAt || b.createdAt) || new Date(0)) - invDate);
+      const da = Math.abs((toDate(a.doneAt || a.createdAt) || new Date(0)) - invDate);
+      const db = Math.abs((toDate(b.doneAt || b.createdAt) || new Date(0)) - invDate);
       return da - db;
     })[0];
 
