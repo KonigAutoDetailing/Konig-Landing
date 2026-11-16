@@ -3228,6 +3228,280 @@ function filterService(val) {
   }).join('');
   dd.style.display='block';
 }
+
+// ============================================================
+// TOOL: Patch invoice history — sesuaikan invoice field di
+//       Firestore dengan data invoice PDF asli (harga lama).
+// Jalankan dari console saat sudah login di halaman ini:
+//   fixOldInvoices()        → preview dulu (dry-run)
+//   fixOldInvoices(false)   → eksekusi update ke Firestore
+// ============================================================
+window.fixOldInvoices = async function(dryRun = true) {
+  const { doc, updateDoc } = window._fbFns;
+  const INVOICE_DATA = [
+    { inv_ref:'INV/2026/0001', inv_date:'2025-12-01', inv_due:'2025-12-08', cust_wa:'6281317427181', keterangan:'BMW X1 - WHITE',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0007', inv_date:'2025-12-30', inv_due:'2026-01-06', cust_wa:'6281218184888', keterangan:'TOYOTA ALPHARD - BLACK',
+      items:[{produk:'Signature Coating — Sonax CC Pro',qty:1,harga:5500000,disc:0,size:'Large'}],
+      diskon:2500000, subtotal:5500000, total:3000000, dp:null },
+    { inv_ref:'INV/2026/0010', inv_date:'2025-12-27', inv_due:'2026-01-03', cust_wa:'6287881644633', keterangan:'HONDA JAZZ GK5',
+      items:[{produk:'Essential Coating — Sapphire 10H',qty:1,harga:2000000,disc:0,size:'Small'}],
+      diskon:900000, subtotal:2000000, total:1100000, dp:{no:'INV-DP/2026/0002',date:'2026-01-09',amount:1000000} },
+    { inv_ref:'INV/2026/0016', inv_date:'2026-01-02', inv_due:'2026-01-09', cust_wa:'6281210680447', keterangan:'MITSUBISHI DESTINATOR - GRAY',
+      items:[{produk:'Prestige Coating — Gyeon Q² Syncro EVO',qty:1,harga:8000000,disc:0,size:'Large'}],
+      diskon:3200000, subtotal:8000000, total:4800000, dp:null },
+    { inv_ref:'INV/2026/0019', inv_date:'2026-01-05', inv_due:'2026-01-12', cust_wa:'6282112420787', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0021', inv_date:'2026-01-10', inv_due:'2026-01-17', cust_wa:'6281217771719', keterangan:'HONDA MOBILIO - WHITE',
+      items:[{produk:'Signature Coating — Sonax CC Pro',qty:1,harga:4500000,disc:0,size:'Medium'}],
+      diskon:0, subtotal:4500000, total:4500000, dp:{no:'INV-DP/2026/0003',date:'2026-01-25',amount:500000} },
+    { inv_ref:'INV/2026/0023', inv_date:'2026-01-27', inv_due:'2026-02-03', cust_wa:'6281336360204', keterangan:'Wuling Almaz - Black',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0025', inv_date:'2026-02-01', inv_due:'2026-02-08', cust_wa:'6287771201510', keterangan:'WULING DARION - BLACK',
+      items:[{produk:'Signature Coating — Sonax CC Pro',qty:1,harga:4500000,disc:0,size:'Large'}],
+      diskon:1575000, subtotal:4500000, total:2925000, dp:{no:'INV-DP/2026/0004',date:'2026-02-08',amount:500000} },
+    { inv_ref:'INV/2026/0026', inv_date:'2026-02-02', inv_due:'2026-02-09', cust_wa:'6281288569784', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0027', inv_date:'2026-02-04', inv_due:'2026-02-11', cust_wa:'6281517209493', keterangan:'HONDA CRV - GRAY - B2778GS',
+      items:[{produk:'Essential Coating — Sapphire 10H',qty:1,harga:2500000,disc:0,size:'Medium'}],
+      diskon:500000, subtotal:2500000, total:2000000, dp:{no:'INV-DP/2026/0005',date:'2026-02-04',amount:500000} },
+    { inv_ref:'INV/2026/0029', inv_date:'2026-02-11', inv_due:'2026-02-18', cust_wa:'6281327094972', keterangan:'',
+      items:[{produk:'Essential Coating — Sapphire 10H',qty:1,harga:2500000,disc:0,size:'Medium'}],
+      diskon:500000, subtotal:2500000, total:2000000, dp:{no:'INV-DP/2026/0006',date:'2026-02-11',amount:500000} },
+    { inv_ref:'INV/2026/0034', inv_date:'2026-02-19', inv_due:'2026-02-26', cust_wa:'628119316889', keterangan:'BYD SEALION 7 - BLACK - B1075UNW',
+      items:[{produk:'Essential Coating — Sapphire 10H',qty:1,harga:3000000,disc:0,size:'Large'}],
+      diskon:600000, subtotal:3000000, total:2400000, dp:{no:'INV-DP/2026/0007',date:'2026-02-26',amount:500000} },
+    { inv_ref:'INV/2026/0035', inv_date:'2026-02-19', inv_due:'2026-02-26', cust_wa:'6285286868888', keterangan:'BYD M6 - WHITE',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0038', inv_date:'2026-02-25', inv_due:'2026-03-04', cust_wa:'6281213588265', keterangan:'WULING CLOUD - WHITE',
+      items:[{produk:'Interior Detailing — 2 Row',qty:1,harga:750000,disc:0,size:''}],
+      diskon:350000, subtotal:750000, total:400000, dp:null },
+    { inv_ref:'INV/2026/0040', inv_date:'2026-03-07', inv_due:'2026-03-14', cust_wa:'6282112020100', keterangan:'TOYOTA FORTUNER - BLACK',
+      items:[{produk:'Essential Coating — Sapphire 10H',qty:1,harga:3000000,disc:33,size:'Large'}],
+      diskon:0, subtotal:3000000, total:2000000, dp:{no:'INV-DP/2026/0009',date:'2026-03-14',amount:500000} },
+    { inv_ref:'INV/2026/0043', inv_date:'2026-03-07', inv_due:'2026-03-14', cust_wa:'6281235016007', keterangan:'MAZDA CX5 - BLACK',
+      items:[{produk:'Signature Coating — Sonax CC Pro',qty:1,harga:4500000,disc:10,size:'Medium'}],
+      diskon:405000, subtotal:4050000, total:3645000, dp:{no:'INV-DP/2026/0012',date:'2026-03-14',amount:500000} },
+    { inv_ref:'INV/2026/0048', inv_date:'2026-03-13', inv_due:'2026-03-20', cust_wa:'62811993389', keterangan:'WULING BINGUO - CREAM',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0049', inv_date:'2026-03-16', inv_due:'2026-03-23', cust_wa:'6281320414151', keterangan:'',
+      items:[{produk:'Essential Coating — Sapphire 10H',qty:1,harga:2500000,disc:0,size:'Medium'}],
+      diskon:500000, subtotal:2500000, total:2000000, dp:{no:'INV-DP/2026/0010',date:'2026-03-27',amount:500000} },
+    { inv_ref:'INV/2026/0059', inv_date:'2026-04-06', inv_due:'2026-04-13', cust_wa:'6281217771719', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''},{produk:'Coating Repair',qty:1,harga:800000,disc:0,size:''}],
+      diskon:300000, subtotal:1000000, total:700000, dp:null },
+    { inv_ref:'INV/2026/0062', inv_date:'2026-04-11', inv_due:'2026-04-18', cust_wa:'6282119774743', keterangan:'TOYOTA INNOVA - WHITE',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0068', inv_date:'2026-04-26', inv_due:'2026-05-03', cust_wa:'628129667562', keterangan:'',
+      items:[{produk:'Signature Coating — Sonax CC Pro',qty:1,harga:4500000,disc:0,size:'Medium'}],
+      diskon:675000, subtotal:4500000, total:3825000, dp:{no:'INV-DP/2026/0023',date:'2026-05-03',amount:500000} },
+    { inv_ref:'INV/2026/0074', inv_date:'2026-05-04', inv_due:'2026-05-11', cust_wa:'6281257442130', keterangan:'LEXUS RX350h - WHITE - B1579LKD',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''},{produk:'Window Coating — Semua Kaca',qty:1,harga:500000,disc:0,size:''}],
+      diskon:0, subtotal:700000, total:700000, dp:null },
+    { inv_ref:'INV/2026/0088', inv_date:'2026-06-02', inv_due:'2026-06-09', cust_wa:'6287808072871', keterangan:'BYD ATTO3 - LIGHT GREY',
+      items:[{produk:'Graphene Coating — Eternity',qty:1,harga:5500000,disc:0,size:'Medium'}],
+      diskon:1375000, subtotal:5500000, total:4125000, dp:null },
+    { inv_ref:'INV/2026/0090', inv_date:'2026-06-05', inv_due:'2026-06-12', cust_wa:'6281336360204', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0091', inv_date:'2026-06-06', inv_due:'2026-06-13', cust_wa:'628119792926', keterangan:'',
+      items:[{produk:'Interior Detailing — 2 Row',qty:1,harga:750000,disc:0,size:''},{produk:'Engine Detailing',qty:1,harga:450000,disc:0,size:''}],
+      diskon:0, subtotal:1200000, total:1200000, dp:null },
+    { inv_ref:'INV/2026/0096', inv_date:'2026-06-17', inv_due:'2026-06-24', cust_wa:'6281257442130', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0097', inv_date:'2026-06-20', inv_due:'2026-06-27', cust_wa:'628119995336', keterangan:'HONDA BRIO - WHITE - B2028UII',
+      items:[{produk:'Interior Detailing — 2 Row',qty:1,harga:750000,disc:0,size:''}],
+      diskon:0, subtotal:750000, total:750000, dp:{no:'INV-DP/2026/0030',date:'2026-06-27',amount:200000} },
+    { inv_ref:'INV/2026/0102', inv_date:'2026-06-27', inv_due:'2026-07-04', cust_wa:'628129942881', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0103', inv_date:'2026-06-29', inv_due:'2026-07-06', cust_wa:'628129189898', keterangan:'',
+      items:[{produk:'Interior Detailing — 2 Row',qty:1,harga:1000000,disc:0,size:''}],
+      diskon:0, subtotal:1000000, total:1000000, dp:{no:'INV-DP/2026/0031',date:'2026-07-06',amount:200000} },
+    { inv_ref:'INV/2026/0105', inv_date:'2026-06-30', inv_due:'2026-07-07', cust_wa:'6289699702699', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0107', inv_date:'2026-07-01', inv_due:'2026-07-08', cust_wa:'6281257442130', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0109', inv_date:'2026-07-08', inv_due:'2026-07-15', cust_wa:'6289699702699', keterangan:'',
+      items:[{produk:'Coating Reparation',qty:2,harga:500000,disc:0,size:''}],
+      diskon:0, subtotal:1000000, total:1000000, dp:null },
+    { inv_ref:'INV/2026/0112', inv_date:'2026-07-20', inv_due:'2026-07-27', cust_wa:'6281295786603', keterangan:'',
+      items:[{produk:'Graphene Coating — Eternity',qty:1,harga:5500000,disc:15,size:'Medium'}],
+      diskon:0, subtotal:4675000, total:4675000, dp:null },
+    { inv_ref:'INV/2026/0114', inv_date:'2026-07-24', inv_due:'2026-07-31', cust_wa:'6287894404860', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0125', inv_date:'2026-08-21', inv_due:'2026-08-28', cust_wa:'6287818232668', keterangan:'',
+      items:[{produk:'Graphene Coating — Shield',qty:1,harga:4500000,disc:0,size:'Medium'}],
+      diskon:765000, subtotal:4500000, total:3735000, dp:null },
+    { inv_ref:'INV/2026/0127', inv_date:'2026-08-24', inv_due:'2026-08-31', cust_wa:'6281280957500', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0129', inv_date:'2026-08-29', inv_due:'2026-09-05', cust_wa:'6285353992255', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0134', inv_date:'2026-09-08', inv_due:'2026-09-15', cust_wa:'6282278077772', keterangan:'BMW E90',
+      items:[{produk:'Graphene Coating — Armor',qty:1,harga:3000000,disc:0,size:'Small'}],
+      diskon:510000, subtotal:3000000, total:2490000, dp:null },
+    { inv_ref:'INV/2026/0135', inv_date:'2026-09-10', inv_due:'2026-09-17', cust_wa:'6281212151838', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0137', inv_date:'2026-09-11', inv_due:'2026-09-18', cust_wa:'6285179892797', keterangan:'',
+      items:[{produk:'Graphene Coating — Eternity',qty:1,harga:5500000,disc:0,size:'Medium'}],
+      diskon:935000, subtotal:5500000, total:4565000, dp:{no:'INV-DP/2026/0038',date:'2026-09-18',amount:500000} },
+    { inv_ref:'INV/2026/0139', inv_date:'2026-09-15', inv_due:'2026-09-22', cust_wa:'6282136635818', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0140', inv_date:'2026-09-21', inv_due:'2026-09-28', cust_wa:'6282112020004', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0147', inv_date:'2026-10-07', inv_due:'2026-10-14', cust_wa:'6282119110511', keterangan:'',
+      items:[{produk:'Interior Detailing — 2 Row',qty:1,harga:750000,disc:0,size:''},{produk:'Engine Detailing',qty:1,harga:450000,disc:0,size:''}],
+      diskon:0, subtotal:1200000, total:1200000, dp:null },
+    { inv_ref:'INV/2026/0149', inv_date:'2026-10-21', inv_due:'2026-10-28', cust_wa:'6281218157476', keterangan:'',
+      items:[{produk:'Premium Wash Exterior',qty:1,harga:200000,disc:0,size:''}],
+      diskon:0, subtotal:200000, total:200000, dp:null },
+    { inv_ref:'INV/2026/0150', inv_date:'2026-10-26', inv_due:'2026-11-02', cust_wa:'6281328439477', keterangan:'',
+      items:[{produk:'Engine Detailing',qty:1,harga:450000,disc:0,size:''}],
+      diskon:0, subtotal:450000, total:450000, dp:null },
+    { inv_ref:'INV/2026/0151', inv_date:'2026-10-28', inv_due:'2026-11-04', cust_wa:'62817168892', keterangan:'TOYOTA ALPHARD - BLACK',
+      items:[{produk:'Graphene Coating — Armor',qty:1,harga:4500000,disc:0,size:'X-tra Large'}],
+      diskon:450000, subtotal:4500000, total:4050000, dp:{no:'INV-DP/2026/0042',date:'2026-11-04',amount:500000} },
+    { inv_ref:'INV/2026/0154', inv_date:'2026-11-08', inv_due:'2026-11-15', cust_wa:'6282211116980', keterangan:'',
+      items:[{produk:'Graphene Coating — Eternity',qty:1,harga:5500000,disc:0,size:'Medium'}],
+      diskon:1100000, subtotal:5500000, total:4400000, dp:null },
+    { inv_ref:'INV/2026/0156', inv_date:'2026-11-10', inv_due:'2026-11-17', cust_wa:'6287782424411', keterangan:'Toyota Innova - White',
+      items:[{produk:'Panel Coating',qty:3,harga:500000,disc:0,size:''}],
+      diskon:0, subtotal:1500000, total:1500000, dp:null },
+    { inv_ref:'INV/2026/0158', inv_date:'2026-11-12', inv_due:'2026-11-19', cust_wa:'6281517639882', keterangan:'',
+      items:[{produk:'Window Coating — Semua Kaca',qty:1,harga:500000,disc:0,size:''}],
+      diskon:0, subtotal:500000, total:500000, dp:null },
+    { inv_ref:'INV/2026/0160', inv_date:'2026-11-13', inv_due:'2026-11-20', cust_wa:'6281275143274', keterangan:'Toyota Rush - Black',
+      items:[{produk:'Express Polish',qty:1,harga:1250000,disc:0,size:'Medium'}],
+      diskon:0, subtotal:1250000, total:1250000, dp:{no:'INV-DP/2026/0045',date:'2026-11-20',amount:200000} },
+  ];
+
+  function normWa(wa) {
+    if (!wa) return '';
+    wa = String(wa).replace(/\D/g,'');
+    if (wa.startsWith('0')) wa = '62' + wa.slice(1);
+    if (wa.startsWith('8')) wa = '62' + wa;
+    return wa;
+  }
+
+  const jobs = window._allJobs || [];
+  if (!jobs.length) { console.error('❌ window._allJobs kosong. Pastikan halaman sudah loaded dan login.'); return; }
+  console.log(`Total jobs di Firestore: ${jobs.length}`);
+
+  const results = [], unmatched = [];
+
+  for (const inv of INVOICE_DATA) {
+    const invWa = normWa(inv.cust_wa);
+    const invDate = new Date(inv.inv_date);
+    const mainService = inv.items[0]?.produk || '';
+
+    // 1) Filter by WA
+    let matched = jobs.filter(j => normWa(j.wa) === invWa);
+
+    // 2) Kalau ada banyak job dari WA sama, filter lebih spesifik by service
+    if (matched.length > 1) {
+      const svcKey = mainService.split(' — ')[0].toLowerCase();
+      const byService = matched.filter(j => (j.service||'').toLowerCase().includes(svcKey) || svcKey.includes((j.service||'').toLowerCase().split(' — ')[0]));
+      if (byService.length > 0) matched = byService;
+    }
+
+    // 3) Kalau masih banyak, filter by tanggal (dalam 60 hari dari invoice)
+    if (matched.length > 1) {
+      const byDate = matched.filter(j => {
+        const jDate = new Date(j.doneAt || j.createdAt || '2000-01-01');
+        return Math.abs(jDate - invDate) < 60 * 86400000;
+      });
+      if (byDate.length > 0) matched = byDate;
+    }
+
+    // 4) Kalau masih banyak, ambil yang paling dekat tanggalnya
+    if (matched.length > 1) {
+      matched = [matched.sort((a,b) => {
+        const da = Math.abs(new Date(a.doneAt||a.createdAt||'2000-01-01') - invDate);
+        const db2 = Math.abs(new Date(b.doneAt||b.createdAt||'2000-01-01') - invDate);
+        return da - db2;
+      })[0]];
+    }
+
+    if (!matched.length) {
+      unmatched.push(inv);
+      console.warn(`⚠️ TIDAK COCOK: ${inv.inv_ref} | WA:${invWa} | ${mainService}`);
+      continue;
+    }
+
+    const job = matched[0];
+    const size = inv.items.find(it => it.size)?.size || '';
+
+    // Build invoice object sesuai struktur Firestore
+    const invoice = {
+      no: inv.inv_ref,
+      date: inv.inv_date,
+      due: inv.inv_due,
+      size: size,
+      items: inv.items.map(it => ({
+        produk: it.size ? `${it.produk} - ${it.size}` : it.produk,
+        desc: '',
+        qty: it.qty,
+        harga: it.harga,
+        disc: it.disc || 0,
+      })),
+      diskon: inv.diskon,
+      diskonPct: 0,
+      keterangan: inv.keterangan || '',
+      pay: 'lunas',
+      pelunasan: { amount: 0, date: inv.inv_date },
+      dp: inv.dp || null,
+      subtotal: inv.subtotal,
+      total: inv.total,
+      tertagih: 0,
+    };
+
+    results.push({ job, inv, invoice });
+
+    if (dryRun) {
+      console.log(`✅ ${inv.inv_ref} → job ${job.id} (${job.custName||job.wa}) | ${job.service} | ${job.car||''}`);
+      console.log(`   ${invoice.items.map(it=>it.produk+' Rp'+it.harga.toLocaleString('id-ID')).join(' + ')} | diskon=${inv.diskon.toLocaleString('id-ID')} | total=Rp${invoice.total.toLocaleString('id-ID')}`);
+    }
+  }
+
+  if (dryRun) {
+    console.log(`\n📊 PREVIEW: ${results.length} cocok, ${unmatched.length} tidak cocok`);
+    if (unmatched.length) console.table(unmatched.map(u=>({inv_ref:u.inv_ref,wa:u.cust_wa,service:u.items[0]?.produk})));
+    console.log('Kalau OK → jalankan: fixOldInvoices(false)');
+    return { results, unmatched };
+  }
+
+  // === EKSEKUSI UPDATE ===
+  console.log(`\n🔄 Update ${results.length} invoice ke Firestore...`);
+  let ok = 0, fail = 0;
+  for (const { job, invoice } of results) {
+    try {
+      await updateDoc(doc(window._db, 'konig_progress', job.id), { invoice });
+      console.log(`✅ ${invoice.no} → ${job.id}`);
+      ok++;
+    } catch(e) {
+      console.error(`❌ GAGAL ${invoice.no}:`, e);
+      fail++;
+    }
+  }
+  console.log(`\n🏁 Selesai: ${ok} berhasil, ${fail} gagal`);
+  if (ok > 0) loadJobs();
+};
 </script>
 </body>
 </html>
