@@ -2107,6 +2107,7 @@ window.openNewJobModal = function() {
   document.getElementById('jobServiceInput').value = '';
   document.getElementById('jobNote').value = '';
   renderStepsEditor([], null);
+  window._pendingMarkDone = false;
   openModal('modalJob');
 }
 
@@ -2140,6 +2141,7 @@ window.openEditJobModal = async function(id) {
     const dpNomEl = document.getElementById('jobDpNominal'); if(dpNomEl) dpNomEl.value = d.dp;
   }
   const chr = document.getElementById('carHistoryRow'); if(chr) chr.style.display = 'none';
+  window._pendingMarkDone = false;
   openModal('modalJob');
 }
 
@@ -2170,6 +2172,18 @@ window.toggleStep = function(id) {
   window._editorDoneSteps = newDone;
   window._editorActiveStep = id;
   renderStepsEditor(newDone, id);
+
+  // Kalau step "done" (100%) dipilih → langsung trigger flow selesai saat Simpan
+  if (id === 'done') {
+    window._pendingMarkDone = true;
+    // Highlight tombol simpan biar keliatan
+    const btn = document.getElementById('btnSaveJob');
+    if (btn) { btn.textContent = '✅ Simpan & Selesai →'; btn.style.background = '#166534'; btn.style.color = '#4ade80'; }
+  } else {
+    window._pendingMarkDone = false;
+    const btn = document.getElementById('btnSaveJob');
+    if (btn) { btn.textContent = 'Simpan →'; btn.style.background = ''; btn.style.color = ''; }
+  }
 }
 
 // ── SAVE JOB ──
@@ -2270,8 +2284,15 @@ window.saveJob = async function() {
     }
 
     closeModal('modalJob');
+    // Reset tombol simpan
+    const btnS = document.getElementById('btnSaveJob');
+    if (btnS) { btnS.textContent = 'Simpan →'; btnS.style.background = ''; btnS.style.color = ''; }
     loadJobs();
-    if (justDone) window.openWaUpdate(justDone);
+    const triggerDoneId = editId || (justDone) || null;
+    if (window._pendingMarkDone && triggerDoneId) {
+      window._pendingMarkDone = false;
+      setTimeout(() => window.markDone(triggerDoneId), 300);
+    } else if (justDone) window.openWaUpdate(justDone);
     else if (window._welcomeJob) { const wj = window._welcomeJob; window._welcomeJob = null; window.openWelcome(wj); }
   } catch(e) {
     alert('Gagal simpan: ' + e.message);
