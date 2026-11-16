@@ -265,6 +265,8 @@
     .form-group input{width:100%;min-width:0}
     #modalJob input[type=text]{text-transform:uppercase}
     #modalJob input[type=text]::placeholder{text-transform:none}
+    .size-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:9px 4px;cursor:pointer;transition:.15s}
+    .size-btn.active{background:rgba(123,47,190,0.25);border-color:var(--purpleB);color:var(--white)}
     .form-row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
     @media(max-width:640px){ .modal-box{padding:20px 16px} }
     .btn-login{
@@ -602,6 +604,16 @@
       </div>
     </div>
     <datalist id="brandList"></datalist><datalist id="modelList"></datalist><datalist id="colorList"></datalist>
+    <div class="form-group">
+      <label>Ukuran Kendaraan</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+        <button type="button" class="size-btn" data-size="Small" onclick="pickJobSize(this)">Small</button>
+        <button type="button" class="size-btn" data-size="Medium" onclick="pickJobSize(this)">Medium</button>
+        <button type="button" class="size-btn" data-size="Large" onclick="pickJobSize(this)">Large</button>
+        <button type="button" class="size-btn" data-size="X-tra Large" onclick="pickJobSize(this)">X-tra Large</button>
+      </div>
+      <input type="hidden" id="jobSize"/>
+    </div>
     <div class="form-group">
       <label>No. WhatsApp</label>
       <input type="tel" id="jobWa" placeholder="0812xxxx" inputmode="tel" oninput="window._waPicked=false; updateContactBtns(); scheduleRepeatCheck(); window.showCarHistory && window.showCarHistory()" onblur="window.showCarHistory && window.showCarHistory()"/>
@@ -1194,6 +1206,7 @@ window.renderJobList = function(){
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
+          <button class="btn-sm" style="background:#128C7E;color:#fff" onclick="sendWelcomeForJob('${j.id}')">💬 WA Welcome</button>
           ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : (j.invoice && j.invoice.pay === 'dp' ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice DP</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice DP</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">💰 Invoice DP</button>`)}
           ${isDone ? lunasBtn(j) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
@@ -1711,6 +1724,13 @@ window.openWelcome = function(j){
   openModal('modalWa');
 };
 
+// Tombol WA Welcome dari job aktif (kirim ulang pesan selamat datang)
+window.sendWelcomeForJob = function(id) {
+  const j = (window._allJobs || []).find(x => x.id === id);
+  if (!j) return;
+  window.openWelcome(j);
+};
+
 window.openWaUpdate = async function(onlyId){
   const { collection, getDocs, query, orderBy } = window._fbFns;
   const list = document.getElementById('waList');
@@ -2084,6 +2104,15 @@ window.saveToContacts = function(){
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 };
 
+// ── SIZE SELECTOR ──
+function setJobSize(size) {
+  document.getElementById('jobSize').value = size || 'Medium';
+  document.querySelectorAll('.size-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.size === (size || 'Medium'));
+  });
+}
+window.pickJobSize = function(btn) { setJobSize(btn.dataset.size); };
+
 // ── NEW JOB MODAL ──
 window.openNewJobModal = function() {
   document.getElementById('btnDeleteJob').style.display = 'none';
@@ -2107,6 +2136,7 @@ window.openNewJobModal = function() {
   document.getElementById('jobServiceInput').value = '';
   document.getElementById('jobNote').value = '';
   renderStepsEditor([], null);
+  setJobSize('Medium');
   window._pendingMarkDone = false;
   openModal('modalJob');
 }
@@ -2141,6 +2171,9 @@ window.openEditJobModal = async function(id) {
     const dpNomEl = document.getElementById('jobDpNominal'); if(dpNomEl) dpNomEl.value = d.dp;
   }
   const chr = document.getElementById('carHistoryRow'); if(chr) chr.style.display = 'none';
+  // Load size (dari invoice atau guess berdasarkan model)
+  const savedSize = (d.invoice && d.invoice.size) ? d.invoice.size : guessSize(d);
+  setJobSize(savedSize);
   window._pendingMarkDone = false;
   openModal('modalJob');
 }
@@ -2227,7 +2260,8 @@ window.saveJob = async function() {
     if (editId) {
       let wasDone = false;
       try { const prev = await window._fbFns.getDoc(doc(window._db, 'konig_progress', editId)); const pd = prev.exists() ? prev.data() : {}; wasDone = (pd.doneSteps || []).includes('done') || pd.activeStep === 'done'; } catch(e) {}
-      const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, updatedAt: serverTimestamp() };
+      const jobSizeVal = document.getElementById('jobSize').value || 'Medium';
+      const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, updatedAt: serverTimestamp() };
       if (dpOnly && dpNominal) upd.dp = dpNominal;
       if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); justDone = editId; }
       await updateDoc(doc(window._db, 'konig_progress', editId), upd);
@@ -2251,7 +2285,8 @@ window.saveJob = async function() {
         carry = { visits: (old.visits || []).concat([prevVisit]), vouchers: jobVouchers({ ...old, id: code }) };
         if (window._ownerChoice !== 'new' && normWa(old.wa) === normWa(wa)) { if (old.reviewed) carry.reviewed = old.reviewed; if (old.reviewReminder) carry.reviewReminder = old.reviewReminder; }
       }
-      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(dpOnly && dpNominal ? { dp: dpNominal } : {}), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
+      const jobSizeVal = document.getElementById('jobSize').value || 'Medium';
+      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(dpOnly && dpNominal ? { dp: dpNominal } : {}), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
       window._repeatOf = null;
       if (nowDone) justDone = code;
       else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName, voucherCode };
@@ -3493,6 +3528,204 @@ window.fixOldInvoices = async function(dryRun = true) {
     try {
       await updateDoc(doc(window._db, 'konig_progress', job.id), { invoice });
       console.log(`✅ ${invoice.no} → ${job.id}`);
+      ok++;
+    } catch(e) {
+      console.error(`❌ GAGAL ${invoice.no}:`, e);
+      fail++;
+    }
+  }
+  console.log(`\n🏁 Selesai: ${ok} berhasil, ${fail} gagal`);
+  if (ok > 0) loadJobs();
+};
+
+// ── PHASE 2: PATCH 102 INVOICE LAMA ──
+// Usage: fixOldInvoices2()       → preview
+//        fixOldInvoices2(false)  → eksekusi
+const INVOICE_DATA_2 = [
+  {inv_ref:"INV/2026/0002",inv_date:"2025-12-08",inv_due:"2025-12-08",cust_wa:"6281317427181",keterangan:"",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2500000,disc:0}],diskon:1000000,subtotal:2500000,total:1500000,dp:null},
+  {inv_ref:"INV/2026/0003",inv_date:"2025-12-12",inv_due:"2025-12-12",cust_wa:"6287775577497",keterangan:"",size:"",items:[{produk:"Essential Coating — Sonax CC One",desc:'',qty:1,harga:3000000,disc:0}],diskon:1200000,subtotal:3000000,total:1800000,dp:null},
+  {inv_ref:"INV/2026/0004",inv_date:"2025-12-01",inv_due:"2025-12-01",cust_wa:"6281293106277",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0005",inv_date:"2025-12-14",inv_due:"2025-12-14",cust_wa:"6281280957500",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:4500000,disc:0}],diskon:1575000,subtotal:4500000,total:2925000,dp:null},
+  {inv_ref:"INV/2026/0006",inv_date:"2025-12-22",inv_due:"2025-12-22",cust_wa:"6281280957500",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0008",inv_date:"2025-12-30",inv_due:"2025-12-30",cust_wa:"628561404218",keterangan:"",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2500000,disc:0}],diskon:750000,subtotal:2500000,total:1750000,dp:null},
+  {inv_ref:"INV/2026/0009",inv_date:"2025-12-26",inv_due:"2026-01-09",cust_wa:"6281387882348",keterangan:"",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2000000,disc:0}],diskon:400000,subtotal:2000000,total:1600000,dp:{no:"INV-DP/2026/0001",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0018",inv_date:"2026-01-04",inv_due:"2026-01-11",cust_wa:"6281294832127",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0020",inv_date:"2026-01-08",inv_due:"2026-01-15",cust_wa:"6281233160694",keterangan:"Total                                   Rp 2,450,000.00",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:3500000,disc:0}],diskon:1050000,subtotal:3500000,total:2450000,dp:null},
+  {inv_ref:"INV/2026/0022",inv_date:"2026-01-19",inv_due:"2026-01-26",cust_wa:"628978335661",keterangan:"Total                                  Rp 1,875,000.00",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2500000,disc:0}],diskon:625000,subtotal:2500000,total:1875000,dp:null},
+  {inv_ref:"INV/2026/0024",inv_date:"2026-01-31",inv_due:"2026-02-07",cust_wa:"628129942881",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0028",inv_date:"2026-02-05",inv_due:"2026-02-12",cust_wa:"62811993389",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0030",inv_date:"2026-02-13",inv_due:"2026-02-20",cust_wa:"628118608894",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0031",inv_date:"2026-02-14",inv_due:"2026-02-21",cust_wa:"6285358148226",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0032",inv_date:"2026-02-16",inv_due:"2026-02-23",cust_wa:"6281233396605",keterangan:"",size:"",items:[{produk:"Interior Detailing — 1 Row",desc:'',qty:1,harga:1000000,disc:0}],diskon:0,subtotal:1000000,total:1000000,dp:null},
+  {inv_ref:"INV/2026/0033",inv_date:"2026-02-17",inv_due:"2026-02-24",cust_wa:"6281373805399",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0036",inv_date:"2026-02-20",inv_due:"2026-02-27",cust_wa:"628118789992",keterangan:"Total                                   Rp 150,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:50000}],diskon:0,subtotal:150000,total:150000,dp:null},
+  {inv_ref:"INV/2026/0037",inv_date:"2026-02-23",inv_due:"2026-03-02",cust_wa:"6285310027353",keterangan:"",size:"",items:[{produk:"Interior Detailing — 3 Row",desc:'',qty:1,harga:1250000,disc:0}],diskon:750000,subtotal:1250000,total:500000,dp:null},
+  {inv_ref:"INV/2026/0039",inv_date:"2026-02-27",inv_due:"2026-03-06",cust_wa:"6285780020234",keterangan:"",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2500000,disc:0}],diskon:250000,subtotal:2500000,total:2250000,dp:{no:"INV-DP/2026/0008",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0044",inv_date:"2026-03-09",inv_due:"2026-03-16",cust_wa:"628118608894",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0045",inv_date:"2026-03-10",inv_due:"2026-03-17",cust_wa:"6285811240840",keterangan:"",size:"",items:[{produk:"Engine Detailing",desc:'',qty:1,harga:450000,disc:0},{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:650000,total:650000,dp:null},
+  {inv_ref:"INV/2026/0046",inv_date:"2026-03-12",inv_due:"2026-03-19",cust_wa:"6282112020100",keterangan:"Total                                   Rp 1,750,000.00",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2500000,disc:750000}],diskon:0,subtotal:1750000,total:1750000,dp:null},
+  {inv_ref:"INV/2026/0047",inv_date:"2026-03-12",inv_due:"2026-03-19",cust_wa:"6287888750153",keterangan:"",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2500000,disc:0}],diskon:250000,subtotal:2500000,total:2250000,dp:{no:"INV-DP/2026/0013",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0050",inv_date:"2026-03-18",inv_due:"2026-03-25",cust_wa:"6282112020100",keterangan:"",size:"",items:[{produk:"Coating Repair",desc:'',qty:1,harga:800000,disc:0}],diskon:0,subtotal:800000,total:800000,dp:null},
+  {inv_ref:"INV/2026/0051",inv_date:"2026-03-18",inv_due:"2026-03-25",cust_wa:"628118789992",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:5000000,disc:0}],diskon:500000,subtotal:5000000,total:4500000,dp:{no:"INV-DP/2026/0015",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0052",inv_date:"2026-03-25",inv_due:"2026-04-01",cust_wa:"6281320414151",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0053",inv_date:"2026-03-27",inv_due:"2026-04-03",cust_wa:"6281372778855",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:550000,subtotal:750000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0054",inv_date:"2026-03-27",inv_due:"2026-04-03",cust_wa:"6282122188877",keterangan:"",size:"Medium",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2500000,disc:0},{produk:"provides paint protection for up to 3 years. Sticker Spion Sticker Spion 1",desc:'',qty:1,harga:350000,disc:0}],diskon:0,subtotal:2850000,total:2850000,dp:null},
+  {inv_ref:"INV/2026/0055",inv_date:"2026-03-28",inv_due:"2026-04-04",cust_wa:"628118608894",keterangan:"Total                                   Rp 500,000.00",size:"",items:[{produk:"Interior Detailing — 3 Row",desc:'',qty:1,harga:1000000,disc:0}],diskon:500000,subtotal:1000000,total:500000,dp:null},
+  {inv_ref:"INV/2026/0056",inv_date:"2026-03-28",inv_due:"2026-04-04",cust_wa:"6281291273271",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0057",inv_date:"2026-03-30",inv_due:"2026-04-06",cust_wa:"6281225114614",keterangan:"",size:"",items:[{produk:"Window Coating — Semua Kaca",desc:'',qty:1,harga:200000,disc:0},{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:400000,total:400000,dp:null},
+  {inv_ref:"INV/2026/0058",inv_date:"2026-04-02",inv_due:"2026-04-09",cust_wa:"6282261043129",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0060",inv_date:"2026-04-06",inv_due:"2026-04-13",cust_wa:"628127347897",keterangan:"",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:3500000,disc:0}],diskon:350000,subtotal:3500000,total:3150000,dp:{no:"INV-DP/2026/0018",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0061",inv_date:"2026-04-07",inv_due:"2026-04-14",cust_wa:"6281383333015",keterangan:"Down Payment",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:3000000,disc:0}],diskon:0,subtotal:3000000,total:3000000,dp:{no:"INV-DP/2026/0019",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0063",inv_date:"2026-04-15",inv_due:"2026-04-22",cust_wa:"628129942881",keterangan:"Down Payment",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:2000000,disc:0}],diskon:0,subtotal:2000000,total:2000000,dp:{no:"INV-DP/2026/0020",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0064",inv_date:"2026-04-18",inv_due:"2026-04-25",cust_wa:"628179933666",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0065",inv_date:"2026-04-22",inv_due:"2026-04-22",cust_wa:"6285832156164",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:4500000,disc:0}],diskon:675000,subtotal:4500000,total:3825000,dp:{no:"INV-DP/2026/0021",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0066",inv_date:"2026-04-25",inv_due:"2026-05-02",cust_wa:"62817717789",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:5000000,disc:0}],diskon:750000,subtotal:5000000,total:4250000,dp:{no:"INV-DP/2026/0022",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0067",inv_date:"2026-04-25",inv_due:"2026-05-02",cust_wa:"628118789992",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0069",inv_date:"2026-04-30",inv_due:"2026-05-07",cust_wa:"6285211280138",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0070",inv_date:"2026-04-30",inv_due:"2026-05-07",cust_wa:"6281285526578",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:4500000,disc:0}],diskon:675000,subtotal:4500000,total:3825000,dp:{no:"INV-DP/2026/0024",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0071",inv_date:"2026-04-30",inv_due:"2026-05-07",cust_wa:"6287775494232",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0072",inv_date:"2026-05-01",inv_due:"2026-05-08",cust_wa:"6287776107986",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:4500000,disc:0}],diskon:900000,subtotal:4500000,total:3600000,dp:{no:"INV-DP/2026/0025",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0073",inv_date:"2026-05-02",inv_due:"2026-05-09",cust_wa:"6282112348626",keterangan:"Down Payment",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0},{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:0,subtotal:950000,total:950000,dp:{no:"INV-DP/2026/0026",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0075",inv_date:"2026-05-04",inv_due:"2026-05-11",cust_wa:"6281257442130",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0076",inv_date:"2026-05-06",inv_due:"2026-05-13",cust_wa:"6282119774743",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0077",inv_date:"2026-05-06",inv_due:"2026-05-13",cust_wa:"6281295786603",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0078",inv_date:"2026-05-08",inv_due:"2026-05-15",cust_wa:"6281257442130",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0079",inv_date:"2026-05-11",inv_due:"2026-05-18",cust_wa:"6282176223221",keterangan:"",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:550000,disc:0}],diskon:0,subtotal:550000,total:550000,dp:null},
+  {inv_ref:"INV/2026/0080",inv_date:"2026-05-16",inv_due:"2026-05-23",cust_wa:"6281285595535",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0081",inv_date:"2026-05-18",inv_due:"2026-05-25",cust_wa:"6281257442130",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0082",inv_date:"2026-05-19",inv_due:"2026-05-26",cust_wa:"6281233396605",keterangan:"",size:"",items:[{produk:"Interior Detailing — 1 Row",desc:'',qty:1,harga:1000000,disc:0}],diskon:0,subtotal:1000000,total:1000000,dp:null},
+  {inv_ref:"INV/2026/0083",inv_date:"2026-05-21",inv_due:"2026-05-28",cust_wa:"6281362399696",keterangan:"",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:0,subtotal:750000,total:750000,dp:null},
+  {inv_ref:"INV/2026/0084",inv_date:"2026-05-23",inv_due:"2026-05-30",cust_wa:"6285697082372",keterangan:"",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:550000,disc:0}],diskon:0,subtotal:550000,total:550000,dp:null},
+  {inv_ref:"INV/2026/0085",inv_date:"2026-05-27",inv_due:"2026-06-03",cust_wa:"6287797130394",keterangan:"Total                                   Rp 2,625,000.00",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:3500000,disc:0}],diskon:875000,subtotal:3500000,total:2625000,dp:null},
+  {inv_ref:"INV/2026/0086",inv_date:"2025-12-30",inv_due:"2026-06-06",cust_wa:"62811993389",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0087",inv_date:"2026-05-31",inv_due:"2026-06-07",cust_wa:"62811967996",keterangan:"",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:5500000,disc:0}],diskon:1375000,subtotal:5500000,total:4125000,dp:{no:"INV-DP/2026/0027",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0089",inv_date:"2026-06-04",inv_due:"2026-06-11",cust_wa:"6281257442130",keterangan:"",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0092",inv_date:"2026-06-11",inv_due:"2026-06-18",cust_wa:"6281218499394",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0093",inv_date:"2026-06-11",inv_due:"2026-06-18",cust_wa:"6289699702699",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:4000000,disc:0}],diskon:1000000,subtotal:4000000,total:3000000,dp:{no:"INV-DP/2026/0028",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0094",inv_date:"2026-06-13",inv_due:"2026-06-20",cust_wa:"6281299020450",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:5500000,disc:0}],diskon:1375000,subtotal:5500000,total:4125000,dp:{no:"INV-DP/2026/0029",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0095",inv_date:"2026-06-16",inv_due:"2026-06-23",cust_wa:"6281283337440",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0098",inv_date:"2026-06-20",inv_due:"2026-06-27",cust_wa:"6281299020450",keterangan:"",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:5500000,disc:0}],diskon:1375000,subtotal:5500000,total:4125000,dp:null},
+  {inv_ref:"INV/2026/0099",inv_date:"2026-06-23",inv_due:"2026-06-30",cust_wa:"6281383333015",keterangan:"",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:5000000,disc:0}],diskon:1250000,subtotal:5000000,total:3750000,dp:null},
+  {inv_ref:"INV/2026/0100",inv_date:"2026-06-26",inv_due:"2026-07-03",cust_wa:"62811993389",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0101",inv_date:"2026-06-27",inv_due:"2026-07-04",cust_wa:"628118789992",keterangan:"Total                                   Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0104",inv_date:"2026-06-30",inv_due:"2026-07-07",cust_wa:"628161885572",keterangan:"",size:"",items:[{produk:"Prestige Coating — Sonax CC EVO",desc:'',qty:1,harga:8000000,disc:0}],diskon:1500000,subtotal:8000000,total:6500000,dp:null},
+  {inv_ref:"INV/2026/0106",inv_date:"2026-07-01",inv_due:"2026-07-08",cust_wa:"6281233396605",keterangan:"Total                                    Rp 750,000.00",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:0,subtotal:750000,total:750000,dp:null},
+  {inv_ref:"INV/2026/0108",inv_date:"2026-07-08",inv_due:"2026-07-15",cust_wa:"6282376102338",keterangan:"Total                                    Rp 750,000.00",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:0,subtotal:750000,total:750000,dp:null},
+  {inv_ref:"INV/2026/0110",inv_date:"2026-07-09",inv_due:"2026-07-16",cust_wa:"6287786653336",keterangan:"Total                                  Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0111",inv_date:"2026-07-14",inv_due:"2026-07-21",cust_wa:"6281257442130",keterangan:"Total                                  Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0113",inv_date:"2026-07-24",inv_due:"2026-07-31",cust_wa:"62818634788",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0115",inv_date:"2026-07-25",inv_due:"2026-08-01",cust_wa:"6282147549777",keterangan:"Pajak                                           Rp 0.00",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:6000000,disc:900000}],diskon:510000,subtotal:5100000,total:4590000,dp:null},
+  {inv_ref:"INV/2026/0116",inv_date:"2026-07-28",inv_due:"2026-08-04",cust_wa:"6281288291008",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:4000000,disc:0}],diskon:600000,subtotal:4000000,total:3400000,dp:{no:"INV-DP/2026/0032",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0117",inv_date:"2026-07-31",inv_due:"2026-08-07",cust_wa:"62817827058",keterangan:"",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:550000,disc:0}],diskon:0,subtotal:550000,total:550000,dp:null},
+  {inv_ref:"INV/2026/0118",inv_date:"2026-08-04",inv_due:"2026-08-11",cust_wa:"6281318026661",keterangan:"Total                                  Rp 4,675,000.00",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:5500000,disc:0}],diskon:825000,subtotal:5500000,total:4675000,dp:null},
+  {inv_ref:"INV/2026/0119",inv_date:"2026-08-07",inv_due:"2026-08-14",cust_wa:"6281293978950",keterangan:"Down Payment",size:"",items:[{produk:"Essential Coating — Sapphire 10H",desc:'',qty:1,harga:3000000,disc:0}],diskon:0,subtotal:3000000,total:3000000,dp:{no:"INV-DP/2026/0033",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0120",inv_date:"2026-08-11",inv_due:"2026-08-18",cust_wa:"6281233396605",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0121",inv_date:"2026-08-15",inv_due:"2026-08-22",cust_wa:"62821666545566",keterangan:"Total                                   Rp 750,000.00",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:0,subtotal:750000,total:750000,dp:null},
+  {inv_ref:"INV/2026/0122",inv_date:"2026-08-17",inv_due:"2026-08-24",cust_wa:"6285363171315",keterangan:"",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:6000000,disc:0}],diskon:900000,subtotal:6000000,total:5100000,dp:null},
+  {inv_ref:"INV/2026/0123",inv_date:"2026-08-17",inv_due:"2026-08-24",cust_wa:"6285353992255",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:4000000,disc:0}],diskon:600000,subtotal:4000000,total:3400000,dp:{no:"INV-DP/2026/0034",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0124",inv_date:"2026-08-19",inv_due:"2026-08-26",cust_wa:"628118608894",keterangan:"Total                                   Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0126",inv_date:"2026-08-22",inv_due:"2026-08-29",cust_wa:"6287808882802",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0128",inv_date:"2026-08-29",inv_due:"2026-09-05",cust_wa:"62821666545566",keterangan:"Total                                   Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0130",inv_date:"2026-08-29",inv_due:"2026-09-05",cust_wa:"601131489780",keterangan:"Total                                   Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0131",inv_date:"2026-08-30",inv_due:"2026-09-06",cust_wa:"6281906258585",keterangan:"Down Payment",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:4900000,disc:0}],diskon:833000,subtotal:4900000,total:4067000,dp:{no:"INV-DP/2026/0035",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0132",inv_date:"2026-08-30",inv_due:"2026-09-06",cust_wa:"601131489780",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:4000000,disc:0}],diskon:680000,subtotal:4000000,total:3320000,dp:{no:"INV-DP/2026/0036",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0133",inv_date:"2026-09-05",inv_due:"2026-09-12",cust_wa:"628118200737",keterangan:"Down Payment",size:"",items:[{produk:"Prestige Coating — Sonax CC EVO",desc:'',qty:1,harga:7000000,disc:0}],diskon:1190000,subtotal:7000000,total:5810000,dp:{no:"INV-DP/2026/0037",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0136",inv_date:"2026-09-11",inv_due:"2026-09-18",cust_wa:"6281273106340",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0138",inv_date:"2026-09-12",inv_due:"2026-09-19",cust_wa:"62821666545566",keterangan:"Total                                   Rp 750,000.00",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:0,subtotal:750000,total:750000,dp:null},
+  {inv_ref:"INV/2026/0141",inv_date:"2026-09-26",inv_due:"2026-10-03",cust_wa:"6281219860123",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:5500000,disc:0}],diskon:0,subtotal:5500000,total:5500000,dp:{no:"INV-DP/2026/0039",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0142",inv_date:"2026-09-28",inv_due:"2026-10-05",cust_wa:"6287771270999",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:4000000,disc:0}],diskon:0,subtotal:4000000,total:4000000,dp:{no:"INV-DP/2026/0040",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0143",inv_date:"2026-09-28",inv_due:"2026-10-05",cust_wa:"6285179892797",keterangan:"Total                                  Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0144",inv_date:"2026-09-29",inv_due:"2026-10-06",cust_wa:"628127347897",keterangan:"Total                                   Rp 500,000.00",size:"",items:[{produk:"Premium Maintenance",desc:'',qty:1,harga:500000,disc:0}],diskon:0,subtotal:500000,total:500000,dp:null},
+  {inv_ref:"INV/2026/0145",inv_date:"2026-09-29",inv_due:"2026-10-06",cust_wa:"6285363171315",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0146",inv_date:"2026-10-02",inv_due:"2026-10-09",cust_wa:"6282119774743",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0148",inv_date:"2026-10-14",inv_due:"2026-10-21",cust_wa:"6285100888877",keterangan:"",size:"",items:[{produk:"Interior Detailing — 2 Row",desc:'',qty:1,harga:750000,disc:0}],diskon:0,subtotal:750000,total:750000,dp:null},
+  {inv_ref:"INV/2026/0152",inv_date:"2026-10-31",inv_due:"2026-11-07",cust_wa:"62821666545566",keterangan:"Total                                   Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0153",inv_date:"2026-10-31",inv_due:"2026-11-07",cust_wa:"6285353992255",keterangan:"Total                                    Rp 200,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:200000,total:200000,dp:null},
+  {inv_ref:"INV/2026/0155",inv_date:"2026-11-10",inv_due:"2026-11-17",cust_wa:"6289658273373",keterangan:"Down Payment",size:"",items:[{produk:"Matte Coating — Gyeon Q² Matte",desc:'',qty:1,harga:4500000,disc:0}],diskon:1000000,subtotal:4500000,total:3500000,dp:{no:"INV-DP/2026/0043",date:"",amount:500000}},
+  {inv_ref:"INV/2026/0157",inv_date:"2026-11-11",inv_due:"2026-11-18",cust_wa:"6281316645709",keterangan:"Total                                    Rp 400,000.00",size:"",items:[{produk:"Signature Coating — Sonax CC Pro",desc:'',qty:1,harga:200000,disc:0},{produk:"Window Coating — Semua Kaca",desc:'',qty:1,harga:200000,disc:0}],diskon:0,subtotal:400000,total:400000,dp:null},
+  {inv_ref:"INV/2026/0159",inv_date:"2026-11-12",inv_due:"2026-11-19",cust_wa:"62818462888",keterangan:"Down Payment",size:"",items:[{produk:"Graphene Coating — Shield",desc:'',qty:1,harga:5500000,disc:0}],diskon:1100000,subtotal:5500000,total:4400000,dp:{no:"INV-DP/2026/0044",date:"",amount:500000}}
+];
+
+window.fixOldInvoices2 = async function(dryRun = true) {
+  const { doc, updateDoc } = window._fbFns;
+  const allJobs = window._allJobs || [];
+  const normWaLocal = wa => { let s = String(wa||'').replace(/[\s\-\(\)]/g,''); if (s.startsWith('0')) s = '62' + s.slice(1); if (s.startsWith('8')) s = '62' + s; return s; };
+
+  // Index jobs by WA number (all visits included)
+  const byWa = {};
+  for (const j of allJobs) {
+    const jobList = [j, ...(j.visits||[]).map(v => ({ ...j, ...v, _mainId: j.id }))];
+    for (const jj of jobList) {
+      const wa = normWaLocal(jj.wa);
+      if (!wa) continue;
+      if (!byWa[wa]) byWa[wa] = [];
+      byWa[wa].push(jj);
+    }
+  }
+
+  const results = [], unmatched = [];
+
+  for (const inv of INVOICE_DATA_2) {
+    const wa = normWaLocal(inv.cust_wa);
+    const candidates = (byWa[wa] || []);
+
+    // Skip if job already has this exact invoice number (Phase 1 may have set it)
+    const alreadyPatched = candidates.some(c => c.invoice && c.invoice.no === inv.inv_ref);
+    if (alreadyPatched) { console.log(`⏭ Skip (sudah ada): ${inv.inv_ref}`); continue; }
+
+    if (!candidates.length) { unmatched.push(inv); continue; }
+
+    // Pick closest job by date
+    const invDate = new Date(inv.inv_date);
+    const best = candidates.sort((a,b) => {
+      const da = Math.abs((toDateObj(a.doneAt || a.createdAt) || new Date(0)) - invDate);
+      const db = Math.abs((toDateObj(b.doneAt || b.createdAt) || new Date(0)) - invDate);
+      return da - db;
+    })[0];
+
+    // Build invoice object
+    const invoice = {
+      no: inv.inv_ref,
+      date: inv.inv_date,
+      due: inv.inv_due,
+      size: inv.size || '',
+      items: inv.items,
+      diskon: inv.diskon || 0,
+      diskonPct: 0,
+      keterangan: inv.keterangan || '',
+      pay: 'lunas',
+      pelunasan: inv.inv_date,
+      dp: 0,
+      subtotal: inv.subtotal,
+      total: inv.total,
+      tertagih: 0
+    };
+    // If DP exists in PDF, record it
+    if (inv.dp) { invoice.dp = inv.dp.amount || 0; }
+
+    results.push({ job: best, invoice });
+    if (dryRun) {
+      const svc = inv.items.map(x=>x.produk).join(', ');
+      const disc = inv.items.filter(x=>x.disc>0).map(x=>`${x.produk} disc=${x.disc.toLocaleString('id-ID')}`).join('; ');
+      console.log(`${inv.inv_ref}  WA:${wa}  → job:${best.id||best._mainId}  total:${inv.total.toLocaleString('id-ID')}  diskon:${inv.diskon.toLocaleString('id-ID')}${disc?' | item disc: '+disc:''}`);
+    }
+  }
+
+  if (dryRun) {
+    console.log(`\n📊 PREVIEW: ${results.length} cocok, ${unmatched.length} tidak cocok`);
+    if (unmatched.length) console.table(unmatched.map(u=>({inv_ref:u.inv_ref,wa:u.cust_wa,service:u.items[0]?.produk})));
+    console.log('Kalau OK → jalankan: fixOldInvoices2(false)');
+    return { results, unmatched };
+  }
+
+  // === EKSEKUSI UPDATE ===
+  console.log(`\n🔄 Update ${results.length} invoice ke Firestore...`);
+  let ok = 0, fail = 0;
+  for (const { job, invoice } of results) {
+    const targetId = job._mainId || job.id;
+    try {
+      await updateDoc(doc(window._db, 'konig_progress', targetId), { invoice });
+      console.log(`✅ ${invoice.no} → ${targetId}`);
       ok++;
     } catch(e) {
       console.error(`❌ GAGAL ${invoice.no}:`, e);
