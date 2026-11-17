@@ -1212,7 +1212,7 @@ window.renderJobList = function(){
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
         </div>
-        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions">${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span class="lock-note">Tanpa invoice</span>'}${lunasBtn(j)}${Date.now() - jobDoneTime(j) > 3 * 864e5 ? '<span class="lock-note">🔒 Terkunci</span>' : ''}<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
+        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions">${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span class="lock-note">Tanpa invoice</span>'}${lunasBtn(j)}${Date.now() - jobDoneTime(j) > 3 * 864e5 ? `<span class="lock-note">🔒 Terkunci</span><button class="btn-sm" style="background:${j.reviewed ? 'rgba(250,204,21,.15)' : 'transparent'};color:${j.reviewed ? '#facc15' : 'var(--muted)'};border:1px solid ${j.reviewed ? 'rgba(250,204,21,.5)' : 'var(--border)'}" onclick="toggleReviewedDirect('${j.id}', this)">${j.reviewed ? '⭐ Sudah Review' : '⭐ Mark Reviewed'}</button>` : ''}<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
           <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
@@ -1970,6 +1970,22 @@ function setReviewedBtn(on){
   b.textContent = on ? '✓ Sudah Review Google · tap untuk batal' : '⭐ Tandai Sudah Review Google';
   b.style.background = on ? 'rgba(250,204,21,.12)' : 'transparent';
 }
+window.toggleReviewedDirect = async function(id, btn) {
+  const job = (window._allJobs || []).find(j => j.id === id);
+  if (!job) return;
+  const on = !job.reviewed;
+  btn.disabled = true;
+  try {
+    const { doc, updateDoc } = window._fbFns;
+    await updateDoc(doc(window._db, 'konig_progress', id), on ? { reviewed: true, reviewReminder: todayWIB() } : { reviewed: false, reviewReminder: null });
+    job.reviewed = on;
+    btn.textContent = on ? '⭐ Sudah Review' : '⭐ Mark Reviewed';
+    btn.style.background = on ? 'rgba(250,204,21,.15)' : 'transparent';
+    btn.style.color = on ? '#facc15' : 'var(--muted)';
+    btn.style.border = '1px solid ' + (on ? 'rgba(250,204,21,.5)' : 'var(--border)');
+  } catch(e) { alert('Gagal: ' + e.message); }
+  btn.disabled = false;
+};
 window.toggleReviewed = async function(){
   const id = document.getElementById('editJobId').value; if (!id) return;
   const b = document.getElementById('btnReviewed'), on = !b.dataset.on;
