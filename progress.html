@@ -1594,7 +1594,15 @@ function coatingMaintenanceMessage(r){
   const j = r.j;
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const bulan = Math.round(r.age / 30);
-  return 'Halo ' + sapa(j) + ',\n\nSudah sekitar ' + bulan + ' bulan sejak ' + mobil + ' di-coating di KONIG Auto Detailing. Pada usia ini, coating mulai memerlukan perawatan agar proteksinya tetap optimal.\n\nKami mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk *Coating Maintenance* — kami akan inspeksi kondisi coating, bersihkan kontaminan, dan lakukan top-up jika diperlukan, agar coating tetap bekerja maksimal melindungi cat mobil Anda.\n\n*Biaya Maintenance: Rp 1.000.000/kunjungan*\n\nSilakan balas pesan ini untuk menjadwalkan kedatangan.\n\nSalam,\nKONIG Auto Detailing';
+  const fm = jobVouchers(j).filter(v => !v.used && /Maintenance/i.test(v.service||''));
+  let msg = 'Halo ' + sapa(j) + ',\n\nSudah sekitar ' + bulan + ' bulan sejak ' + mobil + ' di-coating di KONIG Auto Detailing. Pada usia ini, coating mulai memerlukan perawatan agar proteksinya tetap optimal.\n\nKami mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk *Coating Maintenance* — kami akan inspeksi kondisi coating, bersihkan kontaminan, dan lakukan top-up jika diperlukan, agar coating tetap bekerja maksimal melindungi cat mobil Anda.\n\n';
+  if (fm.length) {
+    const v = fm[0];
+    msg += 'Anda memiliki voucher *Free ' + v.service + '* (kode ' + v.code + ') yang bisa dipakai untuk kunjungan maintenance ini, sehingga tidak ada biaya yang perlu dibayarkan.\n\n';
+  } else {
+    msg += '*Biaya Maintenance: Rp 1.000.000/kunjungan*\n\n';
+  }
+  return msg + 'Silakan balas pesan ini untuk menjadwalkan kedatangan.\n\nSalam,\nKONIG Auto Detailing';
 }
 function renderCoatMainSection(list, due, today){
   const h = document.createElement('div');
@@ -1608,7 +1616,8 @@ function renderCoatMainSection(list, due, today){
     box.style.cssText = 'border:1px solid var(--border);border-left:3px solid #7b2fbe;padding:14px;margin-bottom:12px';
     const head = document.createElement('div');
     head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
-    head.textContent = (j.car || '-') + ' ' + (j.plate || '') + ' · ' + Math.round(r.age / 30) + ' bulan sejak coating';
+    const hasVMain = jobVouchers(j).some(v => !v.used && /Maintenance/i.test(v.service||''));
+    head.textContent = (j.car || '-') + ' ' + (j.plate || '') + ' · ' + Math.round(r.age / 30) + ' bulan sejak coating' + (hasVMain ? ' · 🎁 punya voucher maintenance' : '');
     const ta = document.createElement('textarea'); ta.value = coatingMaintenanceMessage(r); ta.rows = 8;
     ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
     const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
