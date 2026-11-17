@@ -1594,7 +1594,7 @@ function coatingMaintenanceMessage(r){
   const j = r.j;
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const bulan = Math.round(r.age / 30);
-  return 'Halo ' + sapa(j) + ',\n\nSudah sekitar ' + bulan + ' bulan sejak ' + mobil + ' di-coating di KONIG Auto Detailing. Pada usia ini, coating mulai memerlukan perawatan agar proteksinya tetap optimal.\n\nKami mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk *Coating Maintenance* — kami akan inspeksi kondisi coating, bersihkan kontaminan, dan lakukan top-up jika diperlukan, agar coating tetap bekerja maksimal melindungi cat mobil Anda.\n\nSilakan balas pesan ini untuk menjadwalkan kedatangan.\n\nSalam,\nKONIG Auto Detailing';
+  return 'Halo ' + sapa(j) + ',\n\nSudah sekitar ' + bulan + ' bulan sejak ' + mobil + ' di-coating di KONIG Auto Detailing. Pada usia ini, coating mulai memerlukan perawatan agar proteksinya tetap optimal.\n\nKami mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk *Coating Maintenance* — kami akan inspeksi kondisi coating, bersihkan kontaminan, dan lakukan top-up jika diperlukan, agar coating tetap bekerja maksimal melindungi cat mobil Anda.\n\n*Biaya Maintenance: Rp 1.000.000/kunjungan*\n\nSilakan balas pesan ini untuk menjadwalkan kedatangan.\n\nSalam,\nKONIG Auto Detailing';
 }
 function renderCoatMainSection(list, due, today){
   const h = document.createElement('div');
