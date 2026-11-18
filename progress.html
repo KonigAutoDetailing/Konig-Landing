@@ -810,50 +810,57 @@
 
 <!-- MODAL: Schedule -->
 <div class="modal-overlay" id="modalSched">
-  <div class="modal-box" style="max-width:420px">
+  <div class="modal-box" style="max-width:400px;padding:24px 24px 20px">
     <button class="modal-close" onclick="closeModal('modalSched')">×</button>
-    <div class="modal-title" id="schedDate">JADWAL</div>
+    <div class="modal-title" id="schedDate" style="margin-bottom:20px">JADWAL</div>
     <input type="hidden" id="schedDateVal"/>
-    <div class="form-group">
-      <label>Jam</label>
-      <input type="time" id="schedTimeStart" style="width:140px"/>
+
+    <!-- Layanan (utama, paling atas) -->
+    <div class="form-group" style="position:relative;margin-bottom:16px">
+      <label style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase">Layanan</label>
+      <input type="text" id="schedTitle" placeholder="Ketik atau pilih..." autocomplete="off"
+        oninput="schedServiceInput(this.value)" onfocus="schedServiceInput(this.value)"
+        onkeydown="schedServiceKey(event)" style="font-size:14px"/>
+      <div id="schedServiceDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);z-index:200;max-height:200px;overflow-y:auto"></div>
     </div>
-    <div class="form-row2" style="gap:8px">
-      <div class="form-group" style="flex:0 0 90px">
-        <label>Prefix</label>
-        <select id="schedCustTitle" class="inv-select" style="width:100%">
+
+    <!-- Jam -->
+    <div class="form-group" style="margin-bottom:16px">
+      <label style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase">Jam</label>
+      <input type="time" id="schedTimeStart" style="width:130px;font-size:14px"/>
+    </div>
+
+    <!-- Customer: prefix + nama + WA dalam satu baris grup -->
+    <div style="border:1px solid var(--border);padding:12px 14px;margin-bottom:16px;background:rgba(255,255,255,.02)">
+      <div style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Customer <span style="font-weight:400;opacity:.5">— opsional</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;position:relative">
+        <select id="schedCustTitle" class="inv-select" style="width:80px;flex-shrink:0;font-size:13px">
           <option value="">—</option>
-          <option value="Mr.">Mr.</option>
-          <option value="Ms.">Ms.</option>
           <option value="Pak">Pak</option>
           <option value="Bu">Bu</option>
+          <option value="Mr.">Mr.</option>
+          <option value="Ms.">Ms.</option>
           <option value="Bpk.">Bpk.</option>
           <option value="Ibu">Ibu</option>
         </select>
+        <div style="flex:1;position:relative">
+          <input type="text" id="schedCustName" placeholder="Nama" autocomplete="off"
+            oninput="schedNameInput(this.value)" onkeydown="schedNameKey(event)"
+            style="width:100%;box-sizing:border-box;font-size:13px"/>
+          <div id="schedNameDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);z-index:200;max-height:160px;overflow-y:auto"></div>
+        </div>
       </div>
-      <div class="form-group" style="flex:1;position:relative">
-        <label>Nama Customer (opsional)</label>
-        <input type="text" id="schedCustName" placeholder="cth: Budi" autocomplete="off"
-          oninput="schedNameInput(this.value)" onkeydown="schedNameKey(event)"/>
-        <div id="schedNameDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--panel);border:1px solid var(--border);z-index:200;max-height:180px;overflow-y:auto"></div>
-      </div>
+      <input type="text" id="schedCustWA" placeholder="No WhatsApp" inputmode="numeric"
+        style="width:100%;box-sizing:border-box;font-size:13px"/>
     </div>
-    <div class="form-group">
-      <label>No WhatsApp (opsional)</label>
-      <input type="text" id="schedCustWA" placeholder="cth: 081234567890" inputmode="numeric"/>
+
+    <!-- Catatan -->
+    <div class="form-group" style="margin-bottom:16px">
+      <label style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase">Catatan <span style="font-weight:400;opacity:.5">— opsional</span></label>
+      <input type="text" id="schedNote" placeholder="cth: antar sore, perlu polish dulu" style="font-size:13px"/>
     </div>
-    <div class="form-group" style="position:relative">
-      <label>Layanan *</label>
-      <input type="text" id="schedTitle" placeholder="Ketik atau pilih layanan..." autocomplete="off"
-        oninput="schedServiceInput(this.value)" onfocus="schedServiceInput(this.value)"
-        onkeydown="schedServiceKey(event)"/>
-      <div id="schedServiceDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--panel);border:1px solid var(--border);z-index:200;max-height:200px;overflow-y:auto"></div>
-    </div>
-    <div class="form-group">
-      <label>Catatan (opsional)</label>
-      <input type="text" id="schedNote" placeholder="cth: antar sore, perlu polish dulu"/>
-    </div>
-    <button class="btn-login" id="btnSaveSched" onclick="saveSched()" style="margin-top:4px">Simpan</button>
+
+    <button class="btn-login" id="btnSaveSched" onclick="saveSched()">Simpan</button>
     <div class="sched-list" id="schedList"></div>
   </div>
 </div>
