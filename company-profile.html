@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Company Profile — KONÏG Auto Detailing</title>
+  <meta name="description" content="KONIG Auto Detailing — Ceramic & Graphene Coating Specialist di Gading Serpong, Tangerang. Owner bersertifikasi SONAX & CarPro, produk tier-1, garansi pengerjaan."/>
+  <meta property="og:title" content="Company Profile — KONÏG Auto Detailing"/>
+  <meta property="og:description" content="Ceramic & Graphene Coating Specialist di Gading Serpong. Owner bersertifikasi SONAX & CarPro."/>
+  <meta property="og:image" content="https://www.konigautodetailing.com/graphene-campaign-desktop.png"/>
+  <meta property="og:url" content="https://www.konigautodetailing.com/company-profile"/>
+  <link rel="icon" href="/favicon.ico"/>
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--purple:#7b2fbe;--purple2:#9d4edd;--purpleB:#b06aff;--black:#04020f;--card:#0e0b1e;--border:rgba(123,47,190,0.25);--muted:#8878aa;--white:#f0ecff}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--black);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+
+    /* NAV */
+    nav{position:sticky;top:0;z-index:100;background:rgba(4,2,16,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 20px}
+    .nav-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:52px}
+    .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--purpleB);text-decoration:none}
+    .nav-back{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 0.2s}
+    .nav-back:hover{color:var(--white)}
+    .nav-back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+    /* HERO */
+    .hero{padding:60px 20px 48px;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%, rgba(123,47,190,0.18) 0%, transparent 70%);pointer-events:none}
+    .hero-eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px}
+    .hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,8vw,72px);letter-spacing:4px;line-height:1;color:var(--white);margin-bottom:8px}
+    .hero-title span{color:var(--purpleB)}
+    .hero-sub{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+    .hero-cta{display:inline-flex;align-items:center;gap:10px;background:var(--purple);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;padding:14px 28px;text-decoration:none;transition:background 0.2s}
+    .hero-cta:hover{background:var(--purple2)}
+    .hero-cta svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+    /* SECTIONS */
+    section{max-width:900px;margin:0 auto;padding:48px 20px}
+    .sec-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:var(--purpleB);margin-bottom:8px}
+    .sec-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,5vw,42px);letter-spacing:3px;color:var(--white);margin-bottom:6px}
+    .sec-desc{font-size:15px;color:var(--muted);line-height:1.6;max-width:600px}
+    hr.divider{border:none;border-top:1px solid var(--border);max-width:900px;margin:0 auto}
+
+    /* ABOUT */
+    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
+    @media(max-width:580px){.about-grid{grid-template-columns:1fr}}
+    .about-card{background:var(--card);border:1px solid var(--border);padding:20px 22px}
+    .about-card-icon{font-size:22px;margin-bottom:10px}
+    .about-card-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);margin-bottom:6px}
+    .about-card-text{font-size:14px;color:var(--muted);line-height:1.6}
+
+    /* SERVICES */
+    .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+    @media(max-width:640px){.services-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:380px){.services-grid{grid-template-columns:1fr}}
+    .svc-card{background:var(--card);border:1px solid var(--border);padding:18px 16px;position:relative}
+    .svc-card.featured{border-color:var(--purpleB);background:rgba(123,47,190,0.08)}
+    .svc-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--white);margin-bottom:4px}
+    .svc-sub{font-size:12px;color:var(--purpleB);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+    .svc-desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+    /* GRAPHENE TIERS */
+    .tiers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+    @media(max-width:580px){.tiers-grid{grid-template-columns:1fr}}
+    .tier-card{background:var(--card);border:1px solid var(--border);padding:22px 18px;text-align:center}
+    .tier-card.top{border-color:var(--purpleB);background:rgba(123,47,190,0.1)}
+    .tier-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white)}
+    .tier-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--purpleB);margin-bottom:12px}
+    .tier-years{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--purpleB);line-height:1}
+    .tier-years-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+    .tier-desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+    /* PROCESS */
+    .process-list{margin-top:28px;display:flex;flex-direction:column;gap:0}
+    .process-step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border)}
+    .process-step:last-child{border-bottom:none}
+    .process-num{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--border);letter-spacing:2px;min-width:36px;line-height:1;padding-top:2px}
+    .process-step:hover .process-num{color:var(--purpleB);transition:color 0.2s}
+    .process-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--white);margin-bottom:4px}
+    .process-desc{font-size:14px;color:var(--muted);line-height:1.5}
+
+    /* DIGITAL */
+    .digital-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
+    @media(max-width:500px){.digital-grid{grid-template-columns:1fr}}
+    .digital-item{background:var(--card);border:1px solid var(--border);padding:18px 20px}
+    .digital-item-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);margin-bottom:6px}
+    .digital-item-desc{font-size:14px;color:var(--muted);line-height:1.5}
+
+    /* KOMUNITAS */
+    .benefit-list{margin-top:24px;display:flex;flex-direction:column;gap:10px}
+    .benefit-item{display:flex;align-items:flex-start;gap:12px;font-size:15px;color:var(--white);line-height:1.5}
+    .benefit-item::before{content:'✦';color:var(--purpleB);font-size:12px;margin-top:4px;flex:none}
+
+    /* CONTACT */
+    .contact-box{background:var(--card);border:1px solid var(--border);padding:32px;margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    @media(max-width:560px){.contact-box{grid-template-columns:1fr}}
+    .contact-item-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+    .contact-item-val{font-size:15px;color:var(--white);line-height:1.5}
+    .contact-item-val a{color:var(--purpleB);text-decoration:none}
+    .contact-item-val a:hover{text-decoration:underline}
+    .contact-cta-row{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
+    .contact-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all 0.2s}
+    .contact-btn.primary{background:var(--purple);color:#fff}
+    .contact-btn.primary:hover{background:var(--purple2)}
+    .contact-btn.outline{border:1px solid var(--border);color:var(--muted)}
+    .contact-btn.outline:hover{border-color:var(--purpleB);color:var(--purpleB)}
+    .contact-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    /* FOOTER */
+    footer{border-top:1px solid var(--border);padding:28px 20px;text-align:center}
+    .footer-copy{font-size:11px;color:#3a3558;letter-spacing:1px}
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">KONÏG</a>
+    <a href="/" class="nav-back">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Kembali
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Ceramic & Graphene Coating Specialist</div>
+  <div class="hero-title">KONÏG<br><span>Auto Detailing</span></div>
+  <div class="hero-sub">Premium Protection · Gading Serpong, Tangerang</div>
+  <a href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20ingin%20konsultasi%20coating" class="hero-cta" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.26h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9A16 16 0 0 0 15 16.09l1.09-.9a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22.73 17z"/></svg>
+    Konsultasi Sekarang
+  </a>
+</div>
+
+<hr class="divider"/>
+
+<!-- TENTANG KAMI -->
+<section>
+  <div class="sec-label">Tentang Kami</div>
+  <div class="sec-title">Dari Kata Jerman "König": Raja</div>
+  <div class="sec-desc">KONIG Auto Detailing berlokasi di Ruko Downtown Drive, Gading Serpong. Nama kami diambil dari kata Jerman "König" yang berarti raja, sebagai komitmen pada standar pengerjaan yang berbeda dari workshop pada umumnya.</div>
+  <div class="about-grid">
+    <div class="about-card">
+      <div class="about-card-icon">🏅</div>
+      <div class="about-card-title">Owner Bersertifikasi</div>
+      <div class="about-card-text">Sertifikasi resmi SONAX & CarPro — dua brand coating internasional terkemuka.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-card-icon">🧴</div>
+      <div class="about-card-title">Produk Tier-1</div>
+      <div class="about-card-text">Gyeon, CarPro, SONAX, dan graphene coating dari Korea. Tidak kompromi soal kualitas produk.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-card-icon">🛡️</div>
+      <div class="about-card-title">Garansi Pengerjaan</div>
+      <div class="about-card-text">Swirl ringan dan highspot coating ditangani tanpa biaya tambahan.</div>
+    </div>
+    <div class="about-card">
+      <div class="about-card-icon">💬</div>
+      <div class="about-card-title">Transparan & Edukatif</div>
+      <div class="about-card-text">Harga dan kondisi kendaraan dijelaskan sejak awal. Tanpa biaya tersembunyi.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- LAYANAN -->
+<section>
+  <div class="sec-label">Layanan</div>
+  <div class="sec-title">Apa yang Kami Kerjakan</div>
+  <div class="services-grid">
+    <div class="svc-card featured">
+      <div class="svc-name">Graphene Coating</div>
+      <div class="svc-sub">Made in Korea</div>
+      <div class="svc-desc">Generasi terbaru. Perlindungan hingga 8 tahun dengan efek daun talas yang lebih kuat.</div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-name">Ceramic Coating</div>
+      <div class="svc-sub">3 Tier</div>
+      <div class="svc-desc">Essential, Signature, Prestige. Hingga 4 tahun. Brand: SONAX, CarPro, Gyeon.</div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-name">Premium Wash</div>
+      <div class="svc-sub">Detail Wash</div>
+      <div class="svc-desc">Cuci detail 2-bucket, pH neutral. Aman untuk cat & coating yang sudah ada.</div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-name">Window Coating</div>
+      <div class="svc-sub">Hydrophobic</div>
+      <div class="svc-desc">Lapisan hydrophobic kaca. Air langsung mengalir saat hujan, visibilitas lebih baik.</div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-name">Polish</div>
+      <div class="svc-sub">Express & Premium</div>
+      <div class="svc-desc">Mengangkat swirl dan waterspot, mengembalikan kilap cat sebelum coating.</div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-name">Maintenance</div>
+      <div class="svc-sub">Perawatan Berkala</div>
+      <div class="svc-desc">Perawatan berkala agar coating tetap optimal dan performa hydrophobic terjaga.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- GRAPHENE SERIES -->
+<section>
+  <div class="sec-label">Graphene Series · Made in Korea</div>
+  <div class="sec-title">Tiga Tier Graphene</div>
+  <div class="tiers-grid">
+    <div class="tier-card top">
+      <div class="tier-name">Eternity</div>
+      <div class="tier-sub">Graphene</div>
+      <div class="tier-years">8</div>
+      <div class="tier-years-label">Tahun</div>
+      <div class="tier-desc">Perlindungan paling lama untuk perawatan jangka panjang.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-name">Shield</div>
+      <div class="tier-sub">Graphene</div>
+      <div class="tier-years">7</div>
+      <div class="tier-years-label">Tahun</div>
+      <div class="tier-desc">Daya tahan panjang dengan efek daun talas yang kuat.</div>
+    </div>
+    <div class="tier-card">
+      <div class="tier-name">Armor</div>
+      <div class="tier-sub">Graphene</div>
+      <div class="tier-years">3</div>
+      <div class="tier-years-label">Tahun</div>
+      <div class="tier-desc">Pilihan tepat untuk merasakan graphene pertama kali.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ALUR PENGERJAAN -->
+<section>
+  <div class="sec-label">Proses</div>
+  <div class="sec-title">Dari Konsultasi Hingga Serah Terima</div>
+  <div class="process-list">
+    <div class="process-step">
+      <div class="process-num">01</div>
+      <div>
+        <div class="process-name">Konsultasi</div>
+        <div class="process-desc">Diskusi kebutuhan dan rekomendasi yang jujur sesuai kondisi kendaraan.</div>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">02</div>
+      <div>
+        <div class="process-name">Inspeksi</div>
+        <div class="process-desc">Kondisi cat dicatat dan difoto per panel sebelum dikerjakan.</div>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">03</div>
+      <div>
+        <div class="process-name">Dekontaminasi</div>
+        <div class="process-desc">Snow foam, iron remover, clay bar — permukaan bersih sempurna sebelum polish.</div>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">04</div>
+      <div>
+        <div class="process-name">Paint Correction</div>
+        <div class="process-desc">Polish bertahap untuk mengangkat swirl dan baret halus.</div>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">05</div>
+      <div>
+        <div class="process-name">Aplikasi Coating</div>
+        <div class="process-desc">Panel per panel, curing di ruang terkontrol.</div>
+      </div>
+    </div>
+    <div class="process-step">
+      <div class="process-num">06</div>
+      <div>
+        <div class="process-name">QC & Serah Terima</div>
+        <div class="process-desc">Cek akhir di bawah lampu LED, plus panduan perawatan lengkap.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- TRANSPARANSI DIGITAL -->
+<section>
+  <div class="sec-label">Transparansi Digital</div>
+  <div class="sec-title">Pantau Mobil dari HP</div>
+  <div class="digital-grid">
+    <div class="digital-item">
+      <div class="digital-item-title">📲 Live Tracking QR</div>
+      <div class="digital-item-desc">Setiap kendaraan punya QR code untuk melihat progres pengerjaan secara langsung.</div>
+    </div>
+    <div class="digital-item">
+      <div class="digital-item-title">📸 Foto Inspeksi</div>
+      <div class="digital-item-desc">Kondisi awal per panel difoto dan bisa dilihat customer kapan saja.</div>
+    </div>
+    <div class="digital-item">
+      <div class="digital-item-title">🧾 Invoice Digital</div>
+      <div class="digital-item-desc">Invoice dan riwayat servis tersimpan per kendaraan secara digital.</div>
+    </div>
+    <div class="digital-item">
+      <div class="digital-item-title">🔔 Pengingat Perawatan</div>
+      <div class="digital-item-desc">Pengingat cuci pertama dan panduan perawatan otomatis setelah coating.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- KERJA SAMA KOMUNITAS -->
+<section>
+  <div class="sec-label">Kerja Sama</div>
+  <div class="sec-title">Benefit Khusus untuk Member Komunitas</div>
+  <div class="sec-desc">Detail benefit kami sesuaikan dengan kebutuhan masing-masing komunitas.</div>
+  <div class="benefit-list">
+    <div class="benefit-item">Harga spesial coating untuk member komunitas</div>
+    <div class="benefit-item">Free Premium Wash setelah coating selesai</div>
+    <div class="benefit-item">Free wash untuk pengurus, supaya bisa merasakan hasilnya langsung</div>
+    <div class="benefit-item">Kode member khusus, cukup disebut saat booking</div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- KONTAK -->
+<section>
+  <div class="sec-label">Kontak</div>
+  <div class="sec-title">Hubungi Kami</div>
+  <div class="contact-box">
+    <div>
+      <div class="contact-item-label">Alamat</div>
+      <div class="contact-item-val"><a href="https://maps.app.goo.gl/UuXzCDLM3RSTB8Q48" target="_blank" rel="noopener">Ruko Downtown Drive, Jl. Scientia Blvd DDBLV No.027, Medang, Pagedangan, Kab. Tangerang</a></div>
+    </div>
+    <div>
+      <div class="contact-item-label">WhatsApp</div>
+      <div class="contact-item-val"><a href="https://wa.me/62881080578712" target="_blank" rel="noopener">+62 881-0805-78712</a></div>
+      <br/>
+      <div class="contact-item-label">Instagram</div>
+      <div class="contact-item-val"><a href="https://instagram.com/konig.auto.detailing" target="_blank" rel="noopener">@konig.auto.detailing</a></div>
+    </div>
+    <div>
+      <div class="contact-item-label">Website</div>
+      <div class="contact-item-val"><a href="https://www.konigautodetailing.com">konigautodetailing.com</a></div>
+      <br/>
+      <div class="contact-item-label">Jam Buka</div>
+      <div class="contact-item-val">Senin–Sabtu, 08.00–17.00 WIB</div>
+    </div>
+  </div>
+  <div class="contact-cta-row">
+    <a href="https://wa.me/62881080578712?text=Halo%20KONIG%2C%20saya%20ingin%20konsultasi%20coating" class="contact-btn primary" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.26h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 9A16 16 0 0 0 15 16.09l1.09-.9a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22.73 17z"/></svg>
+      Chat WhatsApp
+    </a>
+    <a href="https://maps.app.goo.gl/UuXzCDLM3RSTB8Q48" class="contact-btn outline" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+      Google Maps
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-copy">© 2026 KONÏG Mobil Indonesia · konigautodetailing.com</div>
+</footer>
+
+</body>
+</html>
