@@ -93,7 +93,7 @@
     .cal-nav-btn:hover{border-color:var(--purple);color:var(--white)}
     .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
     .cal-day-label{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);padding:4px 0;text-transform:uppercase}
-    .cal-cell{min-height:80px;background:var(--panel);border:1px solid var(--border);padding:6px;cursor:pointer;position:relative;transition:border-color .15s}
+    .cal-cell{height:80px;overflow:hidden;background:var(--panel);border:1px solid var(--border);padding:6px;cursor:pointer;position:relative;transition:border-color .15s}
     .cal-cell:hover{border-color:var(--purple)}
     .cal-cell.today{border-color:var(--purple2)}
     .cal-cell.other-month{opacity:.35}
@@ -111,7 +111,7 @@
     .sched-item-title{font-size:13px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .sched-del{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px}
     .sched-del:hover{color:var(--red)}
-    @media(max-width:600px){.cal-cell{min-height:52px;padding:3px}.cal-event{display:none}.cal-cell.has-event::after{content:'•';color:var(--purple);font-size:16px;position:absolute;bottom:2px;right:4px}}
+    @media(max-width:600px){.cal-cell{height:52px;overflow:hidden;padding:3px}.cal-event{display:none}.cal-cell.has-event::after{content:'•';color:var(--purple);font-size:16px;position:absolute;bottom:2px;right:4px}}
     .hist-search{width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;font-size:15px}
     .inv-select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:12px;font-size:15px}
     .inv-select option{background:#111}
