@@ -1297,17 +1297,19 @@ window.renderCalendar = async function() {
     <div class="cal-grid" id="calGrid">${cells}</div>`;
 };
 
-// Permanent click listener on calendarView — survives innerHTML re-renders
-document.addEventListener('DOMContentLoaded', function() {
+// Permanent click listener on calendarView — attached once on first tab switch
+window._calListenerAttached = false;
+function ensureCalListener() {
+  if (window._calListenerAttached) return;
   const cv = document.getElementById('calendarView');
-  if (cv) {
-    cv.addEventListener('click', function(e) {
-      const cell = e.target.closest('[data-date]');
-      if (!cell) return;
-      window.openSchedModal(cell.dataset.date);
-    });
-  }
-});
+  if (!cv) return;
+  cv.addEventListener('click', function(e) {
+    const cell = e.target.closest('[data-date]');
+    if (!cell) return;
+    window.openSchedModal(cell.dataset.date);
+  });
+  window._calListenerAttached = true;
+}
 
 window.calNav = function(dir) {
   window._calMonth += dir;
@@ -1405,7 +1407,7 @@ window.renderJobList = function(){
   search.style.display = tab === 'history' ? 'block' : 'none';
   document.getElementById('jobsList').style.display = tab === 'calendar' ? 'none' : '';
   document.getElementById('calendarView').style.display = tab === 'calendar' ? 'block' : 'none';
-  if (tab === 'calendar') { renderCalendar(); return; }
+  if (tab === 'calendar') { ensureCalListener(); renderCalendar(); return; }
   let shown = tab === 'active' ? active : history;
   const q = tab === 'history' ? search.value.trim().toUpperCase().replace(/\s+/g,'') : '';
   if (q) shown = shown.filter(j => [j.id, j.plate, j.custName, j.car, j.color, j.wa].join(' ').toUpperCase().replace(/\s+/g,'').includes(q));
