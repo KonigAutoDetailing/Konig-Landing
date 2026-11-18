@@ -1507,7 +1507,7 @@ function renderWashSection(list, due, today){
 function coatingWashReminders(jobs, today){
   const aktif = new Set(jobs.filter(j => !(j.doneSteps||[]).includes('done') && !autoWashDone(j)).map(custKey));
   return jobs.filter(j => isCoatingJob(j.service) && (j.doneSteps||[]).includes('done') && !j.coatWashReminder && !aktif.has(custKey(j)))
-    .map(j => ({ j, age: dayDiff(tsDay(j.doneAt) || tsDay(j.updatedAt), today) }))
+    .map(j => ({ j, age: dayDiff(tsDay(j.doneAt) || tsDay(j.createdAt), today) }))
     .filter(r => r.age >= 7 && r.age <= 30)
     .sort((a, b) => b.age - a.age);
 }
@@ -1578,7 +1578,7 @@ function coatingMaintenanceReminders(jobs, today){
     if (!(j.doneSteps||[]).includes('done')) return;
     const k = custKey(j);
     if (!k) return;
-    const d = tsDay(j.doneAt) || tsDay(j.updatedAt);
+    const d = tsDay(j.doneAt) || tsDay(j.createdAt);
     if (!d) return;
     if (!latest[k] || d > latest[k].d) latest[k] = { j, d };
   });
