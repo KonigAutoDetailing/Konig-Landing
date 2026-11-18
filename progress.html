@@ -1137,7 +1137,7 @@ function renderTrack(code, data) {
   document.getElementById('trackService').textContent = data.service || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
   const tv = document.getElementById('trackVouchers'), vv = (data.vouchers||[]).filter(v => !v.used);
-  tv.innerHTML = vv.length ? '<b>🎁 Your Vouchers</b><div style="color:var(--muted);font-size:12px">Free service, no expiry date. Show the code on your next visit.<br><i>This voucher can also be used by someone else or for another car.</i></div>' + vv.map(v => `<div class="vc"><span>Free ${v.service}</span><span>${v.code}</span></div>`).join('') : '';
+  tv.innerHTML = vv.length ? '<b>🎁 Your Vouchers</b><div style="color:var(--muted);font-size:12px">Free service, no expiry date. Show the code on your next visit.</div>' + vv.map(v => `<div class="vc"><span>Free ${v.service}</span><span>${v.code}</span></div>`).join('') : '';
   tv.style.display = vv.length ? 'block' : 'none';
   renderTrackInspection(data);
   const isHist = renderHistory(data);
@@ -1790,7 +1790,7 @@ function waMessage(j){
         + 'Jumlah yang perlu dilunasi: Rp ' + Number(iv.tertagih||0).toLocaleString('id-ID') + (iv.dp && iv.dp.amount ? ' (sudah dikurangi DP Rp ' + Number(iv.dp.amount).toLocaleString('id-ID') + ')' : '') + '\n'
         + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
     const vList = iv ? (iv.items||[]).filter(it => it.voucherCode) : [];
-    const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang. (Catatan: voucher ini juga bisa dipakai oleh orang lain atau untuk mobil lain.)\n\n' : '';
+    const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.\n\n' : '';
     return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
@@ -3043,6 +3043,26 @@ window.checkJobVoucher = function(){
   }
   if (v.used) { info.style.color = '#f87171'; info.textContent = '✗ Voucher sudah dipakai' + (v.usedAt ? ' (' + v.usedAt + ')' : ''); return; }
   const o = v.owner; const nm = o.custName ? (o.custTitle ? o.custTitle + ' ' : '') + titleCase(o.custName) : (o.plate || '');
+  // Cek apakah plate / WA cocok dengan pemilik voucher
+  const curPlate = normPlate(document.getElementById('jobPlate').value);
+  const curWa = normWa(document.getElementById('jobWa').value);
+  const ownerPlate = normPlate(o.plate); const ownerWa = normWa(o.wa);
+  const plateMatch = curPlate.length >= 4 && ownerPlate && curPlate === ownerPlate;
+  const waMatch = curWa.length >= 9 && ownerWa.length >= 9 && curWa === ownerWa;
+  if (!plateMatch && !waMatch && (curPlate.length >= 4 || curWa.length >= 9)) {
+    // Beda mobil & beda nomor — voucher tidak berlaku untuk customer ini
+    info.style.color = '#f87171';
+    info.textContent = '✗ Voucher ini milik ' + nm + ' (' + (o.plate||'-') + '). Tidak bisa dipakai untuk mobil/customer lain.';
+    return;
+  }
+  if (waMatch && !plateMatch && curPlate.length >= 4 && ownerPlate && curPlate !== ownerPlate) {
+    // Nomor HP sama tapi beda mobil — warning, perlu konfirmasi admin
+    info.style.color = '#facc15';
+    info.textContent = '⚠️ Nomor HP sama tapi mobil berbeda (' + (o.plate||'-') + ' → ' + (document.getElementById('jobPlate').value||'-') + '). Pastikan ini memang pemilik yang sama sebelum memakai voucher ini.';
+    // Tetap izinkan dipakai (admin sudah lihat warning)
+    if (typeof addService === 'function' && !selectedServices.includes(v.service)) addService(v.service, true);
+    return;
+  }
   info.style.color = '#4ade80'; info.textContent = '✓ Voucher valid: Free ' + v.service + ' (dari ' + nm + '). Otomatis dipakai di invoice.';
   if (typeof addService === 'function' && !selectedServices.includes(v.service)) addService(v.service, true);
 };
@@ -3142,7 +3162,11 @@ function checkRepeat(){
   const vlist = (plate.length >= 4 || wa.length >= 9) ? vouchersFor({ plate: document.getElementById('jobPlate').value, wa: document.getElementById('jobWa').value }).filter(v => !(window._skipVouchers||[]).includes(v.code)) : [];
   if (vlist.length) {
     const cur = document.getElementById('jobVoucher').value.trim().toUpperCase();
-    html.push('🎟️ <b>Customer ini punya voucher gratis yang belum dipakai:</b>' + vlist.map(v => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small>(${v.code})</small></span>${cur === v.code ? '<span style="color:#4ade80">✓ dipakai</span>' : `<button type="button" class="btn-sm" style="background:#facc15;color:#111" onclick="useJobVoucher('${v.code}')">Pakai</button><button type="button" class="btn-sm" onclick="skipJobVoucher('${v.code}')">Tidak</button>`}</div>`).join('') + '<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalau tidak dipakai sekarang, voucher tetap tersimpan untuk kunjungan berikutnya.</div>');
+    html.push('🎟️ <b>Customer ini punya voucher gratis yang belum dipakai:</b>' + vlist.map(v => {
+      const warn = v.diffPlate ? ` <small style="color:#facc15">⚠️ dari mobil ${v.ownerPlate||'-'}</small>` : '';
+      const btnColor = v.diffPlate ? 'background:#78350f;color:#fde68a' : 'background:#facc15;color:#111';
+      return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small>(${v.code})</small>${warn}</span>${cur === v.code ? '<span style="color:#4ade80">✓ dipakai</span>' : `<button type="button" class="btn-sm" style="${btnColor}" onclick="useJobVoucher('${v.code}')">Pakai${v.diffPlate?' ⚠️':''}</button><button type="button" class="btn-sm" onclick="skipJobVoucher('${v.code}')">Tidak</button>`}</div>`;
+    }).join('') + '<div style="font-size:11px;color:var(--muted);margin-top:4px">Kalau tidak dipakai sekarang, voucher tetap tersimpan untuk kunjungan berikutnya.</div>');
     if (cls === 'rep-box info') cls = 'rep-box';
   }
   box.className = cls;
@@ -3327,7 +3351,14 @@ function vouchersFor(d){
   const plate = normPlate(d.plate), wa = normWa(d.wa), out = [];
   (window._allJobs||[]).forEach(j => jobVouchers(j).forEach(v => {
     if (v.used) return;
-    if ((plate && normPlate(j.plate) === plate) || (wa.length >= 9 && normWa(j.wa) === wa)) out.push({ ...v, jobId: j.id });
+    const jPlate = normPlate(j.plate), jWa = normWa(j.wa);
+    const byPlate = plate.length >= 4 && jPlate && plate === jPlate;
+    const byWa = wa.length >= 9 && jWa.length >= 9 && wa === jWa;
+    if (byPlate || byWa) {
+      // Flag: nomor HP sama tapi beda mobil (perlu konfirmasi admin)
+      const diffPlate = byWa && !byPlate && plate.length >= 4 && jPlate && plate !== jPlate;
+      out.push({ ...v, jobId: j.id, diffPlate: diffPlate || false, ownerPlate: j.plate });
+    }
   }));
   return out;
 }
@@ -3337,10 +3368,17 @@ function renderVoucherBox(d){
   const list = vouchersFor(d).filter(v => !used.has(v.code));
   if (!list.length) { box.style.display = 'none'; return; }
   box.style.display = 'block';
-  box.innerHTML = '<b>🎟️ Customer punya voucher yang belum dipakai:</b>' + list.map(v => `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small style="color:var(--muted)">(${v.code})</small></span><button type="button" class="btn-sm" style="background:#facc15;color:#111" onclick='redeemVoucher(${JSON.stringify(v)})'>Pakai</button></div>`).join('');
+  box.innerHTML = '<b>🎟️ Customer punya voucher yang belum dipakai:</b>' + list.map(v => {
+    const warn = v.diffPlate ? ` <small style="color:#facc15">⚠️ dari mobil ${v.ownerPlate||'-'} (beda plat)</small>` : '';
+    return `<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="flex:1">Free ${v.service} <small style="color:var(--muted)">(${v.code})</small>${warn}</span><button type="button" class="btn-sm" style="background:${v.diffPlate?'#78350f':'#facc15'};color:${v.diffPlate?'#fde68a':'#111'}" onclick='redeemVoucher(${JSON.stringify(v)})'>Pakai${v.diffPlate?' ⚠️':''}</button></div>`;
+  }).join('');
 }
 function removeInvItemByBase(base){ document.querySelectorAll('#invItems .inv-item').forEach(el => { const p = el.querySelector('.i-produk'); if (p && p.dataset.base === base) el.remove(); }); }
 window.redeemVoucher = function(v){
+  // Konfirmasi jika nomor HP sama tapi beda mobil
+  if (v.diffPlate) {
+    if (!confirm(`⚠️ Voucher ini dari mobil ${v.ownerPlate||'-'} (nomor HP sama, beda plat).\n\nPastikan ini memang pemilik yang sama sebelum memakai voucher ini.\n\nLanjutkan?`)) return;
+  }
   removeInvItemByBase(v.service);
   const harga = pricelistPrice(v.service, document.getElementById('invSize').value) || pricelistPrice(v.service, '') || 0;
   document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: v.service + ' (Voucher ' + v.code + ')', desc: 'Penukaran voucher ' + v.code + '.', qty: 1, harga, discPct: 100, disc: harga, redeem: { code: v.code, jobId: v.jobId } }));
@@ -3350,7 +3388,7 @@ window.redeemVoucher = function(v){
 window.toggleBonus = function(){ const b = document.getElementById('bonusOpts'); b.style.display = b.style.display === 'block' ? 'none' : 'block'; };
 window.invAddBonus = function(base){
   const harga = pricelistPrice(base, '') || 0;
-  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: 'VOUCHER - Free ' + base, desc: 'Voucher gratis 1x ' + base + ', tanpa batas waktu. Bisa dipakai orang lain / mobil lain.', qty: 1, harga, discPct: 100, disc: harga, bonus: base }));
+  document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: 'VOUCHER - Free ' + base, desc: 'Voucher gratis 1x ' + base + ', tanpa batas waktu.', qty: 1, harga, discPct: 100, disc: harga, bonus: base }));
   document.getElementById('bonusOpts').style.display = 'none';
   invCalc();
 };
