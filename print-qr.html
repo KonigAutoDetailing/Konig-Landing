@@ -260,20 +260,26 @@ async function generatePreview() {
 async function buildPrintSheet(prefix, start, count) {
   const page = document.getElementById('printPage');
   page.innerHTML = '';
-  // A3: 6 col × 6 row = 36 per page; cap at 36
   const printCount = Math.min(count, 36);
+  // Render semua ke canvas dulu
   const jobs = [];
+  const canvases = [];
   for (let i = 0; i < printCount; i++) {
     const code = makeCode(prefix, start + i);
     const url = BASE_URL + '?code=' + code;
     const c = document.createElement('canvas');
-    // 4×6cm @ 300dpi = 472×709px
     c.width = 472; c.height = 709;
-    c.className = 'sticker-img';
-    page.appendChild(c);
+    canvases.push(c);
     jobs.push(renderThumb(c, url, 472/1122, code));
   }
   await Promise.all(jobs);
+  // Konversi canvas → <img> base64 (biar bisa di-print di semua browser/Safari)
+  for (const c of canvases) {
+    const img = document.createElement('img');
+    img.src = c.toDataURL('image/png');
+    img.className = 'sticker-img';
+    page.appendChild(img);
+  }
 }
 
 async function doPrint() {
@@ -281,14 +287,20 @@ async function doPrint() {
   const origText = btn.textContent;
   btn.disabled = true;
   btn.textContent = '⏳ Menyiapkan...';
+  const sheet = document.getElementById('printSheet');
   try {
     const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
     const start = parseInt(document.getElementById('ctrlStart').value) || 1;
     const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 36);
     await buildPrintSheet(prefix, start, count);
-    // Tunggu semua gambar benar2 rendered ke DOM
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // Tampilkan sheet sebentar biar browser layout dulu
+    sheet.style.display = 'block';
+    await new Promise(r => setTimeout(r, 200));
     window.print();
+    sheet.style.display = '';
+  } catch(e) {
+    alert('Error: ' + e.message);
+    sheet.style.display = '';
   } finally {
     btn.disabled = false;
     btn.textContent = origText;
