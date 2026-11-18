@@ -110,7 +110,8 @@
       <input type="number" id="ctrlCount" value="36" min="1" max="36"/>
     </div>
     <button class="btn" onclick="generatePreview()">Generate</button>
-    <button class="btn btn-print" onclick="downloadPDF()" id="btnPDF">⬇ Download PDF</button>
+    <button class="btn btn-print" onclick="downloadPDF('a4')" id="btnPDF_A4">⬇ PDF A4</button>
+    <button class="btn btn-print" onclick="downloadPDF('a3')" id="btnPDF_A3">⬇ PDF A3</button>
     <button class="btn btn-outline" onclick="downloadAll()">⬇ Download Semua PNG</button>
   </div>
 
@@ -284,8 +285,9 @@ async function buildPrintSheet(prefix, start, count) {
   }
 }
 
-async function downloadPDF() {
-  const btn = document.getElementById('btnPDF');
+async function downloadPDF(format = 'a3') {
+  const isA4 = format === 'a4';
+  const btn = document.getElementById(isA4 ? 'btnPDF_A4' : 'btnPDF_A3');
   const origText = btn.textContent;
   btn.disabled = true;
 
@@ -293,18 +295,15 @@ async function downloadPDF() {
   const start = parseInt(document.getElementById('ctrlStart').value) || 1;
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 200);
 
-  // Sticker ukuran: 40mm x 60mm
-  // A3: 297mm x 420mm, margin 10mm tiap sisi
-  // Grid area: 277mm wide, 400mm tall
-  // Kolom: floor((277+3) / (40+3)) = 6 kolom
-  // Baris: floor((400+3) / (60+3)) = 6 baris
-  // = 36 sticker per halaman
+  // Sticker ukuran: 40mm x 60mm, gap 3mm, margin 10mm
+  // A4 (210×297): area 190×277mm → 4 col × 4 row = 16/hal
+  // A3 (297×420): area 277×400mm → 6 col × 6 row = 36/hal
   const STICKER_W_MM = 40;
   const STICKER_H_MM = 60;
   const GAP_MM = 3;
   const MARGIN_MM = 10;
-  const PAGE_W = 297;
-  const PAGE_H = 420;
+  const PAGE_W = isA4 ? 210 : 297;
+  const PAGE_H = isA4 ? 297 : 420;
   const AREA_W = PAGE_W - MARGIN_MM * 2;
   const AREA_H = PAGE_H - MARGIN_MM * 2;
   const COLS = Math.floor((AREA_W + GAP_MM) / (STICKER_W_MM + GAP_MM));  // 4
@@ -322,7 +321,7 @@ async function downloadPDF() {
 
   try {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a3' });
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: isA4 ? 'a4' : 'a3' });
 
     for (let page = 0; page < totalPages; page++) {
       if (page > 0) pdf.addPage();
@@ -499,7 +498,7 @@ async function downloadAll() {
 
 // expose untuk onclick di HTML
 window.generatePreview = generatePreview;
-window.downloadPDF = downloadPDF;
+window.downloadPDF = downloadPDF;  // downloadPDF('a4') or downloadPDF('a3')
 window.downloadAll = downloadAll;
 
 // Auto generate on load
