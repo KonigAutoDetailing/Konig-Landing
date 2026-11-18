@@ -114,6 +114,15 @@
     .section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,60px);letter-spacing:2px;color:var(--white);line-height:1;margin-bottom:20px}
     .section-desc{font-size:15px;font-weight:400;color:var(--white);line-height:1.8;max-width:540px;opacity:0.85}
 
+    /* ── PARTNERS ── */
+    .partners-section{background:var(--dark);border-top:1px solid var(--border)}
+    .partner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:40px}
+    .partner-card{display:block;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--purple);padding:26px 24px;text-decoration:none;transition:all 0.25s}
+    .partner-card:hover{border-left-color:var(--purpleB);background:#1a1a2e}
+    .partner-name{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;color:var(--white);line-height:1}
+    .partner-type{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--purpleB);margin:8px 0 12px}
+    .partner-desc{font-size:14px;color:var(--white);opacity:0.8;line-height:1.6}
+    .partner-link{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);margin-top:14px;display:inline-block}
     /* ── WHY ── */
     .why-section{background:var(--dark);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
     .why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--border);margin-top:48px}
@@ -540,6 +549,23 @@
         onmouseover="this.style.borderColor='#9B3FDE';this.style.color='#b06aff'"
         onmouseout="this.style.borderColor='#2a2a45';this.style.color='#b8b0d8'">
         ⭐ Lihat Semua Review di Google Maps →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- OUR PARTNERS -->
+<section class="partners-section" id="partners">
+  <div class="section-inner">
+    <span class="section-label">Our Partners</span>
+    <h2 class="section-title">PARTNER<br/>KOMUNITAS</h2>
+    <p class="section-desc">Komunitas yang bekerja sama dengan KONIG. Member mendapatkan benefit khusus saat perawatan di workshop kami.</p>
+    <div class="partner-grid">
+      <a class="partner-card" href="https://www.instagram.com/aioners.id/" target="_blank" rel="noopener">
+        <div class="partner-name">AIONERS.ID</div>
+        <div class="partner-type">Official Detailing Partner</div>
+        <div class="partner-desc">Komunitas pengguna mobil listrik GAC Aion di Indonesia. Member AIONERS mendapatkan benefit khusus di KONIG.</div>
+        <span class="partner-link">@aioners.id →</span>
       </a>
     </div>
   </div>
