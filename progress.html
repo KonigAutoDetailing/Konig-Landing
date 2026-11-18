@@ -819,15 +819,18 @@
     <div class="form-group" style="position:relative;margin-bottom:16px">
       <label style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase">Layanan</label>
       <input type="text" id="schedTitle" placeholder="Ketik atau pilih..." autocomplete="off"
-        oninput="schedServiceInput(this.value)" onfocus="schedServiceInput(this.value)"
+        oninput="schedServiceInput(this.value);updateSchedDurHint()" onfocus="schedServiceInput(this.value)"
         onkeydown="schedServiceKey(event)" style="font-size:14px"/>
       <div id="schedServiceDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1a1a2e;border:1px solid var(--border);z-index:200;max-height:200px;overflow-y:auto"></div>
     </div>
 
     <!-- Jam -->
     <div class="form-group" style="margin-bottom:16px">
-      <label style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase">Jam</label>
-      <input type="time" id="schedTimeStart" style="width:130px;font-size:14px"/>
+      <label style="font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase">Jam Mulai</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="time" id="schedTimeStart" style="width:130px;font-size:14px" oninput="updateSchedDurHint()"/>
+        <span id="schedDurHint" style="font-size:12px;color:var(--muted)"></span>
+      </div>
     </div>
 
     <!-- Customer: prefix + nama + WA dalam satu baris grup -->
@@ -1312,7 +1315,8 @@ window.renderCalendar = async function() {
     });
     scheds.slice(0,3).forEach(s => {
       const sLabel = (s.custTitle ? s.custTitle+' ' : '') + (s.custName ? titleCase(s.custName)+' · ' : '');
-      evHtml += `<div class="cal-event" title="${sLabel}${s.title}">${s.timeStart ? s.timeStart+' ' : ''}${sLabel}${s.title}</div>`;
+      const sTimeLabel = s.timeStart ? (s.timeEnd ? s.timeStart+'–'+s.timeEnd+' ' : s.timeStart+' ') : '';
+      evHtml += `<div class="cal-event" title="${sTimeLabel}${sLabel}${s.title}">${sTimeLabel}${sLabel}${s.title}</div>`;
     });
     cells += `<div class="cal-cell${isToday?' today':''}${hasEvent?' has-event':''}" data-date="${ds}">
       <div class="cal-date">${d}</div>${evHtml}</div>`;
@@ -1368,7 +1372,7 @@ window.openSchedModal = async function(dateStr) {
   const schedListHtml = scheds.map(s => `
     <div class="sched-item" id="si-${s.id}">
       <div class="sched-item-info">
-        <div class="sched-item-time">${s.timeStart||''}</div>
+        <div class="sched-item-time">${s.timeStart ? (s.timeEnd ? s.timeStart+'–'+s.timeEnd : s.timeStart) : ''}</div>
         <div class="sched-item-title">${s.title}</div>
         ${s.custName ? `<div style="font-size:11px;color:#a78bfa;margin-top:2px">👤 ${s.custTitle ? s.custTitle+' ' : ''}${titleCase(s.custName)}${s.custWA?' · '+s.custWA:''}</div>` : ''}
         ${s.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${s.note}</div>` : ''}
@@ -1389,6 +1393,7 @@ window.openSchedModal = async function(dateStr) {
   document.getElementById('schedCustTitle').value = '';
   document.getElementById('schedNameDrop').style.display = 'none';
   document.getElementById('schedServiceDrop').style.display = 'none';
+  const hint = document.getElementById('schedDurHint'); if (hint) hint.textContent = '';
   document.getElementById('schedList').innerHTML = schedListHtml + jobsHtml;
   openModal('modalSched');
 };
@@ -1435,6 +1440,28 @@ window.schedServiceInput = function(val) {
 window.pickSchedService = function(s) {
   document.getElementById('schedTitle').value = s;
   document.getElementById('schedServiceDrop').style.display = 'none';
+  updateSchedDurHint();
+};
+window.updateSchedDurHint = function() {
+  const title = document.getElementById('schedTitle').value.trim();
+  const timeStart = document.getElementById('schedTimeStart').value;
+  const hint = document.getElementById('schedDurHint');
+  if (!hint) return;
+  if (title && timeStart) {
+    const dur = getDurasi(title);
+    const endTime = minToTime(timeToMin(timeStart) + dur);
+    const h = Math.floor(dur/60), m = dur%60;
+    const durStr = h > 0 ? (h+'j'+(m?m+'m':'')) : m+'m';
+    hint.textContent = `→ selesai ~${endTime} (${durStr})`;
+    hint.style.color = 'var(--purpleB)';
+  } else if (title) {
+    const dur = getDurasi(title);
+    const h = Math.floor(dur/60), m = dur%60;
+    hint.textContent = `~${h > 0 ? h+'j'+(m?m+'m':'') : m+'m'}`;
+    hint.style.color = 'var(--muted)';
+  } else {
+    hint.textContent = '';
+  }
 };
 window.schedServiceKey = function(e) {
   if (e.key === 'Escape') document.getElementById('schedServiceDrop').style.display = 'none';
@@ -1471,12 +1498,31 @@ window.saveSched = async function() {
   const custName = document.getElementById('schedCustName').value.trim();
   const custWA = document.getElementById('schedCustWA').value.trim();
   const custTitle = document.getElementById('schedCustTitle').value;
+
+  // Cek clash
+  if (timeStart) {
+    const clashes = checkSchedClash(dateStr, title, timeStart, null);
+    if (clashes.length) {
+      const dur = getDurasi(title);
+      const endTime = minToTime(timeToMin(timeStart) + dur);
+      const clashNames = clashes.map(s => {
+        const sEnd = minToTime(timeToMin(s.timeStart) + getDurasi(s.title||''));
+        const who = s.custName ? (s.custTitle ? s.custTitle+' ' : '') + titleCase(s.custName) + ' · ' : '';
+        return `${s.timeStart}–${sEnd} ${who}${s.title}`;
+      }).join('\n');
+      const lanjut = confirm(`⚠️ BENTROK JADWAL\n\n${title}\n${timeStart}–${endTime}\n\nbentrok dengan:\n${clashNames}\n\nTetap simpan?`);
+      if (!lanjut) return;
+    }
+  }
+
   const btn = document.getElementById('btnSaveSched');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
     const { collection, doc, setDoc, serverTimestamp } = window._fbFns;
     const id = 'sched_' + Date.now();
-    const data = { date: dateStr, title, timeStart, note, createdAt: serverTimestamp() };
+    const dur = getDurasi(title);
+    const timeEnd = timeStart ? minToTime(timeToMin(timeStart) + dur) : '';
+    const data = { date: dateStr, title, timeStart, timeEnd, note, createdAt: serverTimestamp() };
     if (custName) data.custName = custName.toUpperCase();
     if (custWA) data.custWA = custWA;
     if (custTitle) data.custTitle = custTitle;
@@ -3565,6 +3611,61 @@ if (urlCode) {
 </script>
 
 <script>
+// Durasi layanan dalam menit (default 480 = seharian/full day)
+const LAYANAN_DURASI = {
+  'Premium Wash Exterior': 120,
+  'Premium Maintenance': 120,
+  'Professional Maintenance': 120,
+  'Engine Detailing': 120,
+  'Interior Detailing — 1 Row': 180,
+  'Interior Detailing — 2 Row': 240,
+  'Interior Detailing — 3 Row': 300,
+  'Window Coating — Kaca Depan': 120,
+  'Window Coating — Semua Kaca': 180,
+  'Express Polish': 240,
+  'Premium Polish': 360,
+  'Essential Coating — Sonax CC One': 480,
+  'Essential Coating — CarPro Lite': 480,
+  'Essential Coating — Sapphire 10H': 480,
+  'Matte Coating — Gyeon Q² Matte': 480,
+  'Signature Coating — Sonax CC Pro': 480,
+  'Signature Coating — Gyeon Q² Pure EVO': 480,
+  'Signature Coating — CarPro CQUK 3.0': 480,
+  'Prestige Coating — Sonax CC EVO': 480,
+  'Prestige Coating — Gyeon Q² Syncro EVO': 480,
+  'Prestige Coating — CarPro D.Quartz GO': 480,
+  'Graphene Coating — Armor': 480,
+  'Graphene Coating — Shield': 480,
+  'Graphene Coating — Eternity': 480,
+};
+function getDurasi(title) {
+  for (const [k, v] of Object.entries(LAYANAN_DURASI)) {
+    if (title.toLowerCase().includes(k.toLowerCase())) return v;
+  }
+  return 480; // default full day
+}
+function timeToMin(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+function minToTime(m) {
+  return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+}
+function checkSchedClash(dateStr, newTitle, newTimeStart, excludeId) {
+  if (!newTimeStart) return [];
+  const scheds = window._schedules[dateStr] || [];
+  const newStart = timeToMin(newTimeStart);
+  const newEnd = newStart + getDurasi(newTitle);
+  return scheds.filter(s => {
+    if (s.id === excludeId) return false;
+    if (!s.timeStart) return false;
+    const sStart = timeToMin(s.timeStart);
+    const sEnd = sStart + getDurasi(s.title || '');
+    return newStart < sEnd && newEnd > sStart;
+  });
+}
+
 const LAYANAN_LIST = [
   // Graphene Coating
   'Graphene Coating — Eternity',
