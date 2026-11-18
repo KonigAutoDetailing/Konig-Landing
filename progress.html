@@ -1344,7 +1344,6 @@ window.openSchedModal = async function(dateStr) {
   document.getElementById('schedDateVal').value = dateStr;
   document.getElementById('schedTitle').value = '';
   document.getElementById('schedTimeStart').value = '';
-  document.getElementById('schedTimeEnd').value = '';
   document.getElementById('schedNote').value = '';
   document.getElementById('schedList').innerHTML = schedListHtml + jobsHtml;
   openModal('modalSched');
@@ -1355,7 +1354,7 @@ window.saveSched = async function() {
   const title = document.getElementById('schedTitle').value.trim();
   if (!title) { document.getElementById('schedTitle').focus(); return; }
   const timeStart = document.getElementById('schedTimeStart').value;
-  const timeEnd = document.getElementById('schedTimeEnd').value;
+  const timeEnd = '';
   const note = document.getElementById('schedNote').value.trim();
   const btn = document.getElementById('btnSaveSched');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
