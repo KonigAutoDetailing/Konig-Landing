@@ -1256,7 +1256,7 @@ window.renderCalendar = async function() {
     const d = prevDays - i;
     const dm = m === 0 ? 12 : m; const dy = m === 0 ? y-1 : y;
     const ds = `${dy}-${String(dm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells += `<div class="cal-cell other-month" onclick="openSchedModal('${ds}')"><div class="cal-date">${d}</div></div>`;
+    cells += `<div class="cal-cell other-month" data-date="${ds}"><div class="cal-date">${d}</div></div>`;
   }
 
   // This month cells
@@ -1274,9 +1274,9 @@ window.renderCalendar = async function() {
       evHtml += `<div class="cal-event ev-job" title="${j.custName||''} - ${j.car||''}">${j.custName||j.id}</div>`;
     });
     scheds.slice(0,3).forEach(s => {
-      evHtml += `<div class="cal-event" onclick="event.stopPropagation();openSchedModal('${ds}')" title="${s.title}">${s.timeStart ? s.timeStart+' ' : ''}${s.title}</div>`;
+      evHtml += `<div class="cal-event" title="${s.title}">${s.timeStart ? s.timeStart+' ' : ''}${s.title}</div>`;
     });
-    cells += `<div class="cal-cell${isToday?' today':''}${hasEvent?' has-event':''}" onclick="openSchedModal('${ds}')">
+    cells += `<div class="cal-cell${isToday?' today':''}${hasEvent?' has-event':''}" data-date="${ds}">
       <div class="cal-date">${d}</div>${evHtml}</div>`;
   }
 
@@ -1285,7 +1285,7 @@ window.renderCalendar = async function() {
   for (let d = 1; d <= totalCells - firstDay - daysInMonth; d++) {
     const dm = m === 11 ? 1 : m+2; const dy = m === 11 ? y+1 : y;
     const ds = `${dy}-${String(dm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells += `<div class="cal-cell other-month" onclick="openSchedModal('${ds}')"><div class="cal-date">${d}</div></div>`;
+    cells += `<div class="cal-cell other-month" data-date="${ds}"><div class="cal-date">${d}</div></div>`;
   }
 
   cv.innerHTML = `
@@ -1294,7 +1294,18 @@ window.renderCalendar = async function() {
       <div class="cal-month">${monthNames[m]} ${y}</div>
       <button class="cal-nav-btn" onclick="calNav(1)">›</button>
     </div>
-    <div class="cal-grid">${cells}</div>`;
+    <div class="cal-grid" id="calGrid">${cells}</div>`;
+
+  // Event delegation — lebih reliable dari inline onclick di innerHTML
+  const grid = cv.querySelector('#calGrid');
+  if (grid) {
+    grid.addEventListener('click', function(e) {
+      const cell = e.target.closest('.cal-cell');
+      if (!cell) return;
+      const ds = cell.dataset.date;
+      if (ds) window.openSchedModal(ds);
+    });
+  }
 };
 
 window.calNav = function(dir) {
