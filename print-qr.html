@@ -67,17 +67,17 @@
     .print-page{
       width:297mm;min-height:420mm;padding:10mm;
       display:grid;
-      grid-template-columns:repeat(5,50mm);
-      grid-template-rows:repeat(5,70mm);
+      grid-template-columns:repeat(6,40mm);
+      grid-template-rows:repeat(6,60mm);
       gap:3mm;
       align-content:start;
       justify-content:center;
       background:#fff;
     }
 
-    /* ── PRINT STICKER 5×7cm ── */
+    /* ── PRINT STICKER 4×6cm portrait ── */
     .sticker-img{
-      width:50mm;height:70mm;
+      width:40mm;height:60mm;
       display:block;
       page-break-inside:avoid;
       break-inside:avoid;
@@ -104,8 +104,8 @@
       <input type="number" id="ctrlStart" value="1" min="1" max="9999"/>
     </div>
     <div class="ctrl-group">
-      <label>Jumlah (max 25/A3)</label>
-      <input type="number" id="ctrlCount" value="25" min="1" max="25"/>
+      <label>Jumlah (max 36/A3)</label>
+      <input type="number" id="ctrlCount" value="36" min="1" max="36"/>
     </div>
     <button class="btn" onclick="generatePreview()">Generate</button>
     <button class="btn btn-print" onclick="doPrint()">🖨️ Print</button>
@@ -260,18 +260,18 @@ async function generatePreview() {
 async function buildPrintSheet(prefix, start, count) {
   const page = document.getElementById('printPage');
   page.innerHTML = '';
-  // A3: 5 col × 5 row = 25 per page; cap at 25
-  const printCount = Math.min(count, 25);
+  // A3: 6 col × 6 row = 36 per page; cap at 36
+  const printCount = Math.min(count, 36);
   const jobs = [];
   for (let i = 0; i < printCount; i++) {
     const code = makeCode(prefix, start + i);
     const url = BASE_URL + '?code=' + code;
     const c = document.createElement('canvas');
-    // 5×7cm @ 300dpi = 591×827px
-    c.width = 591; c.height = 827;
+    // 4×6cm @ 300dpi = 472×709px
+    c.width = 472; c.height = 709;
     c.className = 'sticker-img';
     page.appendChild(c);
-    jobs.push(renderThumb(c, url, 591/1122, code));
+    jobs.push(renderThumb(c, url, 472/1122, code));
   }
   await Promise.all(jobs);
 }
