@@ -83,6 +83,32 @@
     .job-tab span{display:inline-block;min-width:22px;padding:1px 6px;margin-left:6px;border-radius:10px;background:rgba(255,255,255,.08);font-size:12px;letter-spacing:0}
     .job-tab.active{background:var(--purple);color:#fff}
     .job-tab.active span{background:rgba(255,255,255,.2)}
+    /* Calendar */
+    .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .cal-month{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--white)}
+    .cal-nav-btn{background:transparent;border:1px solid var(--border);color:var(--muted);width:36px;height:36px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+    .cal-nav-btn:hover{border-color:var(--purple);color:var(--white)}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .cal-day-label{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);padding:4px 0;text-transform:uppercase}
+    .cal-cell{min-height:80px;background:var(--panel);border:1px solid var(--border);padding:6px;cursor:pointer;position:relative;transition:border-color .15s}
+    .cal-cell:hover{border-color:var(--purple)}
+    .cal-cell.today{border-color:var(--purple2)}
+    .cal-cell.other-month{opacity:.35}
+    .cal-cell.has-event{border-color:rgba(123,47,190,.5)}
+    .cal-date{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:4px}
+    .cal-cell.today .cal-date{color:var(--purpleB)}
+    .cal-event{background:var(--purple);color:#fff;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:600;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+    .cal-event.ev-done{background:rgba(76,212,160,.2);color:#4cd4a0}
+    .cal-event.ev-job{background:rgba(123,47,190,.4);color:var(--purpleB)}
+    /* Modal schedule */
+    .sched-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto}
+    .sched-item{background:var(--panel);border:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .sched-item-info{flex:1;min-width:0}
+    .sched-item-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--purpleB);font-size:13px}
+    .sched-item-title{font-size:13px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sched-del{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px}
+    .sched-del:hover{color:var(--red)}
+    @media(max-width:600px){.cal-cell{min-height:52px;padding:3px}.cal-event{display:none}.cal-cell.has-event::after{content:'•';color:var(--purple);font-size:16px;position:absolute;bottom:2px;right:4px}}
     .hist-search{width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:#fff;font-size:15px}
     .inv-select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--white);padding:12px;font-size:15px}
     .inv-select option{background:#111}
@@ -556,9 +582,11 @@
     <div class="job-tabs">
       <button type="button" class="job-tab active" id="tabActive" onclick="setJobTab('active')">Aktif <span id="cntActive">0</span></button>
       <button type="button" class="job-tab" id="tabHistory" onclick="setJobTab('history')">History <span id="cntHistory">0</span></button>
+      <button type="button" class="job-tab" id="tabCalendar" onclick="setJobTab('calendar')">📅 Jadwal</button>
     </div>
     <input type="search" id="histSearch" class="hist-search" placeholder="Cari plat, nama, mobil, kode..." oninput="renderJobList()" style="display:none">
     <div id="jobsList"></div>
+    <div id="calendarView" style="display:none"></div>
   </div>
 </div>
 
@@ -774,6 +802,35 @@
       </div>
       <button onclick="savePromo()" class="inv-btn-main" style="width:100%">Simpan Kode</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: Schedule -->
+<div class="modal-overlay" id="modalSched">
+  <div class="modal-box" style="max-width:420px">
+    <button class="modal-close" onclick="closeModal('modalSched')">×</button>
+    <div class="modal-title" id="schedDate">JADWAL</div>
+    <input type="hidden" id="schedDateVal"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div class="form-group" style="margin:0">
+        <label>Jam Mulai</label>
+        <input type="time" id="schedTimeStart" style="width:100%"/>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Jam Selesai</label>
+        <input type="time" id="schedTimeEnd" style="width:100%"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Keterangan *</label>
+      <input type="text" id="schedTitle" placeholder="cth: Coating Toyota GR86 · Pak Budi" onkeydown="if(event.key==='Enter')saveSched()"/>
+    </div>
+    <div class="form-group">
+      <label>Catatan (opsional)</label>
+      <input type="text" id="schedNote" placeholder="cth: antar sore, perlu polish dulu"/>
+    </div>
+    <button class="btn-login" id="btnSaveSched" onclick="saveSched()" style="margin-top:4px">Simpan</button>
+    <div class="sched-list" id="schedList"></div>
   </div>
 </div>
 
@@ -1161,6 +1218,165 @@ window.loadJobs = async function() {
 
 window._jobTab = window._jobTab || 'active';
 window.setJobTab = function(t){ window._jobTab = t; renderJobList(); };
+
+// ======= CALENDAR =======
+window._calYear = new Date().getFullYear();
+window._calMonth = new Date().getMonth(); // 0-based
+window._schedules = {}; // { 'YYYY-MM-DD': [{id, title, timeStart, timeEnd}] }
+
+async function loadSchedules() {
+  try {
+    const { collection, getDocs } = window._fbFns;
+    const snap = await getDocs(collection(window._db, 'konig_schedules'));
+    window._schedules = {};
+    snap.forEach(d => {
+      const data = d.data();
+      window._schedules[data.date] = window._schedules[data.date] || [];
+      window._schedules[data.date].push({ id: d.id, ...data });
+    });
+  } catch(e) {}
+}
+
+window.renderCalendar = async function() {
+  const cv = document.getElementById('calendarView');
+  if (!cv) return;
+  if (!window._schedLoaded) { await loadSchedules(); window._schedLoaded = true; }
+  const y = window._calYear, m = window._calMonth;
+  const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const dayNames = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const today = new Date(); const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  // Active jobs per date (using createdAt as reference)
+  const activeJobs = (window._allJobs||[]).filter(j => !(j.doneSteps||[]).includes('done'));
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const prevDays = new Date(y, m, 0).getDate();
+
+  let cells = '';
+  // Header
+  dayNames.forEach(d => { cells += `<div class="cal-day-label">${d}</div>`; });
+
+  // Prev month cells
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = prevDays - i;
+    const dm = m === 0 ? 12 : m; const dy = m === 0 ? y-1 : y;
+    const ds = `${dy}-${String(dm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells += `<div class="cal-cell other-month" onclick="openSchedModal('${ds}')"><div class="cal-date">${d}</div></div>`;
+  }
+
+  // This month cells
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = ds === todayStr;
+    const scheds = window._schedules[ds] || [];
+    const jobsOnDay = activeJobs.filter(j => {
+      const jd = tsDay(j.createdAt);
+      return jd === ds;
+    });
+    const hasEvent = scheds.length > 0 || jobsOnDay.length > 0;
+    let evHtml = '';
+    jobsOnDay.slice(0,2).forEach(j => {
+      evHtml += `<div class="cal-event ev-job" title="${j.custName||''} - ${j.car||''}">${j.custName||j.id}</div>`;
+    });
+    scheds.slice(0,3).forEach(s => {
+      evHtml += `<div class="cal-event" onclick="event.stopPropagation();openSchedModal('${ds}')" title="${s.title}">${s.timeStart ? s.timeStart+' ' : ''}${s.title}</div>`;
+    });
+    cells += `<div class="cal-cell${isToday?' today':''}${hasEvent?' has-event':''}" onclick="openSchedModal('${ds}')">
+      <div class="cal-date">${d}</div>${evHtml}</div>`;
+  }
+
+  // Fill remaining
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for (let d = 1; d <= totalCells - firstDay - daysInMonth; d++) {
+    const dm = m === 11 ? 1 : m+2; const dy = m === 11 ? y+1 : y;
+    const ds = `${dy}-${String(dm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells += `<div class="cal-cell other-month" onclick="openSchedModal('${ds}')"><div class="cal-date">${d}</div></div>`;
+  }
+
+  cv.innerHTML = `
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
+      <div class="cal-month">${monthNames[m]} ${y}</div>
+      <button class="cal-nav-btn" onclick="calNav(1)">›</button>
+    </div>
+    <div class="cal-grid">${cells}</div>`;
+};
+
+window.calNav = function(dir) {
+  window._calMonth += dir;
+  if (window._calMonth > 11) { window._calMonth = 0; window._calYear++; }
+  if (window._calMonth < 0)  { window._calMonth = 11; window._calYear--; }
+  window._schedLoaded = false;
+  renderCalendar();
+};
+
+window.openSchedModal = async function(dateStr) {
+  if (!window._schedLoaded) { await loadSchedules(); window._schedLoaded = true; }
+  const [y,mo,d] = dateStr.split('-');
+  const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const label = `${parseInt(d)} ${monthNames[parseInt(mo)-1]} ${y}`;
+  const scheds = window._schedules[dateStr] || [];
+  const jobsOnDay = (window._allJobs||[]).filter(j => !(j.doneSteps||[]).includes('done') && tsDay(j.createdAt) === dateStr);
+
+  const schedListHtml = scheds.map(s => `
+    <div class="sched-item" id="si-${s.id}">
+      <div class="sched-item-info">
+        <div class="sched-item-time">${s.timeStart||''}${s.timeEnd?' – '+s.timeEnd:''}</div>
+        <div class="sched-item-title">${s.title}</div>
+        ${s.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${s.note}</div>` : ''}
+      </div>
+      <button class="sched-del" onclick="deleteSched('${s.id}','${dateStr}')" title="Hapus">×</button>
+    </div>`).join('');
+
+  const jobsHtml = jobsOnDay.length ? `<div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:12px;margin-bottom:6px">Job Aktif Masuk Hari Ini</div>` +
+    jobsOnDay.map(j => `<div class="sched-item"><div class="sched-item-info"><div class="sched-item-time" style="color:#4cd4a0">${j.id}</div><div class="sched-item-title">${j.custName||''} · ${j.car||''}</div></div></div>`).join('') : '';
+
+  document.getElementById('schedDate').textContent = label;
+  document.getElementById('schedDateVal').value = dateStr;
+  document.getElementById('schedTitle').value = '';
+  document.getElementById('schedTimeStart').value = '';
+  document.getElementById('schedTimeEnd').value = '';
+  document.getElementById('schedNote').value = '';
+  document.getElementById('schedList').innerHTML = schedListHtml + jobsHtml;
+  openModal('modalSched');
+};
+
+window.saveSched = async function() {
+  const dateStr = document.getElementById('schedDateVal').value;
+  const title = document.getElementById('schedTitle').value.trim();
+  if (!title) { document.getElementById('schedTitle').focus(); return; }
+  const timeStart = document.getElementById('schedTimeStart').value;
+  const timeEnd = document.getElementById('schedTimeEnd').value;
+  const note = document.getElementById('schedNote').value.trim();
+  const btn = document.getElementById('btnSaveSched');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    const { collection, doc, setDoc, serverTimestamp } = window._fbFns;
+    const id = 'sched_' + Date.now();
+    const data = { date: dateStr, title, timeStart, timeEnd, note, createdAt: serverTimestamp() };
+    await setDoc(doc(window._db, 'konig_schedules', id), data);
+    window._schedules[dateStr] = window._schedules[dateStr] || [];
+    window._schedules[dateStr].push({ id, ...data });
+    window._schedLoaded = false;
+    closeModal('modalSched');
+    renderCalendar();
+  } catch(e) { alert('Gagal: '+e.message); }
+  btn.disabled = false; btn.textContent = 'Simpan';
+};
+
+window.deleteSched = async function(id, dateStr) {
+  if (!confirm('Hapus jadwal ini?')) return;
+  try {
+    const { doc, deleteDoc } = window._fbFns;
+    await deleteDoc(doc(window._db, 'konig_schedules', id));
+    window._schedules[dateStr] = (window._schedules[dateStr]||[]).filter(s => s.id !== id);
+    const el = document.getElementById('si-'+id);
+    if (el) el.remove();
+    renderCalendar();
+  } catch(e) { alert('Gagal: '+e.message); }
+};
+
 function jobDoneTime(j){ const d = toDateObj(j.doneAt) || toDateObj(j.updatedAt) || toDateObj(j.createdAt); return d ? d.getTime() : 0; }
 window.renderJobList = function(){
   const jobs = window._allJobs || [];
@@ -1178,8 +1394,12 @@ window.renderJobList = function(){
   const tab = window._jobTab;
   document.getElementById('tabActive').classList.toggle('active', tab === 'active');
   document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+  document.getElementById('tabCalendar').classList.toggle('active', tab === 'calendar');
   const search = document.getElementById('histSearch');
   search.style.display = tab === 'history' ? 'block' : 'none';
+  document.getElementById('jobsList').style.display = tab === 'calendar' ? 'none' : '';
+  document.getElementById('calendarView').style.display = tab === 'calendar' ? 'block' : 'none';
+  if (tab === 'calendar') { renderCalendar(); return; }
   let shown = tab === 'active' ? active : history;
   const q = tab === 'history' ? search.value.trim().toUpperCase().replace(/\s+/g,'') : '';
   if (q) shown = shown.filter(j => [j.id, j.plate, j.custName, j.car, j.color, j.wa].join(' ').toUpperCase().replace(/\s+/g,'').includes(q));
