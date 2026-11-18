@@ -818,9 +818,19 @@
       <label>Jam</label>
       <input type="time" id="schedTimeStart" style="width:140px"/>
     </div>
+    <div class="form-group" style="position:relative">
+      <label>Nama Customer (opsional)</label>
+      <input type="text" id="schedCustName" placeholder="cth: Pak Budi" autocomplete="off"
+        oninput="schedNameInput(this.value)" onkeydown="schedNameKey(event)"/>
+      <div id="schedNameDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--panel);border:1px solid var(--border);z-index:200;max-height:180px;overflow-y:auto"></div>
+    </div>
+    <div class="form-group">
+      <label>No WhatsApp (opsional)</label>
+      <input type="text" id="schedCustWA" placeholder="cth: 081234567890" inputmode="numeric"/>
+    </div>
     <div class="form-group">
       <label>Keterangan *</label>
-      <input type="text" id="schedTitle" placeholder="cth: Coating Toyota GR86 · Pak Budi" onkeydown="if(event.key==='Enter')saveSched()"/>
+      <input type="text" id="schedTitle" placeholder="cth: Coating Toyota GR86" onkeydown="if(event.key==='Enter')saveSched()"/>
     </div>
     <div class="form-group">
       <label>Catatan (opsional)</label>
@@ -1277,7 +1287,7 @@ window.renderCalendar = async function() {
       evHtml += `<div class="cal-event ev-job" title="${j.custName||''} - ${j.car||''}">${j.custName||j.id}</div>`;
     });
     scheds.slice(0,3).forEach(s => {
-      evHtml += `<div class="cal-event" title="${s.title}">${s.timeStart ? s.timeStart+' ' : ''}${s.title}</div>`;
+      evHtml += `<div class="cal-event" title="${s.custName ? titleCase(s.custName)+' · ' : ''}${s.title}">${s.timeStart ? s.timeStart+' ' : ''}${s.custName ? titleCase(s.custName)+' · ' : ''}${s.title}</div>`;
     });
     cells += `<div class="cal-cell${isToday?' today':''}${hasEvent?' has-event':''}" data-date="${ds}">
       <div class="cal-date">${d}</div>${evHtml}</div>`;
@@ -1333,8 +1343,9 @@ window.openSchedModal = async function(dateStr) {
   const schedListHtml = scheds.map(s => `
     <div class="sched-item" id="si-${s.id}">
       <div class="sched-item-info">
-        <div class="sched-item-time">${s.timeStart||''}${s.timeEnd?' – '+s.timeEnd:''}</div>
+        <div class="sched-item-time">${s.timeStart||''}</div>
         <div class="sched-item-title">${s.title}</div>
+        ${s.custName ? `<div style="font-size:11px;color:#a78bfa;margin-top:2px">👤 ${titleCase(s.custName)}${s.custWA?' · '+s.custWA:''}</div>` : ''}
         ${s.note ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${s.note}</div>` : ''}
       </div>
       <button class="sched-del" onclick="deleteSched('${s.id}','${dateStr}')" title="Hapus">×</button>
@@ -1348,23 +1359,73 @@ window.openSchedModal = async function(dateStr) {
   document.getElementById('schedTitle').value = '';
   document.getElementById('schedTimeStart').value = '';
   document.getElementById('schedNote').value = '';
+  document.getElementById('schedCustName').value = '';
+  document.getElementById('schedCustWA').value = '';
+  document.getElementById('schedNameDrop').style.display = 'none';
   document.getElementById('schedList').innerHTML = schedListHtml + jobsHtml;
   openModal('modalSched');
 };
+
+// ── Schedule customer autocomplete ──
+window.schedNameInput = function(val) {
+  const drop = document.getElementById('schedNameDrop');
+  const q = val.trim().toUpperCase();
+  if (!q) { drop.style.display = 'none'; return; }
+  const customers = getSchedCustomers();
+  const matches = customers.filter(c => c.name.includes(q)).slice(0, 8);
+  if (!matches.length) { drop.style.display = 'none'; return; }
+  drop.innerHTML = matches.map((c,i) =>
+    `<div class="sched-drop-item" data-idx="${i}" data-name="${c.name}" data-wa="${c.wa||''}"
+      style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)"
+      onmousedown="pickSchedCustomer('${c.name.replace(/'/g,"\\'")}','${(c.wa||'').replace(/'/g,"\\'")}')"
+      onmouseover="this.style.background='rgba(167,139,250,.15)'" onmouseout="this.style.background=''"
+    ><span style="color:var(--white)">${titleCase(c.name)}</span>${c.wa ? `<span style="color:var(--muted);font-size:11px;margin-left:8px">${c.wa}</span>` : ''}${c.car ? `<span style="color:var(--muted);font-size:11px;margin-left:8px">· ${c.car}</span>` : ''}</div>`
+  ).join('');
+  drop.style.display = 'block';
+};
+window.pickSchedCustomer = function(name, wa) {
+  document.getElementById('schedCustName').value = titleCase(name);
+  if (wa) document.getElementById('schedCustWA').value = wa;
+  document.getElementById('schedNameDrop').style.display = 'none';
+};
+window.schedNameKey = function(e) {
+  if (e.key === 'Escape') document.getElementById('schedNameDrop').style.display = 'none';
+};
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#schedNameDrop') && e.target.id !== 'schedCustName') {
+    const d = document.getElementById('schedNameDrop'); if (d) d.style.display = 'none';
+  }
+});
+function getSchedCustomers() {
+  const map = new Map();
+  (window._allJobs||[]).slice().sort((a,b) => {
+    const ta = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
+    const tb = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
+    return ta - tb;
+  }).forEach(j => {
+    const nm = String(j.custName||'').trim().toUpperCase(); if (!nm) return;
+    const k = nm + '|' + (j.wa||'');
+    if (!map.has(k)) map.set(k, { name: nm, wa: j.wa||'', car: j.car||'' });
+  });
+  return [...map.values()];
+}
 
 window.saveSched = async function() {
   const dateStr = document.getElementById('schedDateVal').value;
   const title = document.getElementById('schedTitle').value.trim();
   if (!title) { document.getElementById('schedTitle').focus(); return; }
   const timeStart = document.getElementById('schedTimeStart').value;
-  const timeEnd = '';
   const note = document.getElementById('schedNote').value.trim();
+  const custName = document.getElementById('schedCustName').value.trim();
+  const custWA = document.getElementById('schedCustWA').value.trim();
   const btn = document.getElementById('btnSaveSched');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
     const { collection, doc, setDoc, serverTimestamp } = window._fbFns;
     const id = 'sched_' + Date.now();
-    const data = { date: dateStr, title, timeStart, timeEnd, note, createdAt: serverTimestamp() };
+    const data = { date: dateStr, title, timeStart, note, createdAt: serverTimestamp() };
+    if (custName) data.custName = custName.toUpperCase();
+    if (custWA) data.custWA = custWA;
     await setDoc(doc(window._db, 'konig_schedules', id), data);
     window._schedules[dateStr] = window._schedules[dateStr] || [];
     window._schedules[dateStr].push({ id, ...data });
