@@ -162,16 +162,27 @@ function makeCode(prefix, num) {
   return prefix + '-' + padNum(num, 5);
 }
 
+// Crop padding: template 1122x1402, content bbox x=34-1087, y=29-1356
+// Kita render full lalu crop, supaya border stiker = edge canvas = edge stiker fisik
+const TMPL_CROP = { x: 34, y: 29, w: 1053, h: 1327 };  // pixel di resolusi 1122x1402
+
 async function renderThumb(canvas, url, S, code) {
-  const TW = 1122 * S, TH = 1402 * S;
-  const box_x1 = 137*S, box_x2 = 984*S;
-  const box_y1 = 282*S, box_y2 = 1081*S;
-  const bw = box_x2-box_x1, bh = box_y2-box_y1;
-  // QR 85% — geser ke atas 40% gap, teks di bawah 60% gap
-  const qSize = Math.floor(Math.min(bw,bh)*0.85);
-  const margin = Math.floor(qSize*0.04);
-  const inner = qSize - margin*2;
-  const cx = Math.floor((box_x1+box_x2)/2);
+  // Skala crop ke ukuran canvas target
+  const scaleX = canvas.width / TMPL_CROP.w;
+  const scaleY = canvas.height / TMPL_CROP.h;
+
+  // Koordinat white box QR dalam template asli (1122x1402)
+  // Adjust ke crop coordinate: kurangi offset crop
+  const box_x1 = (137 - TMPL_CROP.x) * scaleX;
+  const box_x2 = (984 - TMPL_CROP.x) * scaleX;
+  const box_y1 = (282 - TMPL_CROP.y) * scaleY;
+  const box_y2 = (1081 - TMPL_CROP.y) * scaleY;
+  const bw = box_x2 - box_x1, bh = box_y2 - box_y1;
+
+  const qSize = Math.floor(Math.min(bw,bh) * 0.85);
+  const margin = Math.floor(qSize * 0.04);
+  const inner = qSize - margin * 2;
+  const cx = Math.floor((box_x1 + box_x2) / 2);
   const gap_total = bh - qSize;
   const qr_top = box_y1 + Math.floor(gap_total * 0.40);
 
@@ -182,17 +193,21 @@ async function renderThumb(canvas, url, S, code) {
   qBg.width = qSize; qBg.height = qSize;
   const qCtx = qBg.getContext('2d');
   qCtx.fillStyle = '#ffffff';
-  qCtx.fillRect(0,0,qSize,qSize);
+  qCtx.fillRect(0, 0, qSize, qSize);
   qCtx.drawImage(qrCanvas, margin, margin);
 
   const ctx = canvas.getContext('2d');
-  // Pastikan background putih — bukan hitam/transparan
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, TW, TH);
-  ctx.drawImage(tmpl, 0, 0, TW, TH);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw template dengan crop: source = TMPL_CROP area, dest = full canvas
+  ctx.drawImage(tmpl,
+    TMPL_CROP.x, TMPL_CROP.y, TMPL_CROP.w, TMPL_CROP.h,  // source crop
+    0, 0, canvas.width, canvas.height                       // dest full
+  );
+
   ctx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
 
-  // Draw code text below QR
   if (code) {
     const qr_bottom = qr_top + qSize;
     const gap_below = box_y2 - qr_bottom;
@@ -230,9 +245,9 @@ async function generatePreview() {
 
     // Canvas thumbnail — same logic as download but at preview scale
     const thumbCanvas = document.createElement('canvas');
-    const PS = 1;  // preview scale (1x = 1122x1402 for display, CSS scales to 160px)
-    thumbCanvas.width = 1122 * PS;
-    thumbCanvas.height = 1402 * PS;
+    const PS = 1;  // preview scale, CSS scales to 160px
+    thumbCanvas.width = 1053 * PS;   // crop width
+    thumbCanvas.height = 1327 * PS;  // crop height
     card.appendChild(thumbCanvas);
 
     const wrap = document.createElement('div');
@@ -274,9 +289,9 @@ async function buildPrintSheet(prefix, start, count) {
     const code = makeCode(prefix, start + i);
     const url = BASE_URL + '?code=' + code;
     const c = document.createElement('canvas');
-    c.width = 472; c.height = 709;
+    c.width = 472; c.height = 595;  // 472/1053 * 1327 ≈ 595
     canvases.push(c);
-    jobs.push(renderThumb(c, url, 472/1122, code));
+    jobs.push(renderThumb(c, url, 472/1053, code));
   }
   await Promise.all(jobs);
   // Konversi canvas → <img> base64 (biar bisa di-print di semua browser/Safari)
@@ -318,7 +333,7 @@ async function downloadPDF(format = 'a3') {
   const PX_PER_MM = 300 / 25.4;  // ≈ 11.81
   const C_W = Math.round(STICKER_W_MM * PX_PER_MM);
   const C_H = Math.round(STICKER_H_MM * PX_PER_MM);
-  const RENDER_SCALE = C_W / 1122;
+  const RENDER_SCALE = C_W / 1053;  // crop width, bukan full 1122
 
   const totalPages = Math.ceil(count / PER_PAGE);
 
@@ -431,55 +446,14 @@ async function downloadSticker(code) {
   if (btn) { btn.textContent = '⏳ Generating...'; btn.disabled = true; }
 
   const url = BASE_URL + '?code=' + code;
-  const SCALE = 4;  // 4K output: 4488x5608px
-  const TW = 1122 * SCALE, TH = 1402 * SCALE;
-
-  // White box in template: x=137-984, y=282-1081
-  const box_x1 = 137 * SCALE, box_x2 = 984 * SCALE;
-  const box_y1 = 282 * SCALE, box_y2 = 1081 * SCALE;
-  const box_w = box_x2 - box_x1;
-  const box_h = box_y2 - box_y1;
-
-  // QR = 85% of shorter dimension, geser atas 40%, teks di bawah
-  const qSize = Math.floor(Math.min(box_w, box_h) * 0.85);
-  const margin = Math.floor(qSize * 0.04);
-  const inner = qSize - margin * 2;
-  const cx = Math.floor((box_x1 + box_x2) / 2);
-  const gap_total = box_h - qSize;
-  const qr_top = box_y1 + Math.floor(gap_total * 0.40);
+  // 4K output berdasarkan crop size (1053x1327 base)
+  const SCALE = 4;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1053 * SCALE;
+  canvas.height = 1327 * SCALE;
 
   try {
-    const tmpl = await loadTemplate();
-    const qrCanvas = await makeQRCanvas(url, inner);
-
-    // White bg square, QR centered inside
-    const qBg = document.createElement('canvas');
-    qBg.width = qSize; qBg.height = qSize;
-    const qCtx = qBg.getContext('2d');
-    qCtx.fillStyle = '#ffffff';
-    qCtx.fillRect(0, 0, qSize, qSize);
-    qCtx.drawImage(qrCanvas, margin, margin);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = TW; canvas.height = TH;
-    const ctx = canvas.getContext('2d');
-
-    // 1. Draw template
-    ctx.drawImage(tmpl, 0, 0, TW, TH);
-
-    // 2. Draw QR (shifted up 40%)
-    ctx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
-
-    // 3. Draw code text below QR
-    const qr_bottom = qr_top + qSize;
-    const gap_below = box_y2 - qr_bottom;
-    const font_size = Math.floor(gap_below * 0.55);
-    const text_y = qr_bottom + Math.floor(gap_below / 2);
-    ctx.font = `bold ${font_size}px sans-serif`;
-    ctx.fillStyle = '#3c0064';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(code, cx, text_y);
+    await renderThumb(canvas, url, SCALE, code);
 
     // Download
     canvas.toBlob(blob => {
