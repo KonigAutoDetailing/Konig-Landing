@@ -163,16 +163,13 @@ function makeCode(prefix, num) {
 }
 
 // Crop padding: template 1122x1402, content bbox x=34-1087, y=29-1356
-// Kita render full lalu crop, supaya border stiker = edge canvas = edge stiker fisik
-const TMPL_CROP = { x: 34, y: 29, w: 1053, h: 1327 };  // pixel di resolusi 1122x1402
+const TMPL_CROP = { x: 34, y: 29, w: 1053, h: 1327 };
 
-async function renderThumb(canvas, url, S, code) {
-  // Skala crop ke ukuran canvas target
+// whiteBg: true untuk PDF (JPEG tidak support alpha), false untuk PNG download
+async function renderThumb(canvas, url, S, code, whiteBg = false) {
   const scaleX = canvas.width / TMPL_CROP.w;
   const scaleY = canvas.height / TMPL_CROP.h;
 
-  // Koordinat white box QR dalam template asli (1122x1402)
-  // Adjust ke crop coordinate: kurangi offset crop
   const box_x1 = (137 - TMPL_CROP.x) * scaleX;
   const box_x2 = (984 - TMPL_CROP.x) * scaleX;
   const box_y1 = (282 - TMPL_CROP.y) * scaleY;
@@ -197,15 +194,16 @@ async function renderThumb(canvas, url, S, code) {
   qCtx.drawImage(qrCanvas, margin, margin);
 
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Hanya isi putih kalau untuk PDF — PNG download biarkan transparan
+  if (whiteBg) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
-  // Draw template dengan crop: source = TMPL_CROP area, dest = full canvas
   ctx.drawImage(tmpl,
-    TMPL_CROP.x, TMPL_CROP.y, TMPL_CROP.w, TMPL_CROP.h,  // source crop
-    0, 0, canvas.width, canvas.height                       // dest full
+    TMPL_CROP.x, TMPL_CROP.y, TMPL_CROP.w, TMPL_CROP.h,
+    0, 0, canvas.width, canvas.height
   );
-
   ctx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
 
   if (code) {
@@ -359,7 +357,7 @@ async function downloadPDF(format = 'a3') {
         c.width = C_W;
         c.height = C_H;
         canvases.push(c);
-        jobs.push(renderThumb(c, url, RENDER_SCALE, code));
+        jobs.push(renderThumb(c, url, RENDER_SCALE, code, true));  // whiteBg for PDF
       }
       await Promise.all(jobs);
 
