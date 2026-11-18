@@ -1612,6 +1612,7 @@ window.renderJobList = function(){
           ${isDone ? lunasBtn(j) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
           ${isDone ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
+          ${isDone ? `<button class="btn-sm" style="background:${j.locked?'rgba(74,222,128,.12)':'rgba(248,113,113,.12)'};color:${j.locked?'#4ade80':'#f87171'};border:1px solid ${j.locked?'rgba(74,222,128,.4)':'rgba(248,113,113,.4)'}" onclick="toggleCodeLock('${j.id}', ${!!j.locked})">${j.locked ? '🔓 Unlock Kode' : '🔒 Lock Kode'}</button>` : ''}
         </div>`}
       </div>
       <div class="badge-row">
@@ -2291,7 +2292,16 @@ async function handleScannedCode(code){
     const snap = await getDoc(doc(window._db, 'konig_progress', code));
     if (snap.exists() && !document.getElementById('editJobId').value) {
       const j = { id: code, ...snap.data() };
-      if ((j.doneSteps||[]).includes('done')) { if (err) err.style.display = 'none'; document.getElementById('jobPlate').value = j.plate || ''; applyRepeat(j); checkRepeat(); return; }
+      if ((j.doneSteps||[]).includes('done')) {
+        // Kode sudah selesai — cek apakah di-lock
+        if (j.locked) {
+          if (err) { err.textContent = '🔒 Kode ini sudah terkunci. Minta admin untuk unlock dulu.'; err.style.display = 'block'; }
+          return;
+        }
+        if (err) err.style.display = 'none';
+        document.getElementById('jobPlate').value = j.plate || '';
+        applyRepeat(j); checkRepeat(); return;
+      }
       if (err) { err.textContent = 'Mobil dengan kode ini masih dalam pengerjaan'; err.style.display = 'block'; }
       return;
     }
@@ -2370,6 +2380,19 @@ function setReviewedBtn(on){
   b.textContent = on ? '✓ Sudah Review Google · tap untuk batal' : '⭐ Tandai Sudah Review Google';
   b.style.background = on ? 'rgba(250,204,21,.12)' : 'transparent';
 }
+window.toggleCodeLock = async function(id, isLocked) {
+  const { doc, updateDoc } = window._fbFns;
+  const newLocked = !isLocked;
+  const label = newLocked ? 'lock' : 'unlock';
+  if (!confirm(`${newLocked ? '🔒 Lock' : '🔓 Unlock'} kode ${id}?\n\n${newLocked ? 'Kode ini tidak bisa dipakai untuk job baru sampai di-unlock.' : 'Kode ini bisa dipakai untuk kunjungan ulang.'}`)) return;
+  try {
+    await updateDoc(doc(window._db, 'konig_progress', id), { locked: newLocked });
+    const job = (window._allJobs || []).find(j => j.id === id);
+    if (job) job.locked = newLocked;
+    renderJobs(window._allJobs || []);
+  } catch(e) { alert('Gagal: ' + e.message); }
+};
+
 window.toggleReviewedDirect = async function(id, btn) {
   const job = (window._allJobs || []).find(j => j.id === id);
   if (!job) return;
@@ -2689,7 +2712,7 @@ window.saveJob = async function() {
       const jobSizeVal = document.getElementById('jobSize').value || 'Medium';
       const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, updatedAt: serverTimestamp() };
       if (dpOnly && dpNominal) upd.dp = dpNominal;
-      if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); justDone = editId; }
+      if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); upd.locked = true; justDone = editId; }
       await updateDoc(doc(window._db, 'konig_progress', editId), upd);
     } else {
       const code = document.getElementById('jobCode').value.trim().toUpperCase();
@@ -2712,7 +2735,7 @@ window.saveJob = async function() {
         if (window._ownerChoice !== 'new' && normWa(old.wa) === normWa(wa)) { if (old.reviewed) carry.reviewed = old.reviewed; if (old.reviewReminder) carry.reviewReminder = old.reviewReminder; }
       }
       const jobSizeVal = document.getElementById('jobSize').value || 'Medium';
-      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(dpOnly && dpNominal ? { dp: dpNominal } : {}), ...(nowDone ? { doneAt: serverTimestamp() } : {}) });
+      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(dpOnly && dpNominal ? { dp: dpNominal } : {}), ...(nowDone ? { doneAt: serverTimestamp(), locked: true } : { locked: false }) });
       window._repeatOf = null;
       if (nowDone) justDone = code;
       else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName, voucherCode };
