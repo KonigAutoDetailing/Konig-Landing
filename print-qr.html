@@ -186,6 +186,9 @@ async function renderThumb(canvas, url, S, code) {
   qCtx.drawImage(qrCanvas, margin, margin);
 
   const ctx = canvas.getContext('2d');
+  // Pastikan background putih — bukan hitam/transparan
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, TW, TH);
   ctx.drawImage(tmpl, 0, 0, TW, TH);
   ctx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
 
@@ -355,8 +358,8 @@ async function downloadPDF(format = 'a3') {
         const row = Math.floor(i / COLS);
         const x = offsetX + col * (STICKER_W_MM + GAP_MM);
         const y = offsetY + row * (STICKER_H_MM + GAP_MM);
-        const imgData = canvases[i].toDataURL('image/jpeg', 0.97);
-        pdf.addImage(imgData, 'JPEG', x, y, STICKER_W_MM, STICKER_H_MM);
+        const imgData = canvases[i].toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', x, y, STICKER_W_MM, STICKER_H_MM);
       }
     }
 
