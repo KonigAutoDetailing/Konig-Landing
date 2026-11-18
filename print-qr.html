@@ -345,12 +345,16 @@ async function downloadPDF(format = 'a3') {
       }
       await Promise.all(jobs);
 
-      // Tempatkan sticker di PDF
+      // Tempatkan sticker di PDF — grid di-center horizontal & vertikal
+      const gridW = COLS * STICKER_W_MM + (COLS - 1) * GAP_MM;
+      const gridH = ROWS * STICKER_H_MM + (ROWS - 1) * GAP_MM;
+      const offsetX = (PAGE_W - gridW) / 2;
+      const offsetY = (PAGE_H - gridH) / 2;
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
-        const x = MARGIN_MM + col * (STICKER_W_MM + GAP_MM);
-        const y = MARGIN_MM + row * (STICKER_H_MM + GAP_MM);
+        const x = offsetX + col * (STICKER_W_MM + GAP_MM);
+        const y = offsetY + row * (STICKER_H_MM + GAP_MM);
         const imgData = canvases[i].toDataURL('image/jpeg', 0.97);
         pdf.addImage(imgData, 'JPEG', x, y, STICKER_W_MM, STICKER_H_MM);
       }
