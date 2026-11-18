@@ -312,9 +312,8 @@ async function downloadPDF() {
   const PER_PAGE = COLS * ROWS;  // 16
 
   // Render canvas di resolusi tinggi untuk kualitas PDF bagus
-  // 1mm = ~3.78px at 96dpi, kita pakai 150dpi = 5.91px/mm
-  // Canvas sticker: 40mm × 60mm × 5.91 ≈ 236 × 354px (cukup tajam)
-  const PX_PER_MM = 150 / 25.4;  // ≈ 5.91
+  // 300dpi = 11.81px/mm → stiker 40×60mm = 472×709px
+  const PX_PER_MM = 300 / 25.4;  // ≈ 11.81
   const C_W = Math.round(STICKER_W_MM * PX_PER_MM);
   const C_H = Math.round(STICKER_H_MM * PX_PER_MM);
   const RENDER_SCALE = C_W / 1122;
@@ -353,7 +352,7 @@ async function downloadPDF() {
         const row = Math.floor(i / COLS);
         const x = MARGIN_MM + col * (STICKER_W_MM + GAP_MM);
         const y = MARGIN_MM + row * (STICKER_H_MM + GAP_MM);
-        const imgData = canvases[i].toDataURL('image/jpeg', 0.92);
+        const imgData = canvases[i].toDataURL('image/jpeg', 0.97);
         pdf.addImage(imgData, 'JPEG', x, y, STICKER_W_MM, STICKER_H_MM);
       }
     }
