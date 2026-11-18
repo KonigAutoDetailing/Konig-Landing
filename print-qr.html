@@ -381,37 +381,41 @@ function loadTemplate() {
   });
 }
 
-// Generate QR canvas directly — no DOM, no double image, pure canvas draw
+// Generate QR canvas — render at exact integer pixels per module then scale to target size
 function makeQRCanvas(url, size) {
-  // Use qrcode-generator (global: qrcode) for raw module matrix
   const qr = qrcode(0, 'H');
   qr.addData(url);
   qr.make();
   const moduleCount = qr.getModuleCount();
-  const cellSize = size / moduleCount;
 
-  const c = document.createElement('canvas');
-  c.width = size; c.height = size;
-  const ctx = c.getContext('2d');
+  // Render at minimum 8px per module for crisp QR, then scale down to target
+  const cellPx = Math.max(8, Math.ceil(size / moduleCount));
+  const rawSize = cellPx * moduleCount;
 
-  // White background
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size, size);
-
-  // Draw modules
-  ctx.fillStyle = '#4B0082';
+  // Draw at native integer size
+  const raw = document.createElement('canvas');
+  raw.width = rawSize; raw.height = rawSize;
+  const rCtx = raw.getContext('2d');
+  rCtx.fillStyle = '#ffffff';
+  rCtx.fillRect(0, 0, rawSize, rawSize);
+  rCtx.fillStyle = '#4B0082';
   for (let r = 0; r < moduleCount; r++) {
     for (let col = 0; col < moduleCount; col++) {
       if (qr.isDark(r, col)) {
-        ctx.fillRect(
-          Math.floor(col * cellSize),
-          Math.floor(r * cellSize),
-          Math.ceil(cellSize),
-          Math.ceil(cellSize)
-        );
+        rCtx.fillRect(col * cellPx, r * cellPx, cellPx, cellPx);
       }
     }
   }
+
+  // If raw is already target size, return as-is
+  if (rawSize === size) return Promise.resolve(raw);
+
+  // Scale down to target size with crisp rendering
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;  // keep QR pixels crisp
+  ctx.drawImage(raw, 0, 0, size, size);
   return Promise.resolve(c);
 }
 
