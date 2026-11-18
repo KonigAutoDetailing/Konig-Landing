@@ -294,17 +294,17 @@ async function downloadPDF() {
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 200);
 
   // Sticker ukuran: 40mm x 60mm
-  // A4: 210mm x 297mm, margin 10mm tiap sisi
-  // Grid area: 190mm wide, 277mm tall
-  // Kolom: floor(190 / (40+3)) = 4 kolom (gap 3mm), sisa space dibagi rata
-  // Baris per halaman: floor(277 / (60+3)) = 4 baris
-  // = 16 sticker per halaman
+  // A3: 297mm x 420mm, margin 10mm tiap sisi
+  // Grid area: 277mm wide, 400mm tall
+  // Kolom: floor((277+3) / (40+3)) = 6 kolom
+  // Baris: floor((400+3) / (60+3)) = 6 baris
+  // = 36 sticker per halaman
   const STICKER_W_MM = 40;
   const STICKER_H_MM = 60;
   const GAP_MM = 3;
   const MARGIN_MM = 10;
-  const PAGE_W = 210;
-  const PAGE_H = 297;
+  const PAGE_W = 297;
+  const PAGE_H = 420;
   const AREA_W = PAGE_W - MARGIN_MM * 2;
   const AREA_H = PAGE_H - MARGIN_MM * 2;
   const COLS = Math.floor((AREA_W + GAP_MM) / (STICKER_W_MM + GAP_MM));  // 4
@@ -323,7 +323,7 @@ async function downloadPDF() {
 
   try {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a3' });
 
     for (let page = 0; page < totalPages; page++) {
       if (page > 0) pdf.addPage();
