@@ -277,11 +277,22 @@ async function buildPrintSheet(prefix, start, count) {
 }
 
 async function doPrint() {
-  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
-  const start = parseInt(document.getElementById('ctrlStart').value) || 1;
-  const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 100);
-  await buildPrintSheet(prefix, start, count);
-  setTimeout(() => window.print(), 300);
+  const btn = document.querySelector('.btn-print');
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Menyiapkan...';
+  try {
+    const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
+    const start = parseInt(document.getElementById('ctrlStart').value) || 1;
+    const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 36);
+    await buildPrintSheet(prefix, start, count);
+    // Tunggu semua gambar benar2 rendered ke DOM
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    window.print();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+  }
 }
 
 // Load template image once (from inline base64 — no CORS)
