@@ -388,8 +388,12 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
   // ── RENDER RESOLUTION: 300dpi ─────────────────────────────────────
   const PX_PER_MM = 300 / 25.4;  // ≈ 11.81px/mm
-  const SW = Math.round(STICKER_W_MM * PX_PER_MM);  // stiker width in px (tanpa bleed)
-  const SH = Math.round(STICKER_H_MM * PX_PER_MM);  // stiker height in px (tanpa bleed)
+  // Gunakan nilai exact (tanpa Math.round) agar ukuran PDF persis 50×60mm
+  // Canvas harus integer untuk pixel, tapi PDF size dihitung dari SW_EXACT/PX_PER_MM
+  const SW_EXACT = STICKER_W_MM * PX_PER_MM;  // exact float
+  const SH_EXACT = STICKER_H_MM * PX_PER_MM;
+  const SW = Math.round(SW_EXACT);  // pixel canvas (harus integer)
+  const SH = Math.round(SH_EXACT);
   const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM); // 2mm bleed in px
   const CW = SW + BLEED_PX * 2;  // canvas width inkl bleed kiri+kanan
   const CH = SH + BLEED_PX * 2;  // canvas height inkl bleed atas+bawah
@@ -477,8 +481,18 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       const offsetY = cellOriginY + BLEED_MM;
 
       // ── Tempatkan stiker di PDF ──
-      const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;
-      const CELL_H_MM = STICKER_H_MM + BLEED_MM * 2;
+      // CELL_W/H_MM: ukuran image di PDF = stiker + bleed dua sisi
+      // Pakai STICKER_W/H_MM langsung (exact) agar stiker persis 50×60mm
+      const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;  // 54mm exact
+      const CELL_H_MM = STICKER_H_MM + BLEED_MM * 2;  // 64mm exact
+      // addImage scale: image CW×CH pixel → CELL_W×H_MM
+      // → stiker area SW/CW × CELL_W_MM = persis STICKER_W_MM karena:
+      //   SW/CW = SW/(SW+2*BLEED_PX), CELL_W_MM = STICKER_W_MM + 2*BLEED_MM
+      //   = STICKER_W_MM * (1 + 2*BLEED_MM/STICKER_W_MM) ≠ exact karena rounding BLEED_PX
+      // FIX: gunakan alias agar stiker PERSIS 50×60mm — tempatkan image dengan ukuran
+      //   cell_w = STICKER_W_MM * CW/SW, cell_h = STICKER_H_MM * CH/SH
+      const TRUE_CELL_W_MM = STICKER_W_MM * CW / SW;  // exact mapping pixel→mm
+      const TRUE_CELL_H_MM = STICKER_H_MM * CH / SH;
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
@@ -486,9 +500,12 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
         const sx = offsetX + col * STEP_W;
         const sy = offsetY + row * STEP_H;
 
-        // addImage dari sx-BLEED_MM, sy-BLEED_MM: bleed extend 2mm keluar dari cutting line
+        // addImage: pakai TRUE_CELL ukuran agar stiker = persis STICKER_W_MM × STICKER_H_MM
+        // TRUE_CELL = STICKER_W_MM * CW/SW → stiker area SW/CW * TRUE_CELL = STICKER_W_MM
+        const bleed_w_mm = TRUE_CELL_W_MM - STICKER_W_MM;  // total bleed kiri+kanan dalam mm
+        const bleed_h_mm = TRUE_CELL_H_MM - STICKER_H_MM;
         const imgData = cellCanvases[i].cell.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', sx - BLEED_MM, sy - BLEED_MM, CELL_W_MM, CELL_H_MM);
+        pdf.addImage(imgData, 'PNG', sx - bleed_w_mm/2, sy - bleed_h_mm/2, TRUE_CELL_W_MM, TRUE_CELL_H_MM);
 
         // ── Cutting line: outline rounded mengikuti outline stiker ──
         // R dalam mm = R_stiker px / PX_PER_MM
