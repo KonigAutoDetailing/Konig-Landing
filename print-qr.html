@@ -479,8 +479,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
         const row = Math.floor(i / COLS);
         const sx = offsetX + col * STEP_W;
         const sy = offsetY + row * STEP_H;
-        const imgData = cell.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', sx - bleed_w_mm/2, sy - bleed_h_mm/2, TRUE_CELL_W_MM, TRUE_CELL_H_MM);
+        const imgData = cell.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', sx - bleed_w_mm/2, sy - bleed_h_mm/2, TRUE_CELL_W_MM, TRUE_CELL_H_MM);
 
         // Bebaskan memori canvas
         sc.width = 0; sc.height = 0;
