@@ -432,8 +432,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
       // ── Composite: stiker + bleed ke canvas cell (CW×CH) ──
       // Corner radius dari stiker (10.42% lebar) — bleed radius = R + BLEED_PX
-      const R_sticker = Math.round(SW * 0.1042);
-      const R_bleed = R_sticker + BLEED_PX;
+      const R_stiker = Math.round(SW * 0.1042);
+      const R_bleed = R_stiker + BLEED_PX;
       const cellCanvases = stickerCanvases.map(({ sc, code }) => {
         const cell = document.createElement('canvas');
         cell.width = CW; cell.height = CH;
