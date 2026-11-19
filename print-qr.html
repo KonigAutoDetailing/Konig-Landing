@@ -438,21 +438,21 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, CW, CH);
 
-        // 2. Bleed layer: rounded rect expanded (R_bleed), scale stiker ke ukuran cell
-        //    → warna tepi stiker melebar 2mm mengikuti outline
+        // 2. Bleed layer: draw stiker di -BLEED_PX offset, clip ke R_bleed
+        //    → tepi stiker asli (hitam/gelap) melebar 2mm ke semua sisi, ikuti outline rounded
         ctx.save();
         ctx.beginPath();
         ctx.roundRect(0, 0, CW, CH, R_bleed);
         ctx.clip();
-        ctx.drawImage(sc, 0, 0, CW, CH);  // scale up stiker ke seluruh cell untuk bleed fill
+        ctx.drawImage(sc, -BLEED_PX, -BLEED_PX);  // geser stiker keluar sehingga tepinya isi bleed
         ctx.restore();
 
-        // 3. Stiker asli di posisi BLEED_PX offset, clip ke outline stiker tepat
+        // 3. Stiker asli sharp di tengah cell (offset BLEED_PX), clip ke R_sticker
         ctx.save();
         ctx.beginPath();
         ctx.roundRect(BLEED_PX, BLEED_PX, SW, SH, R_sticker);
         ctx.clip();
-        ctx.drawImage(sc, BLEED_PX, BLEED_PX);  // stiker di posisi asli, tajam
+        ctx.drawImage(sc, BLEED_PX, BLEED_PX);  // stiker tepat di cutting outline
         ctx.restore();
 
         return { cell, code };
