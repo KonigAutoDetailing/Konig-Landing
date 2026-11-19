@@ -331,7 +331,6 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   const origText = btn.textContent;
   btn.disabled = true;
 
-  // Tampilkan overlay progress
   const overlay = document.getElementById('pdfOverlay');
   const progressFill = document.getElementById('pdfProgressFill');
   const progressPct = document.getElementById('pdfProgressPct');
@@ -346,42 +345,42 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
   const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
   const startAll = parseInt(document.getElementById('ctrlStart').value) || 1;
-  const totalCount = Math.min(parseInt(document.getElementById('ctrlCount').value) || 30, 200);
+  const totalCount = Math.min(parseInt(document.getElementById('ctrlCount').value) || 90, 500);
 
-  // Sticker ukuran: 44mm x 55mm, bleed 2mm di semua sisi, gap 2mm antar sticker
+  // ── LAYOUT CONSTANTS ──────────────────────────────────────────────
+  // Stiker 44×55mm, jarak 4mm per sisi (= 8mm cutting-to-cutting)
   const STICKER_W_MM = 44;
   const STICKER_H_MM = 55;
-  const BLEED_MM = 2;       // bleed di luar sticker (per sisi)
-  const GAP_MM = 0;  // 0mm — cell bleed saling overlap persis di cutting line, tidak ada gap putih
-  const MARGIN_MM = 10;
+  const GAP_MM = 4;          // 4mm per sisi antar stiker
+  const MARGIN_MM = 8;       // margin tepi halaman
   const PAGE_W = isA4 ? 210 : 297;
   const PAGE_H = isA4 ? 297 : 420;
-  // Canvas per sticker = sticker + bleed kiri + bleed kanan
-  const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;  // 48mm
-  const CELL_H_MM = STICKER_H_MM + BLEED_MM * 2;  // 59mm
-  // Area efektif dikurangi 2×BLEED_MM di tiap dimensi:
-  // bleed stiker pertama & terakhir harus muat dalam halaman
-  const AREA_W = PAGE_W - MARGIN_MM * 2 - BLEED_MM * 2;
-  const AREA_H = PAGE_H - MARGIN_MM * 2 - BLEED_MM * 2;
-  // Layout: step = ukuran sticker saja (cutting ke cutting), bleed ada di luar grid
-  const COLS = Math.floor(AREA_W / STICKER_W_MM);
-  const ROWS = Math.floor(AREA_H / STICKER_H_MM);
-  const PER_PAGE = COLS * ROWS;  // 30
 
-  // Kalau sheetNum diberikan, hanya render 1 lembar itu saja
-  const start = sheetNum ? startAll + (sheetNum - 1) * PER_PAGE : startAll;
-  const count = sheetNum ? Math.min(PER_PAGE, totalCount - (sheetNum - 1) * PER_PAGE) : Math.min(totalCount, PER_PAGE);
+  // Step = ukuran stiker + 2×gap (dari tengah-ke-tengah cutting line)
+  const STEP_W = STICKER_W_MM + GAP_MM * 2;  // 44 + 8 = 52mm
+  const STEP_H = STICKER_H_MM + GAP_MM * 2;  // 55 + 8 = 63mm
 
-  // Render canvas di resolusi tinggi untuk kualitas PDF bagus
-  // 600dpi = 23.62px/mm → canvas 48×59mm = 1134×1393px
-  const PX_PER_MM = 600 / 25.4;  // ≈ 23.62
-  const C_W = Math.round(CELL_W_MM * PX_PER_MM);   // 48mm × 11.81 ≈ 567px (inkl bleed)
-  const C_H = Math.round(CELL_H_MM * PX_PER_MM);   // 59mm × 11.81 ≈ 697px (inkl bleed)
-  const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM);  // 2mm → ≈ 24px
-  // renderThumb menggambar sticker di area tengah (tanpa bleed), skala dari 1088px lebar template
-  const RENDER_SCALE = Math.round(STICKER_W_MM * PX_PER_MM) / 1088;
+  // Area efektif = halaman - 2×margin
+  const AREA_W = PAGE_W - MARGIN_MM * 2;  // 297-16 = 281mm
+  const AREA_H = PAGE_H - MARGIN_MM * 2;  // 420-16 = 404mm
 
-  const totalPages = 1;  // per download = 1 lembar
+  // Kolom/baris: stiker pertama mulai di MARGIN_MM + GAP_MM dari tepi
+  // Jadi area untuk isi = AREA_W - GAP_MM*2 (gap terluar kiri+kanan)
+  const INNER_W = AREA_W - GAP_MM * 2;  // 281-8 = 273mm
+  const INNER_H = AREA_H - GAP_MM * 2;  // 404-8 = 396mm
+  const COLS = Math.floor((INNER_W + GAP_MM * 2) / STEP_W);  // floor(281/52) = 5
+  const ROWS = Math.floor((INNER_H + GAP_MM * 2) / STEP_H);  // floor(404/63) = 6
+  const PER_PAGE = COLS * ROWS;  // 30 per lembar
+
+  // ── RENDER RESOLUTION: 300dpi ─────────────────────────────────────
+  const PX_PER_MM = 300 / 25.4;  // ≈ 11.81px/mm
+  const SW = Math.round(STICKER_W_MM * PX_PER_MM);  // stiker width in px
+  const SH = Math.round(STICKER_H_MM * PX_PER_MM);  // stiker height in px
+  // Scale untuk renderThumb: canvas stiker SW×SH, template crop 1088px lebar
+  const RENDER_SCALE = SW / 1088;
+
+  // ── 1 lembar saja ────────────────────────────────────────────────
+  const totalPages = 1;
 
   try {
     const { jsPDF } = window.jspdf;
@@ -391,120 +390,74 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       if (page > 0) pdf.addPage();
 
       const pageStart = page * PER_PAGE;
-      const pageCount = Math.min(PER_PAGE, count - pageStart);
+      const pageCount = Math.min(PER_PAGE, totalCount - pageStart);
+      if (pageCount <= 0) break;
+
+      // Stiker nomor berapa di halaman ini
+      const pageStartCode = startAll + pageStart;
 
       btn.textContent = `⏳ Halaman ${page+1}/${totalPages}...`;
-      const basePct = (page / totalPages) * 90;
-      setProgress(basePct, `Render halaman ${page+1} dari ${totalPages}...`);
+      setProgress((page / totalPages) * 90, `Render halaman ${page+1} dari ${totalPages}...`);
 
-      // Render semua sticker di halaman ini secara parallel
-      // Setiap canvas = sticker + bleed 2mm di semua sisi
-      const canvases = [];
+      // ── Render semua stiker halaman ini parallel ──
+      const stickerCanvases = [];
       const jobs = [];
       for (let i = 0; i < pageCount; i++) {
-        const code = makeCode(prefix, start + pageStart + i);
+        const code = makeCode(prefix, pageStartCode + i);
         const url = BASE_URL + '?code=' + code;
-
-        // Canvas ukuran penuh termasuk bleed
-        const cellCanvas = document.createElement('canvas');
-        cellCanvas.width = C_W;
-        cellCanvas.height = C_H;
-        const cellCtx = cellCanvas.getContext('2d');
-
-        // Render sticker di canvas sementara lalu composite ke tengah cell
-        const stickerW_px = Math.round(STICKER_W_MM * PX_PER_MM);
-        const stickerH_px = Math.round(STICKER_H_MM * PX_PER_MM);
         const sc = document.createElement('canvas');
-        sc.width = stickerW_px;
-        sc.height = stickerH_px;
-
-        canvases.push({ cellCanvas, cellCtx, sc, stickerW_px, stickerH_px });
+        sc.width = SW; sc.height = SH;
+        stickerCanvases.push({ sc, code });
         jobs.push(renderThumb(sc, url, RENDER_SCALE, code, true));
       }
       await Promise.all(jobs);
 
-      // Composite sticker ke cell canvas + gambar garis cutting
-      for (const { cellCanvas, cellCtx, sc, stickerW_px, stickerH_px } of canvases) {
-        // Radius corner dari template: 171px dari tinggi 1373px = 12.45% tinggi
-        const CORNER_R_PX = Math.round(stickerH_px * 0.1245);
+      // ── Center grid di halaman ──
+      // Grid total lebar = COLS*STEP_W - GAP_MM*2 + GAP_MM*2 (tepi kiri+kanan)
+      // = COLS*STEP_W → tapi cutting line pertama mulai di offsetX
+      // offsetX = posisi cutting-line stiker col=0
+      const gridTotalW = (COLS - 1) * STEP_W + STICKER_W_MM;  // lebar dari cutting kiri ke cutting kanan
+      const gridTotalH = (ROWS - 1) * STEP_H + STICKER_H_MM;
+      // Center: sisa = PAGE - gridTotal - 2*GAP (tepi kiri+kanan)
+      const offsetX = (PAGE_W - gridTotalW - GAP_MM * 2) / 2 + GAP_MM;
+      const offsetY = (PAGE_H - gridTotalH - GAP_MM * 2) / 2 + GAP_MM;
 
-        // 1. Background cell = putih (dicetak di kertas putih, area luar bleed = kertas)
-        cellCtx.fillStyle = '#ffffff';
-        cellCtx.fillRect(0, 0, C_W, C_H);
-
-        // 2. Bleed zone: rounded rect dari (0,0) ukuran C_W×C_H
-        //    Radius bleed = radius stiker + BLEED_PX → sudut bleed konsisten dengan sudut stiker
-        //    Clip lalu draw stiker di-scale up penuh ke ukuran cell (tepi stiker = bleed fill)
-        const bleedR = CORNER_R_PX + BLEED_PX;
-        cellCtx.save();
-        cellCtx.beginPath();
-        cellCtx.roundRect(0, 0, C_W, C_H, bleedR);
-        cellCtx.clip();
-        cellCtx.drawImage(sc, 0, 0, C_W, C_H);
-        cellCtx.restore();
-
-        // 3. Stiker asli: draw sharp di posisi BLEED_PX offset, clip ke rounded rect stiker
-        //    Ini menutupi bleed scale-up dengan versi sharp/tajam di area stiker itu sendiri
-        cellCtx.save();
-        cellCtx.beginPath();
-        cellCtx.roundRect(BLEED_PX, BLEED_PX, stickerW_px, stickerH_px, CORNER_R_PX);
-        cellCtx.clip();
-        cellCtx.drawImage(sc, BLEED_PX, BLEED_PX, stickerW_px, stickerH_px);
-        cellCtx.restore();
-
-        // ── Cutting marks: garis pendek di 4 sudut stiker (bukan outline penuh) ──
-        const lineW = Math.max(2, Math.round(0.25 * PX_PER_MM));  // 0.25mm
-        const markLen = Math.round(3 * PX_PER_MM);  // 3mm panjang garis cutting
-        const gap = Math.round(0.5 * PX_PER_MM);    // 0.5mm jarak dari tepi stiker
-        cellCtx.strokeStyle = '#000000';
-        cellCtx.lineWidth = lineW;
-        cellCtx.setLineDash([]);
-        // sudut kiri-atas
-        const x0 = BLEED_PX, y0 = BLEED_PX;
-        // sudut kanan-atas
-        const x1 = BLEED_PX + stickerW_px, y1 = BLEED_PX;
-        // sudut kiri-bawah
-        const x2 = BLEED_PX, y2 = BLEED_PX + stickerH_px;
-        // sudut kanan-bawah
-        const x3 = BLEED_PX + stickerW_px, y3 = BLEED_PX + stickerH_px;
-        // helper: garis pendek horizontal dan vertikal keluar dari tiap sudut
-        function cutMark(cx, cy, dirX, dirY) {
-          // horizontal
-          cellCtx.beginPath(); cellCtx.moveTo(cx + dirX * gap, cy); cellCtx.lineTo(cx + dirX * (gap + markLen), cy); cellCtx.stroke();
-          // vertical
-          cellCtx.beginPath(); cellCtx.moveTo(cx, cy + dirY * gap); cellCtx.lineTo(cx, cy + dirY * (gap + markLen)); cellCtx.stroke();
-        }
-        cutMark(x0, y0, -1, -1);  // kiri-atas: keluar ke kiri & atas
-        cutMark(x1, y1,  1, -1);  // kanan-atas
-        cutMark(x2, y2, -1,  1);  // kiri-bawah
-        cutMark(x3, y3,  1,  1);  // kanan-bawah
-      }
-
-      // Tempatkan cell (sticker+bleed) di PDF — grid di-center horizontal & vertikal
-      // Grid dimulai dari MARGIN_MM — bleed stiker pertama extend ke dalam margin (tidak ada gap putih)
-      const gridW = COLS * STICKER_W_MM;
-      const gridH = ROWS * STICKER_H_MM;
-      // Center grid cutting-line di halaman; bleed (2mm) extend ke luar dari sini
-      // (PAGE_W - gridW)/2 = sisa margin; stiker pertama mulai di sini, bleednya di sini-2mm
-      const offsetX = (PAGE_W - gridW) / 2;
-      const offsetY = (PAGE_H - gridH) / 2;
-      // Background PDF putih — dicetak di kertas putih, area di luar grid = kertas
-      // (tidak perlu fill, PDF default putih)
+      // ── Tempatkan stiker di PDF ──
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
-        // Posisi cutting line sticker (tanpa bleed)
-        const x = offsetX + col * STICKER_W_MM;
-        const y = offsetY + row * STICKER_H_MM;
-        // addImage dari posisi bleed (x - BLEED_MM, y - BLEED_MM), ukuran cell penuh
-        const imgData = canvases[i].cellCanvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', x - BLEED_MM, y - BLEED_MM, CELL_W_MM, CELL_H_MM);
+        // Posisi cutting-line kiri-atas stiker ini
+        const sx = offsetX + col * STEP_W;
+        const sy = offsetY + row * STEP_H;
+
+        // addImage stiker persis di posisi cutting-line, ukuran STICKER_W×STICKER_H
+        // Stiker tidak terpotong — ukuran image = ukuran stiker persis
+        const imgData = stickerCanvases[i].sc.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', sx, sy, STICKER_W_MM, STICKER_H_MM);
+
+        // ── Cutting marks: garis pendek di 4 sudut stiker ──
+        const ml = 3;    // panjang garis cutting 3mm
+        const mg = 0.5;  // gap 0.5mm dari tepi stiker
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.25);
+        // kiri-atas
+        pdf.line(sx - mg - ml, sy,         sx - mg,         sy);           // horizontal kiri
+        pdf.line(sx,           sy - mg - ml, sx,             sy - mg);     // vertikal atas
+        // kanan-atas
+        pdf.line(sx + STICKER_W_MM + mg, sy,         sx + STICKER_W_MM + mg + ml, sy);
+        pdf.line(sx + STICKER_W_MM,     sy - mg - ml, sx + STICKER_W_MM, sy - mg);
+        // kiri-bawah
+        pdf.line(sx - mg - ml, sy + STICKER_H_MM, sx - mg, sy + STICKER_H_MM);
+        pdf.line(sx,           sy + STICKER_H_MM + mg, sx, sy + STICKER_H_MM + mg + ml);
+        // kanan-bawah
+        pdf.line(sx + STICKER_W_MM + mg, sy + STICKER_H_MM, sx + STICKER_W_MM + mg + ml, sy + STICKER_H_MM);
+        pdf.line(sx + STICKER_W_MM,     sy + STICKER_H_MM + mg, sx + STICKER_W_MM, sy + STICKER_H_MM + mg + ml);
       }
     }
 
     setProgress(95, 'Menyimpan PDF...');
-    const endCode = makeCode(prefix, start + count - 1);
-    const startCode = makeCode(prefix, start);
+    const startCode = makeCode(prefix, startAll);
+    const endCode = makeCode(prefix, startAll + totalCount - 1);
     const sheetLabel = sheetNum ? `-L${sheetNum}` : '';
     pdf.save(`KONIG-QR-${startCode}-${endCode}${sheetLabel}.pdf`);
     setProgress(100, 'Selesai! ✓');
