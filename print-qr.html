@@ -267,8 +267,8 @@ async function generatePreview() {
     // Canvas thumbnail — same logic as download but at preview scale
     const thumbCanvas = document.createElement('canvas');
     const PS = 1;  // preview scale, CSS scales to 160px
-    thumbCanvas.width = 1053 * PS;   // crop width
-    thumbCanvas.height = 1327 * PS;  // crop height
+    thumbCanvas.width = 1088 * PS;   // crop width
+    thumbCanvas.height = 1373 * PS;  // crop height
     card.appendChild(thumbCanvas);
 
     const wrap = document.createElement('div');
@@ -310,9 +310,9 @@ async function buildPrintSheet(prefix, start, count) {
     const code = makeCode(prefix, start + i);
     const url = BASE_URL + '?code=' + code;
     const c = document.createElement('canvas');
-    c.width = 472; c.height = 595;  // 472/1053 * 1327 ≈ 595
+    c.width = 472; c.height = Math.round(472 / 1088 * 1373);  // maintain aspect ratio
     canvases.push(c);
-    jobs.push(renderThumb(c, url, 472/1053, code));
+    jobs.push(renderThumb(c, url, 472/1088, code));
   }
   await Promise.all(jobs);
   // Konversi canvas → <img> base64 (biar bisa di-print di semua browser/Safari)
@@ -378,8 +378,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   const C_W = Math.round(CELL_W_MM * PX_PER_MM);   // 48mm × 11.81 ≈ 567px (inkl bleed)
   const C_H = Math.round(CELL_H_MM * PX_PER_MM);   // 59mm × 11.81 ≈ 697px (inkl bleed)
   const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM);  // 2mm → ≈ 24px
-  // renderThumb menggambar sticker di area tengah (tanpa bleed), skala dari 1053px lebar template
-  const RENDER_SCALE = Math.round(STICKER_W_MM * PX_PER_MM) / 1053;
+  // renderThumb menggambar sticker di area tengah (tanpa bleed), skala dari 1088px lebar template
+  const RENDER_SCALE = Math.round(STICKER_W_MM * PX_PER_MM) / 1088;
 
   const totalPages = 1;  // per download = 1 lembar
 
@@ -576,11 +576,11 @@ async function downloadSticker(code) {
   if (btn) { btn.textContent = '⏳ Generating...'; btn.disabled = true; }
 
   const url = BASE_URL + '?code=' + code;
-  // 4K output berdasarkan crop size (1053x1327 base)
+  // 4K output berdasarkan crop size (1088x1373 base)
   const SCALE = 4;
   const canvas = document.createElement('canvas');
-  canvas.width = 1053 * SCALE;
-  canvas.height = 1327 * SCALE;
+  canvas.width = 1088 * SCALE;
+  canvas.height = 1373 * SCALE;
 
   try {
     await renderThumb(canvas, url, SCALE, code);
