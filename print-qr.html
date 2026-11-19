@@ -475,11 +475,16 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       // Tapi lebih mudah: total cell canvas = COLS*STEP_W (cell = stiker+bleed kiri+kanan)
       // Posisi cell pertama (inkl bleed kiri) = offsetX - BLEED_MM
       // → offsetX = cutting-line stiker pertama
-      const gridW = COLS * STEP_W;  // total lebar semua cell (inkl bleed dalam)
-      const gridH = ROWS * STEP_H;
-      // Center: bleed terluar (kiri+kanan) masuk ke sisa margin
-      const offsetX = (PAGE_W - gridW) / 2 + BLEED_MM;  // cutting-line col=0
-      const offsetY = (PAGE_H - gridH) / 2 + BLEED_MM;
+      // Total lebar semua cell inkl bleed terluar = COLS*STEP_W + 2*BLEED_MM
+      // (setiap cell = stiker+bleed kiri+kanan, tapi bleed terluar hanya 1×)
+      const totalCellW = COLS * STEP_W + BLEED_MM * 2;
+      const totalCellH = ROWS * STEP_H + BLEED_MM * 2;
+      // offsetX = posisi kiri cell[0] inkl bleed kiri (= sx_col0 - BLEED_MM)
+      const cellOriginX = (PAGE_W - totalCellW) / 2;
+      const cellOriginY = (PAGE_H - totalCellH) / 2;
+      // cutting-line col=0 = cellOriginX + BLEED_MM
+      const offsetX = cellOriginX + BLEED_MM;
+      const offsetY = cellOriginY + BLEED_MM;
 
       // ── Tempatkan stiker di PDF ──
       const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;
