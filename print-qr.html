@@ -499,23 +499,34 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
         const imgData = cellCanvases[i].cell.toDataURL('image/png');
         pdf.addImage(imgData, 'PNG', sx - BLEED_MM, sy - BLEED_MM, CELL_W_MM, CELL_H_MM);
 
-        // ── Cutting marks: garis pendek di 4 sudut stiker ──
-        const ml = 3;    // panjang garis cutting 3mm
-        const mg = 0.5;  // gap 0.5mm dari tepi stiker
+        // ── Cutting line: outline rounded mengikuti outline stiker ──
+        // R dalam mm = R_stiker px / PX_PER_MM
+        const R_mm = R_stiker / PX_PER_MM;
+        const W_mm = STICKER_W_MM, H_mm = STICKER_H_MM;
         pdf.setDrawColor(0, 0, 0);
-        pdf.setLineWidth(0.25);
-        // kiri-atas
-        pdf.line(sx - mg - ml, sy,         sx - mg,         sy);           // horizontal kiri
-        pdf.line(sx,           sy - mg - ml, sx,             sy - mg);     // vertikal atas
-        // kanan-atas
-        pdf.line(sx + STICKER_W_MM + mg, sy,         sx + STICKER_W_MM + mg + ml, sy);
-        pdf.line(sx + STICKER_W_MM,     sy - mg - ml, sx + STICKER_W_MM, sy - mg);
-        // kiri-bawah
-        pdf.line(sx - mg - ml, sy + STICKER_H_MM, sx - mg, sy + STICKER_H_MM);
-        pdf.line(sx,           sy + STICKER_H_MM + mg, sx, sy + STICKER_H_MM + mg + ml);
-        // kanan-bawah
-        pdf.line(sx + STICKER_W_MM + mg, sy + STICKER_H_MM, sx + STICKER_W_MM + mg + ml, sy + STICKER_H_MM);
-        pdf.line(sx + STICKER_W_MM,     sy + STICKER_H_MM + mg, sx + STICKER_W_MM, sy + STICKER_H_MM + mg + ml);
+        pdf.setLineWidth(0.15);
+        // Gambar rounded rect sebagai path: 4 sisi lurus + 4 arc sudut
+        // jsPDF lines[]: array [x1,y1,x2,y2] — pakai lines() untuk polyline
+        // Gunakan arc approximasi dengan banyak titik kecil di setiap sudut
+        const steps = 12; // titik per sudut
+        const pts = [];
+        const corners = [
+          { cx: sx + R_mm,       cy: sy + R_mm,       a0: Math.PI,       a1: Math.PI * 1.5 },  // kiri-atas
+          { cx: sx + W_mm - R_mm, cy: sy + R_mm,      a0: Math.PI * 1.5, a1: Math.PI * 2   },  // kanan-atas
+          { cx: sx + W_mm - R_mm, cy: sy + H_mm - R_mm, a0: 0,           a1: Math.PI * 0.5 },  // kanan-bawah
+          { cx: sx + R_mm,       cy: sy + H_mm - R_mm, a0: Math.PI * 0.5, a1: Math.PI      },  // kiri-bawah
+        ];
+        for (const { cx, cy, a0, a1 } of corners) {
+          for (let s = 0; s <= steps; s++) {
+            const a = a0 + (a1 - a0) * s / steps;
+            pts.push({ x: cx + R_mm * Math.cos(a), y: cy + R_mm * Math.sin(a) });
+          }
+        }
+        // Tutup path
+        pts.push(pts[0]);
+        for (let p = 0; p < pts.length - 1; p++) {
+          pdf.line(pts[p].x, pts[p].y, pts[p+1].x, pts[p+1].y);
+        }
       }
     }
 
