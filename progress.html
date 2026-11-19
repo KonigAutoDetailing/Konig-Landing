@@ -3637,7 +3637,7 @@ function loadQrTemplate(){
 // Sama persis dengan print-qr.html (template + QR ungu + kode)
 async function renderQrSticker(code, S){
   const url = QR_BASE + '?code=' + code;
-  const TW = 520*S, TH = 650*S, x1 = 64*S, x2 = 456*S, y1 = 131*S, y2 = 501*S;
+  const TW = 1122*S, TH = 1402*S, x1 = 137*S, x2 = 984*S, y1 = 282*S, y2 = 1081*S;
   const qSize = Math.floor(Math.min(x2-x1, y2-y1)*0.85), margin = Math.floor(qSize*0.04), inner = qSize - margin*2;
   const cx = Math.floor((x1+x2)/2), qrTop = y1 + Math.floor(((y2-y1) - qSize)*0.40);
   const tmpl = await loadQrTemplate();

@@ -69,17 +69,17 @@
     .print-page{
       width:297mm;min-height:420mm;padding:10mm;
       display:grid;
-      grid-template-columns:repeat(6,40mm);
-      grid-template-rows:repeat(6,60mm);
+      grid-template-columns:repeat(6,44mm);
+      grid-template-rows:repeat(6,55mm);
       gap:3mm;
       align-content:start;
       justify-content:center;
       background:#fff;
     }
 
-    /* ── PRINT STICKER 4×6cm portrait ── */
+    /* ── PRINT STICKER 44×55mm ── */
     .sticker-img{
-      width:40mm;height:60mm;
+      width:44mm;height:55mm;
       display:block;
       page-break-inside:avoid;
       break-inside:avoid;
@@ -311,11 +311,9 @@ async function downloadPDF(format = 'a3') {
   const start = parseInt(document.getElementById('ctrlStart').value) || 1;
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 200);
 
-  // Sticker ukuran: 40mm x 60mm, gap 3mm, margin 10mm
-  // A4 (210×297): area 190×277mm → 4 col × 4 row = 16/hal
-  // A3 (297×420): area 277×400mm → 6 col × 6 row = 36/hal
-  const STICKER_W_MM = 50;
-  const STICKER_H_MM = Math.round(STICKER_W_MM * 1327 / 1053 * 10) / 10;  // proporsional ≈ 63mm
+  // Sticker ukuran: 44mm x 55mm, gap 3mm, margin 10mm
+  const STICKER_W_MM = 44;
+  const STICKER_H_MM = 55;
   const GAP_MM = 2;
   const MARGIN_MM = 10;
   const PAGE_W = isA4 ? 210 : 297;
@@ -329,8 +327,8 @@ async function downloadPDF(format = 'a3') {
   // Render canvas di resolusi tinggi untuk kualitas PDF bagus
   // 300dpi = 11.81px/mm → stiker 40×60mm = 472×709px
   const PX_PER_MM = 300 / 25.4;  // ≈ 11.81
-  const C_W = Math.round(STICKER_W_MM * PX_PER_MM);
-  const C_H = Math.round(C_W * 1327 / 1053);  // proporsional dari crop ratio
+  const C_W = Math.round(STICKER_W_MM * PX_PER_MM);  // 44mm × 11.81 ≈ 520px
+  const C_H = Math.round(STICKER_H_MM * PX_PER_MM);  // 55mm × 11.81 ≈ 650px
   const RENDER_SCALE = C_W / 1053;
 
   const totalPages = Math.ceil(count / PER_PAGE);
