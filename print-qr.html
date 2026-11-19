@@ -351,7 +351,7 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   const STICKER_W_MM = 44;
   const STICKER_H_MM = 55;
   const BLEED_MM = 2;       // bleed di luar sticker (per sisi)
-  const GAP_MM = BLEED_MM * 2;  // 4mm — bleed kanan sticker kiri + bleed kiri sticker kanan, tidak overlap
+  const GAP_MM = 0;  // 0mm — cell bleed saling overlap persis di cutting line, tidak ada gap putih
   const MARGIN_MM = 10;
   const PAGE_W = isA4 ? 210 : 297;
   const PAGE_H = isA4 ? 297 : 420;
@@ -360,12 +360,11 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   const CELL_H_MM = STICKER_H_MM + BLEED_MM * 2;  // 59mm
   const AREA_W = PAGE_W - MARGIN_MM * 2;
   const AREA_H = PAGE_H - MARGIN_MM * 2;
-  // Layout: tiap cell 48×59mm, overlap bleed antar cell = 2mm → step = cell - bleed = 46×57mm
-  // Tapi supaya mudah, pakai step = STICKER + GAP (bleed tumpang tindih intentionally)
-  const STEP_W = STICKER_W_MM + GAP_MM;  // 48mm per kolom (44 + 4mm gap)
-  const STEP_H = STICKER_H_MM + GAP_MM;  // 59mm per baris (55 + 4mm gap)
-  const COLS = Math.floor((AREA_W + GAP_MM) / STEP_W);  // 5 (dengan GAP 4mm)
-  const ROWS = Math.floor((AREA_H + GAP_MM) / STEP_H);  // 6 (dengan GAP 4mm)
+  // Layout: step = ukuran sticker saja (tanpa gap), bleed dari tiap sisi overlap di cutting line
+  const STEP_W = STICKER_W_MM;  // 44mm per kolom — bleed extend 2mm ke kiri/kanan
+  const STEP_H = STICKER_H_MM;  // 55mm per baris — bleed extend 2mm ke atas/bawah
+  const COLS = Math.floor((AREA_W + BLEED_MM * 2) / STEP_W);
+  const ROWS = Math.floor((AREA_H + BLEED_MM * 2) / STEP_H);
   const PER_PAGE = COLS * ROWS;  // 30
 
   // Kalau sheetNum diberikan, hanya render 1 lembar itu saja
@@ -464,17 +463,17 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       }
 
       // Tempatkan cell (sticker+bleed) di PDF — grid di-center horizontal & vertikal
-      // Cell dimulai dari (x - BLEED_MM) supaya bleed keluar ke sisi
-      const gridW = COLS * STICKER_W_MM + (COLS - 1) * GAP_MM;
-      const gridH = ROWS * STICKER_H_MM + (ROWS - 1) * GAP_MM;
+      // Grid = COLS stiker × lebar stiker (tanpa gap), center di halaman
+      const gridW = COLS * STICKER_W_MM;
+      const gridH = ROWS * STICKER_H_MM;
       const offsetX = (PAGE_W - gridW) / 2;
       const offsetY = (PAGE_H - gridH) / 2;
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
-        // Posisi sticker (tanpa bleed)
-        const x = offsetX + col * (STICKER_W_MM + GAP_MM);
-        const y = offsetY + row * (STICKER_H_MM + GAP_MM);
+        // Posisi cutting line sticker (tanpa bleed)
+        const x = offsetX + col * STICKER_W_MM;
+        const y = offsetY + row * STICKER_H_MM;
         // addImage dari posisi bleed (x - BLEED_MM, y - BLEED_MM), ukuran cell penuh
         const imgData = canvases[i].cellCanvas.toDataURL('image/png');
         pdf.addImage(imgData, 'PNG', x - BLEED_MM, y - BLEED_MM, CELL_W_MM, CELL_H_MM);
