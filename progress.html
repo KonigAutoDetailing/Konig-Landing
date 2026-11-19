@@ -1073,13 +1073,14 @@ async function renderTrackReferral(data, jobCode, isHist){
   el.className = 'trk-referral';
   el.innerHTML = `
     <div class="trk-referral-title">🎁 Refer a Friend</div>
-    <div class="trk-referral-sub">Share your code with a friend — they get <b style="color:#c4b5fd">10% off</b> their first service at KONIG, and you get a <b style="color:#c4b5fd">Free Premium Wash</b> once they complete their booking.</div>
+    <div class="trk-referral-sub">Share your code with a friend — they get <b style="color:#c4b5fd">10% off any coating service</b> at KONIG, and you get a <b style="color:#c4b5fd">Free Premium Wash</b> once they complete their booking.</div>
     <div class="trk-referral-code">
       <span id="refCodeDisplay">${refCode}</span>
       <button class="trk-referral-copy" onclick="copyRefCode('${refCode}')">COPY</button>
     </div>
     <div class="trk-referral-tnc">
       <b style="color:#a78bfa;font-size:11px;letter-spacing:1px">TERMS & CONDITIONS</b><br>
+      • Discount applies to coating services only (Graphene Coating, etc.) — not valid for Car Wash or Polish.<br>
       • Valid for new customers only — first visit to KONIG.<br>
       • Friend must mention or enter the code when registering their vehicle.<br>
       • Free Premium Wash voucher is issued to you after your friend's invoice is confirmed.<br>
