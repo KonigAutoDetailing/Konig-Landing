@@ -1851,7 +1851,7 @@ function waMessage(j){
     : needsTrackLink(j)
       ? 'Kendaraan dapat diambil pada jam operasional workshop, Senin–Sabtu hingga pukul 17.00.'
       : 'Kendaraan dapat diambil hari ini hingga pukul 17.00.';
-  const ambil = ambilBase + ' Boleh kami tahu kira-kira akan diambil jam berapa? Agar kami bisa mempersiapkan kendaraan dan mengatur jadwal workshop.';
+  const ambil = ambilBase + ' Mohon informasikan kepada kami kira-kira jam berapa kendaraan akan diambil, agar kami dapat mempersiapkan dan mengatur jadwal workshop.';
   const salam = '\n\nSalam,\nKONIG Auto Detailing';
   if(done){
     const iv = j.invoice, ivUrl = iv ? location.origin + '/invoice?code=' + encodeURIComponent(j.id) : '';
