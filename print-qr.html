@@ -121,7 +121,9 @@
     </div>
     <button class="btn" onclick="generatePreview()">Generate</button>
     <button class="btn btn-print" onclick="downloadPDF('a4')" id="btnPDF_A4">⬇ PDF A4</button>
-    <button class="btn btn-print" onclick="downloadPDF('a3')" id="btnPDF_A3">⬇ PDF A3 (3 lembar = 90 stiker)</button>
+    <button class="btn btn-print" onclick="downloadPDF('a3',1)" id="btnPDF_A3_1">⬇ A3 Lembar 1</button>
+    <button class="btn btn-print" onclick="downloadPDF('a3',2)" id="btnPDF_A3_2">⬇ A3 Lembar 2</button>
+    <button class="btn btn-print" onclick="downloadPDF('a3',3)" id="btnPDF_A3_3">⬇ A3 Lembar 3</button>
     <button class="btn btn-outline" onclick="downloadAll()">⬇ Download Semua PNG</button>
   </div>
 
@@ -321,9 +323,10 @@ async function buildPrintSheet(prefix, start, count) {
   }
 }
 
-async function downloadPDF(format = 'a3') {
+async function downloadPDF(format = 'a3', sheetNum = null) {
   const isA4 = format === 'a4';
-  const btn = document.getElementById(isA4 ? 'btnPDF_A4' : 'btnPDF_A3');
+  const btnId = isA4 ? 'btnPDF_A4' : (sheetNum ? `btnPDF_A3_${sheetNum}` : 'btnPDF_A3_1');
+  const btn = document.getElementById(btnId);
   const origText = btn.textContent;
   btn.disabled = true;
 
@@ -341,8 +344,8 @@ async function downloadPDF(format = 'a3') {
   setProgress(0, 'Menyiapkan...');
 
   const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
-  const start = parseInt(document.getElementById('ctrlStart').value) || 1;
-  const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 200);
+  const startAll = parseInt(document.getElementById('ctrlStart').value) || 1;
+  const totalCount = Math.min(parseInt(document.getElementById('ctrlCount').value) || 30, 200);
 
   // Sticker ukuran: 44mm x 55mm, bleed 2mm di semua sisi, gap 2mm antar sticker
   const STICKER_W_MM = 44;
@@ -365,6 +368,10 @@ async function downloadPDF(format = 'a3') {
   const ROWS = Math.floor((AREA_H + GAP_MM) / STEP_H);  // 6 (dengan GAP 4mm)
   const PER_PAGE = COLS * ROWS;  // 30
 
+  // Kalau sheetNum diberikan, hanya render 1 lembar itu saja
+  const start = sheetNum ? startAll + (sheetNum - 1) * PER_PAGE : startAll;
+  const count = sheetNum ? Math.min(PER_PAGE, totalCount - (sheetNum - 1) * PER_PAGE) : Math.min(totalCount, PER_PAGE);
+
   // Render canvas di resolusi tinggi untuk kualitas PDF bagus
   // 600dpi = 23.62px/mm → canvas 48×59mm = 1134×1393px
   const PX_PER_MM = 600 / 25.4;  // ≈ 23.62
@@ -374,7 +381,7 @@ async function downloadPDF(format = 'a3') {
   // renderThumb menggambar sticker di area tengah (tanpa bleed), skala dari 1053px lebar template
   const RENDER_SCALE = Math.round(STICKER_W_MM * PX_PER_MM) / 1053;
 
-  const totalPages = Math.ceil(count / PER_PAGE);
+  const totalPages = 1;  // per download = 1 lembar
 
   try {
     const { jsPDF } = window.jspdf;
@@ -472,7 +479,8 @@ async function downloadPDF(format = 'a3') {
     setProgress(95, 'Menyimpan PDF...');
     const endCode = makeCode(prefix, start + count - 1);
     const startCode = makeCode(prefix, start);
-    pdf.save(`KONIG-QR-${startCode}-${endCode}.pdf`);
+    const sheetLabel = sheetNum ? `-L${sheetNum}` : '';
+    pdf.save(`KONIG-QR-${startCode}-${endCode}${sheetLabel}.pdf`);
     setProgress(100, 'Selesai! ✓');
     setTimeout(() => overlay.classList.remove('active'), 1200);
   } catch(e) {
