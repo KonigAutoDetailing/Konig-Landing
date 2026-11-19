@@ -1035,7 +1035,7 @@ window.lookupCode = async function() {
   }
 }
 
-// Setelah 5 hari sejak selesai, halaman customer berubah jadi riwayat
+// Setelah 3 hari sejak selesai, halaman customer berubah jadi riwayat
 function toDateObj(t){ try { return t && t.toDate ? t.toDate() : (t ? new Date(t) : null); } catch(e) { return null; } }
 const COLOR_EN = { 'HITAM':'Black','PUTIH':'White','PEARL WHITE':'Pearl White','SILVER':'Silver','ABU-ABU':'Grey','ABU-ABU GELAP':'Dark Grey','MERAH':'Red','MAROON':'Maroon','BIRU':'Blue','NAVY':'Navy','HIJAU':'Green','KUNING':'Yellow','ORANYE':'Orange','COKLAT':'Brown','GOLD':'Gold','CHAMPAGNE':'Champagne','UNGU':'Purple','HITAM DOFF':'Matte Black','ABU-ABU DOFF':'Matte Grey','TWO TONE':'Two Tone' };
 function colorEn(c){ const k = String(c||'').trim().toUpperCase(); return COLOR_EN[k] || titleCase(k); }
@@ -1043,7 +1043,7 @@ function fmtTgl(d){ return d ? d.toLocaleDateString('en-GB', { day:'numeric', mo
 function renderHistory(data){
   const done = (data.doneSteps||[]).includes('done');
   const out = toDateObj(data.doneAt) || (done ? toDateObj(data.updatedAt) : null);
-  if (!done || !out || (Date.now() - out.getTime()) < 5 * 864e5) return false;
+  if (!done || !out || (Date.now() - out.getTime()) < 3 * 864e5) return false;
   const inn = toDateObj(data.createdAt);
   document.getElementById('trackLive').style.display = 'none';
   document.getElementById('trackHistory').style.display = '';
