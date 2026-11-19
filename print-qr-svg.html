@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>KONÏG — Export SVG Sticker (White Ink)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--black:#04020f;--purple:#7b2fbe;--purple2:#9d4edd;--purpleB:#c084fc;--white:#f5f2ff;--muted:#b8aed4;--border:rgba(157,78,221,0.35)}
+    body{background:var(--black);color:var(--white);font-family:'Arial',sans-serif;padding:24px;min-height:100vh}
+    h1{font-size:22px;letter-spacing:3px;text-transform:uppercase;color:var(--purpleB);margin-bottom:4px}
+    .sub{font-size:12px;color:var(--muted);margin-bottom:24px;letter-spacing:1px}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:24px;padding:16px;background:rgba(255,255,255,0.03);border:1px solid var(--border)}
+    .ctrl-group{display:flex;flex-direction:column;gap:4px}
+    label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+    input{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--white);font-size:16px;padding:8px 12px;width:100px;outline:none}
+    .btn{background:var(--purple);color:#fff;border:none;padding:10px 20px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn-green{background:#166534;border:1px solid #4ade80;color:#4ade80}
+    .info{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6;padding:12px;background:rgba(123,47,190,0.08);border:1px solid rgba(123,47,190,0.2)}
+    .info b{color:var(--purpleB)}
+    #status{font-size:13px;color:var(--purpleB);margin-top:12px;min-height:20px}
+    .preview-wrap{margin-top:24px;overflow:auto;background:#1a1a1a;padding:12px;border:1px solid var(--border)}
+    .preview-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <h1>SVG Sticker Generator</h1>
+  <div class="sub">White Ink + Silver Metallic — Vector Output</div>
+
+  <div class="controls">
+    <div class="ctrl-group">
+      <label>Prefix</label>
+      <input type="text" id="ctrlPrefix" value="KNG" maxlength="4" oninput="this.value=this.value.toUpperCase()" style="width:70px"/>
+    </div>
+    <div class="ctrl-group">
+      <label>Mulai Dari</label>
+      <input type="number" id="ctrlStart" value="1" min="1" max="9999" style="width:80px"/>
+    </div>
+    <div class="ctrl-group">
+      <label>Jumlah</label>
+      <input type="number" id="ctrlCount" value="126" min="1" max="200" style="width:80px"/>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-green" id="btnSVG_A3" onclick="exportSVG('a3')">⬇ Export SVG A3 (3 lembar = 126 stiker)</button>
+      <button class="btn btn-green" id="btnSVG_A4" onclick="exportSVG('a4')">⬇ Export SVG A4</button>
+    </div>
+  </div>
+
+  <div class="info">
+    <b>Instruksi untuk percetakan:</b><br>
+    File SVG ini memiliki 2 layer:<br>
+    • <b>layer id="white-ink"</b> → semua elemen yang diprint dengan <b>white ink</b><br>
+    • <b>layer id="color-ink"</b> → elemen warna (purple/gradient)<br>
+    • Background = <b>transparan</b> → substrate silver metallic terlihat<br><br>
+    Format: SVG, bisa dibuka di Adobe Illustrator / CorelDRAW
+  </div>
+
+  <div id="status"></div>
+  <div class="preview-wrap" id="previewWrap" style="display:none">
+    <div class="preview-label">Preview (halaman 1)</div>
+    <div id="previewSvg"></div>
+  </div>
+
+<script>
+const BASE_URL = 'https://www.konigautodetailing.com/progress';
+
+// Dimensi stiker dalam mm
+const STICKER_W = 44;
+const STICKER_H = 55;
+const GAP = 2;
+const MARGIN = 10;
+
+function padNum(n, len){ return String(n).padStart(len, '0'); }
+function makeCode(prefix, num){ return prefix + '-' + padNum(num, 5); }
+
+// Generate QR code sebagai SVG path string
+function qrToSvgPaths(url, x, y, size) {
+  const qr = qrcode(0, 'H');
+  qr.addData(url);
+  qr.make();
+  const n = qr.getModuleCount();
+  const cell = size / n;
+  let paths = '';
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (qr.isDark(r, c)) {
+        const px = x + c * cell;
+        const py = y + r * cell;
+        paths += `M${px.toFixed(3)},${py.toFixed(3)}h${cell.toFixed(3)}v${cell.toFixed(3)}h-${cell.toFixed(3)}Z `;
+      }
+    }
+  }
+  return paths;
+}
+
+// Satu stiker sebagai SVG group, posisi (sx, sy) dalam mm
+function renderStickerSvg(code, sx, sy) {
+  const url = BASE_URL + '?code=' + code;
+  const W = STICKER_W, H = STICKER_H;
+
+  // Layout dalam mm (relatif ke sudut kiri atas stiker)
+  const R = 3;          // corner radius
+  const BW = 1.2;       // border width outer
+  const BW2 = 0.6;      // border width inner
+  const BPAD = 2;       // padding dari tepi ke border luar
+
+  // Header "PROTECTED BY"
+  const hdrH = H * 0.17;
+  // QR area
+  const qrPad = 2.5;
+  const qrTop = hdrH + qrPad;
+  const qrBottom = H * 0.78;
+  const qrSize = Math.min(W - qrPad*2 - 2, qrBottom - qrTop - 2);
+  const qrX = sx + (W - qrSize) / 2;
+  const qrY = sy + qrTop + (qrBottom - qrTop - qrSize) / 2;
+  // Code text
+  const codeY = sy + H * 0.825;
+  const codeFontSize = 3.2;
+  // Footer KONIG
+  const footerY = sy + H * 0.86;
+  const footerH = H * 0.14;
+  // Logo text center
+  const logoCY = sy + footerY - sy + footerH / 2;
+
+  // QR paths (dalam koordinat mm)
+  const qrPaths = qrToSvgPaths(url, qrX, qrY, qrSize);
+
+  // Dekorasi sudut (diagonal lines)
+  const deco = `
+    <line x1="${sx+BPAD+2}" y1="${sy+BPAD+2}" x2="${sx+BPAD+6}" y2="${sy+BPAD+2}" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="${sx+BPAD+2}" y1="${sy+BPAD+2}" x2="${sx+BPAD+2}" y2="${sy+BPAD+6}" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="${sx+W-BPAD-2}" y1="${sy+BPAD+2}" x2="${sx+W-BPAD-6}" y2="${sy+BPAD+2}" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="${sx+W-BPAD-2}" y1="${sy+BPAD+2}" x2="${sx+W-BPAD-2}" y2="${sy+BPAD+6}" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="${sx+BPAD+2}" y1="${sy+H-BPAD-2}" x2="${sx+BPAD+6}" y2="${sy+H-BPAD-2}" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="${sx+BPAD+2}" y1="${sy+H-BPAD-2}" x2="${sx+BPAD+2}" y2="${sy+H-BPAD-6}" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="${sx+W-BPAD-2}" y1="${sy+H-BPAD-2}" x2="${sx+W-BPAD-6}" y2="${sy+H-BPAD-2}" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="${sx+W-BPAD-2}" y1="${sy+H-BPAD-2}" x2="${sx+W-BPAD-2}" y2="${sy+H-BPAD-6}" stroke-width="0.8" stroke-linecap="round"/>`;
+
+  return `
+  <g id="sticker-${code}">
+    <!-- WHITE INK layer: semua yang diprint putih -->
+    <g id="white-${code}" fill="white" stroke="white">
+      <!-- Border luar -->
+      <rect x="${sx+BPAD}" y="${sy+BPAD}" width="${W-BPAD*2}" height="${H-BPAD*2}" rx="${R}" ry="${R}" fill="none" stroke="white" stroke-width="${BW}"/>
+      <!-- Border dalam -->
+      <rect x="${sx+BPAD+1.5}" y="${sy+BPAD+1.5}" width="${W-BPAD*2-3}" height="${H-BPAD*2-3}" rx="${R-0.8}" ry="${R-0.8}" fill="none" stroke="white" stroke-width="${BW2}"/>
+      <!-- Dekorasi sudut -->
+      ${deco}
+      <!-- Teks PROTECTED BY -->
+      <text x="${sx+W/2}" y="${sy+hdrH*0.62}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="3.2" letter-spacing="1.5" fill="white">— PROTECTED BY —</text>
+      <!-- Area putih background QR -->
+      <rect x="${qrX-1}" y="${qrY-1}" width="${qrSize+2}" height="${qrSize+2+3.5}" rx="1.5" ry="1.5" fill="white"/>
+      <!-- QR code modules -->
+      <path d="${qrPaths}" fill="#4B0082"/>
+      <!-- Kode teks -->
+      <text x="${sx+W/2}" y="${codeY}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="${codeFontSize}" fill="#3c0064">${code}</text>
+      <!-- Footer bar background -->
+      <rect x="${sx+BPAD+0.8}" y="${footerY}" width="${W-BPAD*2-1.6}" height="${footerH-BPAD+0.5}" rx="0" ry="0" fill="none"/>
+      <!-- KONIG teks besar -->
+      <text x="${sx+W/2}" y="${sy+H-BPAD-2.5}" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="7.5" letter-spacing="2" fill="white">KONIG</text>
+    </g>
+    <!-- COLOR layer: elemen warna purple (opsional, bisa dinonaktifkan untuk full white ink) -->
+    <g id="color-${code}" fill="none">
+      <!-- Separator line header -->
+      <line x1="${sx+BPAD+1.5}" y1="${sy+hdrH}" x2="${sx+W-BPAD-1.5}" y2="${sy+hdrH}" stroke="#9d4edd" stroke-width="0.5"/>
+      <!-- Separator line footer -->
+      <line x1="${sx+BPAD+1.5}" y1="${footerY}" x2="${sx+W-BPAD-1.5}" y2="${footerY}" stroke="#9d4edd" stroke-width="0.5"/>
+    </g>
+  </g>`;
+}
+
+async function exportSVG(format) {
+  const isA4 = format === 'a4';
+  const btnId = isA4 ? 'btnSVG_A4' : 'btnSVG_A3';
+  const btn = document.getElementById(btnId);
+  const status = document.getElementById('status');
+  btn.disabled = true;
+
+  const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
+  const start = parseInt(document.getElementById('ctrlStart').value) || 1;
+  const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 126, 200);
+
+  const PAGE_W = isA4 ? 210 : 297;
+  const PAGE_H = isA4 ? 297 : 420;
+  const COLS = Math.floor((PAGE_W - MARGIN*2 + GAP) / (STICKER_W + GAP));
+  const ROWS = Math.floor((PAGE_H - MARGIN*2 + GAP) / (STICKER_H + GAP));
+  const PER_PAGE = COLS * ROWS;
+  const totalPages = Math.ceil(count / PER_PAGE);
+
+  const gridW = COLS * STICKER_W + (COLS-1)*GAP;
+  const gridH = ROWS * STICKER_H + (ROWS-1)*GAP;
+  const offsetX = (PAGE_W - gridW) / 2;
+  const offsetY = (PAGE_H - gridH) / 2;
+
+  status.textContent = `Generating ${count} stiker dalam ${totalPages} halaman A${isA4?'4':'3'}...`;
+
+  // Satu SVG per file, semua halaman di-stack vertikal dengan jarak antar halaman
+  const PAGE_GAP = 10; // mm antar halaman
+  const totalH = totalPages * PAGE_H + (totalPages-1)*PAGE_GAP;
+
+  let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!-- KONIG Auto Detailing — QR Sticker Sheet -->
+<!-- Format: ${format.toUpperCase()} | Ukuran stiker: ${STICKER_W}x${STICKER_H}mm | ${count} stiker -->
+<!-- WHITE INK SETUP: semua elemen dalam <g id="white-ink-layer"> diprint dengan white ink -->
+<!-- SUBSTRATE: silver metallic — background transparan -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="${PAGE_W}mm" height="${totalH}mm"
+     viewBox="0 0 ${PAGE_W} ${totalH}">
+  <title>KONIG QR Sticker — ${makeCode(prefix,start)} s/d ${makeCode(prefix,start+count-1)}</title>
+
+  <!-- LAYER GUIDE untuk operator percetakan:
+       1. Layer "white-ink-layer" = semua yang diprint white ink
+       2. QR code modules = diprint dengan tinta gelap (atau cutout dari white)
+       3. Background per halaman = transparan (silver metallic substrate)
+  -->
+
+  <defs>
+    <!-- Clip per halaman untuk bleed control -->
+    ${Array.from({length:totalPages},(_,p)=>`<clipPath id="page-clip-${p}"><rect x="0" y="${p*(PAGE_H+PAGE_GAP)}" width="${PAGE_W}" height="${PAGE_H}"/></clipPath>`).join('\n    ')}
+  </defs>
+`;
+
+  // Render per halaman
+  for (let page = 0; page < totalPages; page++) {
+    const pageOffsetY = page * (PAGE_H + PAGE_GAP);
+    const pageStart = page * PER_PAGE;
+    const pageCount = Math.min(PER_PAGE, count - pageStart);
+
+    status.textContent = `Halaman ${page+1}/${totalPages}...`;
+    await new Promise(r => setTimeout(r, 0)); // yield UI
+
+    svgContent += `
+  <!-- ═══ HALAMAN ${page+1}/${totalPages} — ${format.toUpperCase()} ═══ -->
+  <g id="page-${page+1}" clip-path="url(#page-clip-${page})">
+    <!-- Background halaman: JANGAN diprint — ini area transparan/silver -->
+    <rect x="0" y="${pageOffsetY}" width="${PAGE_W}" height="${PAGE_H}" fill="none" stroke="#cccccc" stroke-width="0.3" stroke-dasharray="2,2"/>
+    <g id="white-ink-layer-p${page+1}">`;
+
+    for (let i = 0; i < pageCount; i++) {
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      const sx = offsetX + col * (STICKER_W + GAP);
+      const sy = pageOffsetY + offsetY + row * (STICKER_H + GAP);
+      const code = makeCode(prefix, start + pageStart + i);
+      svgContent += renderStickerSvg(code, sx, sy);
+    }
+
+    svgContent += `
+    </g>
+  </g>`;
+  }
+
+  svgContent += `\n</svg>`;
+
+  // Download
+  const blob = new Blob([svgContent], {type: 'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const startCode = makeCode(prefix, start);
+  const endCode = makeCode(prefix, start+count-1);
+  a.download = `KONIG-QR-${startCode}-${endCode}-${format.toUpperCase()}-whiteink.svg`;
+  a.href = url;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  status.textContent = `✓ SVG berhasil di-export — ${count} stiker, ${totalPages} halaman ${format.toUpperCase()}`;
+  btn.disabled = false;
+
+  // Preview halaman 1
+  const previewWrap = document.getElementById('previewWrap');
+  const previewSvg = document.getElementById('previewSvg');
+  // Buat SVG preview halaman 1 saja, skala 25%
+  const scale = 0.35;
+  const pvW = PAGE_W * scale * 3.78; // mm ke px
+  const pvH = PAGE_H * scale * 3.78;
+  let pvSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${pvW}px" height="${pvH}px" viewBox="0 0 ${PAGE_W} ${PAGE_H}" style="background:#2a2a2a">`;
+  const pageCount0 = Math.min(PER_PAGE, count);
+  for (let i = 0; i < pageCount0; i++) {
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const sx = offsetX + col * (STICKER_W + GAP);
+    const sy = offsetY + row * (STICKER_H + GAP);
+    const code = makeCode(prefix, start + i);
+    pvSvg += renderStickerSvg(code, sx, sy);
+  }
+  pvSvg += '</svg>';
+  previewSvg.innerHTML = pvSvg;
+  previewWrap.style.display = 'block';
+}
+</script>
+</body>
+</html>
