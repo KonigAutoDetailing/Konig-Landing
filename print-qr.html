@@ -375,8 +375,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   // Stiker 44×55mm. Bleed 2mm per sisi.
   // Jarak antar cutting line = 4mm (= 2mm bleed kanan stiker kiri + 2mm bleed kiri stiker kanan)
   // → bleed mengisi seluruh ruang antar stiker, tidak ada gap putih antar bleed
-  const STICKER_W_MM = 44;
-  const STICKER_H_MM = 55;
+  const STICKER_W_MM = 50;
+  const STICKER_H_MM = 60;
   const BLEED_MM = 2;        // bleed per sisi
   const MARGIN_MM = 8;       // margin tepi halaman
   const PAGE_W = isA4 ? 210 : 297;
