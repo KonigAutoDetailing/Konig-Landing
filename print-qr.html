@@ -452,7 +452,7 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
         // 3. Stiker asli di tengah cell (offset BLEED_PX), clip ke R_sticker
         ctx.save();
         ctx.beginPath();
-        ctx.roundRect(BLEED_PX, BLEED_PX, SW, SH, R_sticker);
+        ctx.roundRect(BLEED_PX, BLEED_PX, SW, SH, R_stiker);
         ctx.clip();
         ctx.drawImage(sc, BLEED_PX, BLEED_PX);
         ctx.restore();
