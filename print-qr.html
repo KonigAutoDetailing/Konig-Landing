@@ -372,33 +372,29 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   const totalCount = Math.min(parseInt(document.getElementById('ctrlCount').value) || 90, 500);
 
   // ── LAYOUT CONSTANTS ──────────────────────────────────────────────
-  // Stiker 44×55mm, jarak 4mm per sisi (= 8mm cutting-to-cutting)
+  // Stiker 44×55mm. Bleed 2mm per sisi.
+  // Jarak antar cutting line = 4mm (= 2mm bleed kanan stiker kiri + 2mm bleed kiri stiker kanan)
+  // → bleed mengisi seluruh ruang antar stiker, tidak ada gap putih antar bleed
   const STICKER_W_MM = 44;
   const STICKER_H_MM = 55;
-  const GAP_MM = 4;          // 4mm per sisi antar stiker
+  const BLEED_MM = 2;        // bleed per sisi
   const MARGIN_MM = 8;       // margin tepi halaman
   const PAGE_W = isA4 ? 210 : 297;
   const PAGE_H = isA4 ? 297 : 420;
 
-  // Step = ukuran stiker + 2×gap (dari tengah-ke-tengah cutting line)
-  const STEP_W = STICKER_W_MM + GAP_MM * 2;  // 44 + 8 = 52mm
-  const STEP_H = STICKER_H_MM + GAP_MM * 2;  // 55 + 8 = 63mm
+  // Step cutting-to-cutting = stiker + 2×bleed (bleed dua stiker bersebelahan saling bertemu)
+  const STEP_W = STICKER_W_MM + BLEED_MM * 2;  // 44 + 4 = 48mm
+  const STEP_H = STICKER_H_MM + BLEED_MM * 2;  // 55 + 4 = 59mm
 
-  // Area efektif = halaman - 2×margin
-  const AREA_W = PAGE_W - MARGIN_MM * 2;  // 297-16 = 281mm
-  const AREA_H = PAGE_H - MARGIN_MM * 2;  // 420-16 = 404mm
-
-  // Kolom/baris: stiker pertama mulai di MARGIN_MM + GAP_MM dari tepi
-  // Jadi area untuk isi = AREA_W - GAP_MM*2 (gap terluar kiri+kanan)
-  const INNER_W = AREA_W - GAP_MM * 2;  // 281-8 = 273mm
-  const INNER_H = AREA_H - GAP_MM * 2;  // 404-8 = 396mm
-  const COLS = Math.floor((INNER_W + GAP_MM * 2) / STEP_W);  // floor(281/52) = 5
-  const ROWS = Math.floor((INNER_H + GAP_MM * 2) / STEP_H);  // floor(404/63) = 6
-  const PER_PAGE = COLS * ROWS;  // 30 per lembar
+  // Area efektif = halaman - 2×margin - 2×bleed (bleed terluar masuk ke margin)
+  const AREA_W = PAGE_W - MARGIN_MM * 2 - BLEED_MM * 2;
+  const AREA_H = PAGE_H - MARGIN_MM * 2 - BLEED_MM * 2;
+  const COLS = Math.floor(AREA_W / STEP_W);  // A4: floor((210-20-4)/48) = floor(186/48) = 3
+  const ROWS = Math.floor(AREA_H / STEP_H);  // A4: floor((297-20-4)/59) = floor(273/59) = 4
+  const PER_PAGE = COLS * ROWS;
 
   // ── RENDER RESOLUTION: 300dpi ─────────────────────────────────────
   const PX_PER_MM = 300 / 25.4;  // ≈ 11.81px/mm
-  const BLEED_MM = 2;
   const SW = Math.round(STICKER_W_MM * PX_PER_MM);  // stiker width in px (tanpa bleed)
   const SH = Math.round(STICKER_H_MM * PX_PER_MM);  // stiker height in px (tanpa bleed)
   const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM); // 2mm bleed in px
@@ -475,14 +471,15 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       });
 
       // ── Center grid di halaman ──
-      // Grid total lebar = COLS*STEP_W - GAP_MM*2 + GAP_MM*2 (tepi kiri+kanan)
-      // = COLS*STEP_W → tapi cutting line pertama mulai di offsetX
-      // offsetX = posisi cutting-line stiker col=0
-      const gridTotalW = (COLS - 1) * STEP_W + STICKER_W_MM;  // lebar dari cutting kiri ke cutting kanan
-      const gridTotalH = (ROWS - 1) * STEP_H + STICKER_H_MM;
-      // Center: sisa = PAGE - gridTotal - 2*GAP (tepi kiri+kanan)
-      const offsetX = (PAGE_W - gridTotalW - GAP_MM * 2) / 2 + GAP_MM;
-      const offsetY = (PAGE_H - gridTotalH - GAP_MM * 2) / 2 + GAP_MM;
+      // Grid total (cutting to cutting) = COLS*STEP_W - BLEED_MM*2 (bleed terluar tidak dihitung)
+      // Tapi lebih mudah: total cell canvas = COLS*STEP_W (cell = stiker+bleed kiri+kanan)
+      // Posisi cell pertama (inkl bleed kiri) = offsetX - BLEED_MM
+      // → offsetX = cutting-line stiker pertama
+      const gridW = COLS * STEP_W;  // total lebar semua cell (inkl bleed dalam)
+      const gridH = ROWS * STEP_H;
+      // Center: bleed terluar (kiri+kanan) masuk ke sisa margin
+      const offsetX = (PAGE_W - gridW) / 2 + BLEED_MM;  // cutting-line col=0
+      const offsetY = (PAGE_H - gridH) / 2 + BLEED_MM;
 
       // ── Tempatkan stiker di PDF ──
       const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;
