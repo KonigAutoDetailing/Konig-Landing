@@ -483,9 +483,9 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       // Grid dimulai dari MARGIN_MM — bleed stiker pertama extend ke dalam margin (tidak ada gap putih)
       const gridW = COLS * STICKER_W_MM;
       const gridH = ROWS * STICKER_H_MM;
-      // Center grid di dalam halaman (sisa margin kiri-kanan/atas-bawah sama)
-      const offsetX = (PAGE_W - gridW) / 2;
-      const offsetY = (PAGE_H - gridH) / 2;
+      // Center grid di dalam halaman — pastikan minimal BLEED_MM dari tepi agar sel pertama tidak terpotong
+      const offsetX = Math.max(BLEED_MM, (PAGE_W - gridW) / 2);
+      const offsetY = Math.max(BLEED_MM, (PAGE_H - gridH) / 2);
       // Background PDF putih — dicetak di kertas putih, area di luar grid = kertas
       // (tidak perlu fill, PDF default putih)
       for (let i = 0; i < pageCount; i++) {
