@@ -398,8 +398,12 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
   // ── RENDER RESOLUTION: 300dpi ─────────────────────────────────────
   const PX_PER_MM = 300 / 25.4;  // ≈ 11.81px/mm
-  const SW = Math.round(STICKER_W_MM * PX_PER_MM);  // stiker width in px
-  const SH = Math.round(STICKER_H_MM * PX_PER_MM);  // stiker height in px
+  const BLEED_MM = 2;
+  const SW = Math.round(STICKER_W_MM * PX_PER_MM);  // stiker width in px (tanpa bleed)
+  const SH = Math.round(STICKER_H_MM * PX_PER_MM);  // stiker height in px (tanpa bleed)
+  const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM); // 2mm bleed in px
+  const CW = SW + BLEED_PX * 2;  // canvas width inkl bleed kiri+kanan
+  const CH = SH + BLEED_PX * 2;  // canvas height inkl bleed atas+bawah
   // Scale untuk renderThumb: canvas stiker SW×SH, template crop 1088px lebar
   const RENDER_SCALE = SW / 1088;
 
@@ -429,12 +433,46 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       for (let i = 0; i < pageCount; i++) {
         const code = makeCode(prefix, pageStartCode + i);
         const url = BASE_URL + '?code=' + code;
+        // sc = canvas stiker saja (SW×SH), tanpa bleed
         const sc = document.createElement('canvas');
         sc.width = SW; sc.height = SH;
         stickerCanvases.push({ sc, code });
-        jobs.push(renderThumb(sc, url, RENDER_SCALE, code, true));
+        jobs.push(renderThumb(sc, url, RENDER_SCALE, code, false));
       }
       await Promise.all(jobs);
+
+      // ── Composite: stiker + bleed ke canvas cell (CW×CH) ──
+      // Corner radius dari stiker (10.42% lebar) — bleed radius = R + BLEED_PX
+      const R_sticker = Math.round(SW * 0.1042);
+      const R_bleed = R_sticker + BLEED_PX;
+      const cellCanvases = stickerCanvases.map(({ sc, code }) => {
+        const cell = document.createElement('canvas');
+        cell.width = CW; cell.height = CH;
+        const ctx = cell.getContext('2d');
+
+        // 1. Background putih (kertas)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, CW, CH);
+
+        // 2. Bleed layer: rounded rect expanded (R_bleed), scale stiker ke ukuran cell
+        //    → warna tepi stiker melebar 2mm mengikuti outline
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(0, 0, CW, CH, R_bleed);
+        ctx.clip();
+        ctx.drawImage(sc, 0, 0, CW, CH);  // scale up stiker ke seluruh cell untuk bleed fill
+        ctx.restore();
+
+        // 3. Stiker asli di posisi BLEED_PX offset, clip ke outline stiker tepat
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(BLEED_PX, BLEED_PX, SW, SH, R_sticker);
+        ctx.clip();
+        ctx.drawImage(sc, BLEED_PX, BLEED_PX);  // stiker di posisi asli, tajam
+        ctx.restore();
+
+        return { cell, code };
+      });
 
       // ── Center grid di halaman ──
       // Grid total lebar = COLS*STEP_W - GAP_MM*2 + GAP_MM*2 (tepi kiri+kanan)
@@ -447,6 +485,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       const offsetY = (PAGE_H - gridTotalH - GAP_MM * 2) / 2 + GAP_MM;
 
       // ── Tempatkan stiker di PDF ──
+      const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;
+      const CELL_H_MM = STICKER_H_MM + BLEED_MM * 2;
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
@@ -454,10 +494,9 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
         const sx = offsetX + col * STEP_W;
         const sy = offsetY + row * STEP_H;
 
-        // addImage stiker persis di posisi cutting-line, ukuran STICKER_W×STICKER_H
-        // Stiker tidak terpotong — ukuran image = ukuran stiker persis
-        const imgData = stickerCanvases[i].sc.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', sx, sy, STICKER_W_MM, STICKER_H_MM);
+        // addImage dari sx-BLEED_MM, sy-BLEED_MM: bleed extend 2mm keluar dari cutting line
+        const imgData = cellCanvases[i].cell.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', sx - BLEED_MM, sy - BLEED_MM, CELL_W_MM, CELL_H_MM);
 
         // ── Cutting marks: garis pendek di 4 sudut stiker ──
         const ml = 3;    // panjang garis cutting 3mm
