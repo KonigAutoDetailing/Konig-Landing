@@ -191,13 +191,24 @@ const TMPL_CROP = { x: 34, y: 29, w: 1054, h: 1328 };
 
 // whiteBg: true untuk PDF (JPEG tidak support alpha), false untuk PNG download
 async function renderThumb(canvas, url, S, code) {
-  const scaleX = canvas.width / TMPL_CROP.w;
-  const scaleY = canvas.height / TMPL_CROP.h;
+  // Scale dan offset sesuai letterbox rendering
+  const tmplRatioCalc = TMPL_CROP.w / TMPL_CROP.h;
+  const canvasRatioCalc = canvas.width / canvas.height;
+  let scaleX, scaleY, offX, offY;
+  if (tmplRatioCalc > canvasRatioCalc) {
+    scaleX = canvas.width / TMPL_CROP.w;
+    scaleY = scaleX;
+    offX = 0; offY = Math.round((canvas.height - TMPL_CROP.h * scaleY) / 2);
+  } else {
+    scaleY = canvas.height / TMPL_CROP.h;
+    scaleX = scaleY;
+    offY = 0; offX = Math.round((canvas.width - TMPL_CROP.w * scaleX) / 2);
+  }
 
-  const box_x1 = (137 - TMPL_CROP.x) * scaleX;
-  const box_x2 = (984 - TMPL_CROP.x) * scaleX;
-  const box_y1 = (282 - TMPL_CROP.y) * scaleY;
-  const box_y2 = (1081 - TMPL_CROP.y) * scaleY;
+  const box_x1 = offX + (137 - TMPL_CROP.x) * scaleX;
+  const box_x2 = offX + (984 - TMPL_CROP.x) * scaleX;
+  const box_y1 = offY + (282 - TMPL_CROP.y) * scaleY;
+  const box_y2 = offY + (1081 - TMPL_CROP.y) * scaleY;
   const bw = box_x2 - box_x1, bh = box_y2 - box_y1;
 
   const qSize = Math.floor(Math.min(bw,bh) * 0.85);
@@ -228,9 +239,10 @@ async function renderThumb(canvas, url, S, code) {
   tmp.width = W; tmp.height = H;
   const tCtx = tmp.getContext('2d');
 
+  // Draw template maintain aspect ratio (letterbox) — pakai scale/offset dari atas
   tCtx.drawImage(tmpl,
     TMPL_CROP.x, TMPL_CROP.y, TMPL_CROP.w, TMPL_CROP.h,
-    0, 0, W, H
+    offX, offY, Math.round(TMPL_CROP.w * scaleX), Math.round(TMPL_CROP.h * scaleY)
   );
   tCtx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
 
