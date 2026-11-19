@@ -184,8 +184,10 @@ function makeCode(prefix, num) {
   return prefix + '-' + padNum(num, 5);
 }
 
-// Crop padding: template 1122x1402, content bbox x=34-1087, y=29-1356
-const TMPL_CROP = { x: 34, y: 29, w: 1088, h: 1373 };  // full template: 1122x1402, crop from (34,29)
+// Template 1122x1402. Konten stiker dalam crop: x=34..1087 (lebar 1054), y=29..1356 (tinggi 1328)
+// Padding kanan crop lama = 34px kosong, bawah = 45px kosong → stiker tidak center di canvas
+// Fix: crop ke konten aktual stiker, center di canvas
+const TMPL_CROP = { x: 34, y: 29, w: 1054, h: 1328 };
 
 // whiteBg: true untuk PDF (JPEG tidak support alpha), false untuk PNG download
 async function renderThumb(canvas, url, S, code) {
@@ -279,8 +281,8 @@ async function generatePreview() {
     // Canvas thumbnail — same logic as download but at preview scale
     const thumbCanvas = document.createElement('canvas');
     const PS = 1;  // preview scale, CSS scales to 160px
-    thumbCanvas.width = 1088 * PS;   // crop width
-    thumbCanvas.height = 1373 * PS;  // crop height
+    thumbCanvas.width = 1054 * PS;   // crop width
+    thumbCanvas.height = 1328 * PS;  // crop height
     card.appendChild(thumbCanvas);
 
     const wrap = document.createElement('div');
@@ -322,9 +324,9 @@ async function buildPrintSheet(prefix, start, count) {
     const code = makeCode(prefix, start + i);
     const url = BASE_URL + '?code=' + code;
     const c = document.createElement('canvas');
-    c.width = 472; c.height = Math.round(472 / 1088 * 1373);  // maintain aspect ratio
+    c.width = 472; c.height = Math.round(472 / 1054 * 1328);  // maintain aspect ratio
     canvases.push(c);
-    jobs.push(renderThumb(c, url, 472/1088, code));
+    jobs.push(renderThumb(c, url, 472/1054, code));
   }
   await Promise.all(jobs);
   // Konversi canvas → <img> base64 (biar bisa di-print di semua browser/Safari)
@@ -388,8 +390,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM); // 2mm bleed in px
   const CW = SW + BLEED_PX * 2;  // canvas width inkl bleed kiri+kanan
   const CH = SH + BLEED_PX * 2;  // canvas height inkl bleed atas+bawah
-  // Scale untuk renderThumb: canvas stiker SW×SH, template crop 1088px lebar
-  const RENDER_SCALE = SW / 1088;
+  // Scale untuk renderThumb: canvas stiker SW×SH, template crop 1054px lebar
+  const RENDER_SCALE = SW / 1054;
 
   // ── 1 lembar saja ────────────────────────────────────────────────
   const totalPages = 1;
@@ -579,11 +581,11 @@ async function downloadSticker(code) {
   if (btn) { btn.textContent = '⏳ Generating...'; btn.disabled = true; }
 
   const url = BASE_URL + '?code=' + code;
-  // 4K output berdasarkan crop size (1088x1373 base)
+  // 4K output berdasarkan crop size (1054x1328 base)
   const SCALE = 4;
   const canvas = document.createElement('canvas');
-  canvas.width = 1088 * SCALE;
-  canvas.height = 1373 * SCALE;
+  canvas.width = 1054 * SCALE;
+  canvas.height = 1328 * SCALE;
 
   try {
     await renderThumb(canvas, url, SCALE, code);
