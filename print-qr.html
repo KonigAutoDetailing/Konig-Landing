@@ -216,29 +216,53 @@ async function renderThumb(canvas, url, S, code, whiteBg = false) {
   qCtx.drawImage(qrCanvas, margin, margin);
 
   const ctx = canvas.getContext('2d');
-  // Isi background gelap (warna stiker) untuk PDF — PNG download biarkan transparan
-  // Jangan putih: rounded corner stiker akan menampilkan warna ini di sudut bleed
-  if (whiteBg) {
-    ctx.fillStyle = '#080810';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
+  const W = canvas.width, H = canvas.height;
 
-  ctx.drawImage(tmpl,
+  // Corner radius: 12.45% dari tinggi stiker (dari pengukuran template)
+  const R = Math.round(H * 0.1245);
+
+  // Render stiker ke canvas sementara (transparan background)
+  const tmp = document.createElement('canvas');
+  tmp.width = W; tmp.height = H;
+  const tCtx = tmp.getContext('2d');
+
+  tCtx.drawImage(tmpl,
     TMPL_CROP.x, TMPL_CROP.y, TMPL_CROP.w, TMPL_CROP.h,
-    0, 0, canvas.width, canvas.height
+    0, 0, W, H
   );
-  ctx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
+  tCtx.drawImage(qBg, cx - Math.floor(qSize/2), qr_top, qSize, qSize);
 
   if (code) {
     const qr_bottom = qr_top + qSize;
     const gap_below = box_y2 - qr_bottom;
     const font_size = Math.floor(gap_below * 0.55);
     const text_y = qr_bottom + Math.floor(gap_below / 2);
-    ctx.font = `bold ${font_size}px sans-serif`;
-    ctx.fillStyle = '#3c0064';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(code, cx, text_y);
+    tCtx.font = `bold ${font_size}px sans-serif`;
+    tCtx.fillStyle = '#3c0064';
+    tCtx.textAlign = 'center';
+    tCtx.textBaseline = 'middle';
+    tCtx.fillText(code, cx, text_y);
+  }
+
+  if (whiteBg) {
+    // PDF: background putih dulu, lalu clip stiker ke rounded rect
+    // → sudut stiker = putih kertas (tidak ada kotak hitam di pojok)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(0, 0, W, H, R);
+    ctx.clip();
+    ctx.drawImage(tmp, 0, 0);
+    ctx.restore();
+  } else {
+    // PNG download: transparan di luar rounded rect
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(0, 0, W, H, R);
+    ctx.clip();
+    ctx.drawImage(tmp, 0, 0);
+    ctx.restore();
   }
 }
 
