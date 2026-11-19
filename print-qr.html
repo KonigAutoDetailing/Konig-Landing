@@ -425,24 +425,27 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
       // Composite sticker ke cell canvas + gambar garis cutting
       for (const { cellCanvas, cellCtx, sc, stickerW_px, stickerH_px } of canvases) {
-        // Radius rounded corner stiker: ~8% dari lebar stiker (dari template image)
-        const CORNER_R_PX = Math.round(stickerW_px * 0.08);
-        // 1. Background cell = putih (kertas putih, area di luar bleed zone)
+        // Radius corner dari template: 171px dari tinggi 1328px = 12.88%
+        // Ini sama di semua ukuran render karena proporsional terhadap stickerH_px
+        const CORNER_R_PX = Math.round(stickerH_px * 0.1288);
+
+        // 1. Background cell = putih (dicetak di kertas putih, area luar bleed = kertas)
         cellCtx.fillStyle = '#ffffff';
         cellCtx.fillRect(0, 0, C_W, C_H);
 
-        // 2. Bleed zone: clip ke rounded rect yang sedikit lebih besar dari stiker (extend BLEED_PX)
-        //    Radius bleed = radius stiker + BLEED_PX (proporsional, sudut konsisten)
+        // 2. Bleed zone: rounded rect dari (0,0) ukuran C_W×C_H
+        //    Radius bleed = radius stiker + BLEED_PX → sudut bleed konsisten dengan sudut stiker
+        //    Clip lalu draw stiker di-scale up penuh ke ukuran cell (tepi stiker = bleed fill)
         const bleedR = CORNER_R_PX + BLEED_PX;
         cellCtx.save();
         cellCtx.beginPath();
         cellCtx.roundRect(0, 0, C_W, C_H, bleedR);
         cellCtx.clip();
-        // Draw stiker di-scale up ke ukuran bleed — warna tepi stiker mengisi bleed zone
         cellCtx.drawImage(sc, 0, 0, C_W, C_H);
         cellCtx.restore();
 
-        // 3. Stiker asli di tengah (posisi tepat, tidak blur) — clipped ke rounded rect stiker
+        // 3. Stiker asli: draw sharp di posisi BLEED_PX offset, clip ke rounded rect stiker
+        //    Ini menutupi bleed scale-up dengan versi sharp/tajam di area stiker itu sendiri
         cellCtx.save();
         cellCtx.beginPath();
         cellCtx.roundRect(BLEED_PX, BLEED_PX, stickerW_px, stickerH_px, CORNER_R_PX);
