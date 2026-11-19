@@ -3701,7 +3701,7 @@ window.printQR = async function() {
   const w = window.open('', '_blank');
   try {
     const c = await renderQrSticker(code, 1);
-    w.document.write('<!DOCTYPE html><html><head><title>QR Sticker - ' + code + '</title><style>@page{size:A4;margin:10mm}body{margin:0;background:#fff}img{width:44mm;height:auto;display:block}</style></head><body><img src="' + c.toDataURL('image/png') + '" onload="setTimeout(function(){window.print()},300)"></body></html>');
+    w.document.write('<!DOCTYPE html><html><head><title>QR Sticker - ' + code + '</title><style>@page{size:A4;margin:10mm}body{margin:0;background:#fff}img{width:44mm;height:55mm;display:block}</style></head><body><img src="' + c.toDataURL('image/png') + '" onload="setTimeout(function(){window.print()},300)"></body></html>');
     w.document.close();
   } catch(e) { w.close(); alert('Gagal membuat stiker: ' + e.message); }
 }
