@@ -463,11 +463,15 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       }
 
       // Tempatkan cell (sticker+bleed) di PDF — grid di-center horizontal & vertikal
-      // Grid = COLS stiker × lebar stiker (tanpa gap), center di halaman
+      // Grid dimulai dari MARGIN_MM — bleed stiker pertama extend ke dalam margin (tidak ada gap putih)
       const gridW = COLS * STICKER_W_MM;
       const gridH = ROWS * STICKER_H_MM;
+      // Center grid di dalam halaman (sisa margin kiri-kanan/atas-bawah sama)
       const offsetX = (PAGE_W - gridW) / 2;
       const offsetY = (PAGE_H - gridH) / 2;
+      // Fill seluruh background PDF dengan hitam supaya area di luar grid tidak putih
+      pdf.setFillColor(8, 8, 16);
+      pdf.rect(0, 0, PAGE_W, PAGE_H, 'F');
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
