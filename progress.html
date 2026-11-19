@@ -2192,12 +2192,13 @@ window.openWaUpdate = async function(onlyId){
   const list = document.getElementById('waList');
   list.textContent = 'Memuat…';
   openModal('modalWa');
+  try {
   const snap = await getDocs(query(collection(window._db, 'konig_progress'), orderBy('createdAt','desc')));
   const today = todayWIB();
   const jobs = [];
   const allJobs = [];
   snap.forEach(d => { const j = { id: d.id, ...d.data() }; allJobs.push(j); const done = (j.doneSteps||[]).includes('done');
-    if(onlyId){ if(j.id === onlyId) jobs.push(j); return; }
+    if(onlyId){ if(j.id === onlyId) jobs.push(j); return; } // onlyId: selalu tampilkan, bypass filter harian
     if(j.lastWaUpdate === today) return; // sudah dikirim / dihapus dari daftar hari ini
     if(done){ if((tsDay(j.doneAt) || tsDay(j.updatedAt)) === today) jobs.push(j); return; }
     if(autoWashDone(j)) return;
@@ -2273,6 +2274,7 @@ window.openWaUpdate = async function(onlyId){
     list.appendChild(box);
   });
   if(!onlyId){ renderCoatWashSection(list, coatDue, today); renderCoatMainSection(list, coatMainDue, today); renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); }
+  } catch(err) { list.innerHTML = '<div class="empty-state" style="color:#f97316">Error: ' + (err.message||err) + '</div>'; console.error('openWaUpdate error:', err); }
 };
 // Buka otomatis lewat link ?update=sore (dari notifikasi jam 16:00)
 if (new URLSearchParams(location.search).get('update') === 'sore') {
