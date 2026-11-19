@@ -400,21 +400,28 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   // Scale untuk renderThumb: canvas stiker SW×SH, template crop 1054px lebar
   const RENDER_SCALE = SW / 1054;
 
-  // ── 1 lembar saja ────────────────────────────────────────────────
-  const totalPages = 1;
+  // ── 1 lembar per download ─────────────────────────────────────────
+  // sheetNum 1/2/3 → offset ke lembar yang diminta (0-based: sheetNum-1)
+  const sheetIdx = sheetNum ? (sheetNum - 1) : 0;
+  const sheetStart = sheetIdx * PER_PAGE;         // offset stiker di lembar ini
+  const sheetCount = Math.min(PER_PAGE, Math.max(0, totalCount - sheetStart));
 
   try {
+    if (sheetCount <= 0) {
+      alert(`Lembar ${sheetNum} tidak ada stiker (total hanya ${totalCount}, per lembar ${PER_PAGE}).`);
+      overlay.classList.remove('active');
+      btn.disabled = false; btn.textContent = origText;
+      return;
+    }
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: isA4 ? 'a4' : 'a3' });
 
-    for (let page = 0; page < totalPages; page++) {
-      if (page > 0) pdf.addPage();
+    {
+      const pageStart = sheetStart;
+      const pageCount = sheetCount;
 
-      const pageStart = page * PER_PAGE;
-      const pageCount = Math.min(PER_PAGE, totalCount - pageStart);
-      if (pageCount <= 0) break;
-
-      // Stiker nomor berapa di halaman ini
+      // Stiker nomor berapa di lembar ini
       const pageStartCode = startAll + pageStart;
 
       btn.textContent = `⏳ Halaman ${page+1}/${totalPages}...`;
@@ -511,8 +518,9 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
     }
 
     setProgress(95, 'Menyimpan PDF...');
-    const startCode = makeCode(prefix, startAll);
-    const endCode = makeCode(prefix, startAll + totalCount - 1);
+    // Nama file pakai range stiker di lembar ini saja
+    const startCode = makeCode(prefix, startAll + sheetStart);
+    const endCode   = makeCode(prefix, startAll + sheetStart + sheetCount - 1);
     const sheetLabel = sheetNum ? `-L${sheetNum}` : '';
     pdf.save(`KONIG-QR-${startCode}-${endCode}${sheetLabel}.pdf`);
     setProgress(100, 'Selesai! ✓');
