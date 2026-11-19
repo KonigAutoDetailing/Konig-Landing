@@ -38,6 +38,16 @@
     .btn-print:hover{background:#1f4a1f}
     .btn-print:disabled{opacity:0.5;cursor:not-allowed}
 
+    /* ── PDF Progress Overlay ── */
+    #pdfOverlay{display:none;position:fixed;inset:0;background:rgba(8,8,16,0.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+    #pdfOverlay.active{display:flex}
+    .pdf-progress-box{background:#161625;border:1px solid #2a2a45;padding:32px 40px;text-align:center;min-width:320px}
+    .pdf-progress-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#f0eeff;margin-bottom:8px}
+    .pdf-progress-sub{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:#9d93c0;margin-bottom:20px}
+    .pdf-progress-bar-bg{background:#0f0f1a;height:6px;width:100%;overflow:hidden}
+    .pdf-progress-bar-fill{background:#7B2FBE;height:6px;width:0%;transition:width 0.3s ease}
+    .pdf-progress-pct{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:#b06aff;margin-top:12px}
+
     .preview-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
     #previewGrid{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px}
 
@@ -113,6 +123,16 @@
     <button class="btn btn-print" onclick="downloadPDF('a4')" id="btnPDF_A4">⬇ PDF A4</button>
     <button class="btn btn-print" onclick="downloadPDF('a3')" id="btnPDF_A3">⬇ PDF A3 (3 lembar = 90 stiker)</button>
     <button class="btn btn-outline" onclick="downloadAll()">⬇ Download Semua PNG</button>
+  </div>
+
+  <!-- PDF Progress Overlay -->
+  <div id="pdfOverlay">
+    <div class="pdf-progress-box">
+      <div class="pdf-progress-title">Generating PDF...</div>
+      <div class="pdf-progress-sub" id="pdfProgressSub">Menyiapkan stiker...</div>
+      <div class="pdf-progress-bar-bg"><div class="pdf-progress-bar-fill" id="pdfProgressFill"></div></div>
+      <div class="pdf-progress-pct" id="pdfProgressPct">0%</div>
+    </div>
   </div>
 
   <div class="preview-label">Preview</div>
@@ -307,6 +327,19 @@ async function downloadPDF(format = 'a3') {
   const origText = btn.textContent;
   btn.disabled = true;
 
+  // Tampilkan overlay progress
+  const overlay = document.getElementById('pdfOverlay');
+  const progressFill = document.getElementById('pdfProgressFill');
+  const progressPct = document.getElementById('pdfProgressPct');
+  const progressSub = document.getElementById('pdfProgressSub');
+  function setProgress(pct, sub) {
+    progressFill.style.width = pct + '%';
+    progressPct.textContent = Math.round(pct) + '%';
+    if (sub) progressSub.textContent = sub;
+  }
+  overlay.classList.add('active');
+  setProgress(0, 'Menyiapkan...');
+
   const prefix = document.getElementById('ctrlPrefix').value.trim().toUpperCase() || 'KNG';
   const start = parseInt(document.getElementById('ctrlStart').value) || 1;
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 200);
@@ -354,6 +387,8 @@ async function downloadPDF(format = 'a3') {
       const pageCount = Math.min(PER_PAGE, count - pageStart);
 
       btn.textContent = `⏳ Halaman ${page+1}/${totalPages}...`;
+      const basePct = (page / totalPages) * 90;
+      setProgress(basePct, `Render halaman ${page+1} dari ${totalPages}...`);
 
       // Render semua sticker di halaman ini secara parallel
       // Setiap canvas = sticker + bleed 2mm di semua sisi
@@ -434,15 +469,20 @@ async function downloadPDF(format = 'a3') {
       }
     }
 
+    setProgress(95, 'Menyimpan PDF...');
     const endCode = makeCode(prefix, start + count - 1);
     const startCode = makeCode(prefix, start);
     pdf.save(`KONIG-QR-${startCode}-${endCode}.pdf`);
+    setProgress(100, 'Selesai! ✓');
+    setTimeout(() => overlay.classList.remove('active'), 1200);
   } catch(e) {
+    overlay.classList.remove('active');
     alert('Error: ' + e.message);
     console.error(e);
   } finally {
     btn.disabled = false;
     btn.textContent = origText;
+    overlay.classList.remove('active');
   }
 }
 
