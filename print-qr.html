@@ -402,8 +402,18 @@ async function downloadPDF(format = 'a3') {
         const ry = BLEED_PX + lineW / 2;
         const rw = stickerW_px - lineW;
         const rh = stickerH_px - lineW;
+        const r = cornerPx;
         cellCtx.beginPath();
-        cellCtx.roundRect(rx, ry, rw, rh, cornerPx);
+        cellCtx.moveTo(rx + r, ry);
+        cellCtx.lineTo(rx + rw - r, ry);
+        cellCtx.arcTo(rx + rw, ry, rx + rw, ry + r, r);
+        cellCtx.lineTo(rx + rw, ry + rh - r);
+        cellCtx.arcTo(rx + rw, ry + rh, rx + rw - r, ry + rh, r);
+        cellCtx.lineTo(rx + r, ry + rh);
+        cellCtx.arcTo(rx, ry + rh, rx, ry + rh - r, r);
+        cellCtx.lineTo(rx, ry + r);
+        cellCtx.arcTo(rx, ry, rx + r, ry, r);
+        cellCtx.closePath();
         cellCtx.stroke();
       }
 
