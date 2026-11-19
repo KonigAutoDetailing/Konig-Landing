@@ -390,17 +390,21 @@ async function downloadPDF(format = 'a3') {
         // Composite sticker ke posisi bleed offset
         cellCtx.drawImage(sc, BLEED_PX, BLEED_PX, stickerW_px, stickerH_px);
 
-        // ── Garis cutting: outline tepat di tepi sticker (di dalam bleed area) ──
+        // ── Garis cutting: rounded rect ikutin contour sticker ──
+        // Corner radius ≈ 3.3mm (proporsional dari template asli)
+        const CORNER_MM = 3.3;
+        const cornerPx = Math.round(CORNER_MM * PX_PER_MM);
         const lineW = Math.max(2, Math.round(0.25 * PX_PER_MM));  // 0.25mm garis cutting
         cellCtx.strokeStyle = '#000000';
         cellCtx.lineWidth = lineW;
         cellCtx.setLineDash([]);  // solid line
-        cellCtx.strokeRect(
-          BLEED_PX + lineW / 2,
-          BLEED_PX + lineW / 2,
-          stickerW_px - lineW,
-          stickerH_px - lineW
-        );
+        const rx = BLEED_PX + lineW / 2;
+        const ry = BLEED_PX + lineW / 2;
+        const rw = stickerW_px - lineW;
+        const rh = stickerH_px - lineW;
+        cellCtx.beginPath();
+        cellCtx.roundRect(rx, ry, rw, rh, cornerPx);
+        cellCtx.stroke();
       }
 
       // Tempatkan cell (sticker+bleed) di PDF — grid di-center horizontal & vertikal
