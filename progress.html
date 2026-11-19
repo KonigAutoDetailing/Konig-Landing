@@ -1800,6 +1800,49 @@ function waMessage(j){
   if (needsTrackLink(j)) msg += '\n\nDetail progres dapat dipantau melalui tautan berikut:\n' + url;
   return msg + salam;
 }
+
+// ── TEMPLATE NARASI UPDATE WA PER STEP ──
+function waUpdateNarasi(j, pcLevel){
+  const steps = window.stepsFor(j.service), done = (j.doneSteps||[]).includes('done');
+  const s = steps.find(x => x.id === j.activeStep);
+  const stepId = s ? s.id : null;
+  const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
+  const nm = sapa(j);
+  const url = location.origin + '/progress?code=' + j.id;
+  const hasCoat = hasCoating(j);
+  const isCoat = isCoatingJob(j.service);
+  const salam = '\n\nSalam,\nKONIG Auto Detailing';
+  const trackLine = needsTrackLink(j) ? '\n\nProgres bisa dipantau langsung di:\n' + url : '';
+
+  const tmpl = {
+    received: () => `Halo ${nm},\n\nKendaraan ${mobil} sudah kami terima dan sedang dalam tahap pengecekan awal. Kami dokumentasikan kondisi eksterior sebelum pengerjaan dimulai, agar semuanya tercatat dengan baik.\n\nPengerjaan akan segera dimulai. Kami akan update kembali seiring progress berlangsung.${trackLine}`,
+
+    washing: () => `Halo ${nm},\n\nUpdate untuk ${mobil} — saat ini kendaraan sedang dalam proses cuci dan dekontaminasi. Tahap ini penting untuk memastikan permukaan cat bersih dari kontaminan sebelum masuk ke tahap berikutnya.\n\nInsya Allah pengerjaan berjalan sesuai rencana dan kami akan update lagi ke tahap selanjutnya.${trackLine}`,
+
+    correction: () => {
+      const lv = pcLevel || 50;
+      let nar = '';
+      if(lv <= 20){
+        nar = `Pengerjaan ${mobil} saat ini masih di tahap awal paint correction. Kami sedang menganalisis kondisi cat dan menyiapkan teknik yang tepat sesuai kondisi permukaan kendaraan Anda. Tahap ini memerlukan ketelitian, namun hasilnya akan sangat terasa pada kilap akhir cat.`;
+      } else if(lv <= 70){
+        nar = `Update untuk ${mobil} — paint correction sudah berjalan sekitar setengah bagian. Progres cukup baik, swirl dan baret halus pada cat sudah mulai terangkat. Kami terus bekerja panel per panel untuk memastikan hasilnya merata dan konsisten.`;
+      } else {
+        nar = `Paint correction untuk ${mobil} sudah hampir selesai. Sebagian besar panel sudah bersih dari swirl dan baret halus. Setelah ini masuk ke tahap final wash, lalu kendaraan langsung naik ke proses ${isCoat ? 'aplikasi coating' : 'finishing'}.${isCoat ? ' Kalau semuanya berjalan lancar, kemungkinan besar kendaraan bisa diambil besok.' : ''}`;
+      }
+      return `Halo ${nm},\n\n${nar}${trackLine}`;
+    },
+
+    finalwash: () => `Halo ${nm},\n\nPaint correction untuk ${mobil} sudah selesai dan sekarang sedang dalam proses final wash — cuci terakhir sebelum masuk ke tahap ${isCoat ? 'aplikasi coating' : 'finishing'}. Permukaan cat sudah bersih dan siap untuk proses berikutnya.\n\n${isCoat ? 'Setelah final wash selesai, kendaraan akan langsung naik ke proses coating. Kalau semua berjalan sesuai rencana, kemungkinan besar kendaraan bisa diambil besok.' : 'Sudah hampir selesai, kami informasikan kembali begitu kendaraan siap diambil.'}${trackLine}`,
+
+    coating: () => `Halo ${nm},\n\nUpdate untuk ${mobil} — saat ini sedang dalam proses aplikasi coating. Ini adalah tahap inti dari pengerjaan, di mana lapisan proteksi diaplikasikan panel per panel dengan teliti.\n\nSetelah coating selesai, kendaraan masuk ke proses curing. Kami akan informasikan begitu kendaraan siap diambil.${trackLine}`,
+
+    qc: () => `Halo ${nm},\n\nPengerjaan ${mobil} sudah hampir selesai — saat ini dalam tahap QC final. Kami memeriksa seluruh permukaan di bawah lighting khusus untuk memastikan hasil coating merata dan tidak ada yang terlewat.\n\nTidak lama lagi kendaraan siap diambil. Kami segera kabarkan.${trackLine}`,
+  };
+
+  if(stepId && tmpl[stepId]) return tmpl[stepId]() + salam;
+  // fallback ke format lama
+  return waMessage(j);
+}
 // ── REMINDER CUCI (Premium Wash) ──
 // Jadwal setelah cuci terakhir: 14 hari, lalu 1, 2, 3, 4, 5, 6 bulan. Kalau customer cuci lagi, hitungan mulai ulang dari cuci terbaru.
 const WASH_STAGES = [14, 30, 60, 90, 120, 150, 180];
@@ -2175,52 +2218,32 @@ window.openWaUpdate = async function(onlyId){
     head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
     head.textContent = (j.car || '-') + ' ' + (j.plate || '') + (sent ? '  ✓ sudah dikirim hari ini' : '');
     const ta = document.createElement('textarea');
-    ta.value = waMessage(j); ta.rows = 7;
+    ta.value = waUpdateNarasi(j, _pcLevel); ta.rows = 9;
     ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
-    // ── FOTO PROGRESS ──
-    const fotoRow = document.createElement('div');
-    fotoRow.style.cssText = 'margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
-    const fotoInput = document.createElement('input');
-    fotoInput.type = 'file'; fotoInput.accept = 'image/*'; fotoInput.multiple = true; fotoInput.style.display = 'none';
-    const fotoBtn = document.createElement('button');
-    fotoBtn.className = 'btn-sm'; fotoBtn.style.cssText = 'background:rgba(123,47,190,0.25);color:var(--purpleB);border:1px solid var(--purpleB)';
-    fotoBtn.textContent = '📸 Tambah Foto Progress';
-    fotoBtn.onclick = () => fotoInput.click();
-    const fotoStatus = document.createElement('span');
-    fotoStatus.style.cssText = 'font-size:12px;color:var(--muted)';
-    const fotoPreview = document.createElement('div');
-    fotoPreview.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px';
-    let _fotoUrls = [];
-    function rebuildTaWithFoto(){
-      const base = waMessage(j);
-      if(!_fotoUrls.length){ ta.value = base; }
-      else {
-        const fotoLines = '\n\n📸 Foto progress:\n' + _fotoUrls.join('\n');
-        ta.value = base + fotoLines;
-      }
-      if(nomor) btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+    // ── SELECTOR LEVEL (khusus paint correction) ──
+    const steps2 = window.stepsFor(j.service);
+    const curStep = steps2.find(x => x.id === j.activeStep);
+    const isPc = curStep && curStep.id === 'correction';
+    let _pcLevel = 50;
+    const pcRow = document.createElement('div');
+    if(isPc){
+      pcRow.style.cssText = 'margin-top:10px;padding:10px 12px;background:rgba(123,47,190,0.12);border:1px solid rgba(123,47,190,0.3)';
+      pcRow.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--purpleB);margin-bottom:8px">Seberapa jauh paint correction?</div><div style="display:flex;gap:8px">
+        <button data-lv="10" style="flex:1;padding:8px 4px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer">Baru mulai</button>
+        <button data-lv="50" style="flex:1;padding:8px 4px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;border:1px solid var(--purpleB);background:rgba(123,47,190,0.2);color:var(--purpleB);cursor:pointer">Setengah jalan</button>
+        <button data-lv="90" style="flex:1;padding:8px 4px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer">Hampir selesai</button>
+      </div>`;
+      pcRow.querySelectorAll('button[data-lv]').forEach(b => {
+        b.onclick = () => {
+          _pcLevel = parseInt(b.dataset.lv);
+          pcRow.querySelectorAll('button[data-lv]').forEach(x => { x.style.borderColor='var(--border)'; x.style.background='transparent'; x.style.color='var(--muted)'; });
+          b.style.borderColor='var(--purpleB)'; b.style.background='rgba(123,47,190,0.2)'; b.style.color='var(--purpleB)';
+          ta.value = waUpdateNarasi(j, _pcLevel);
+          if(nomor) btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+        };
+      });
     }
-    fotoInput.onchange = async () => {
-      const files = Array.from(fotoInput.files);
-      if(!files.length) return;
-      fotoBtn.disabled = true; fotoStatus.textContent = '⏳ Mengupload foto…';
-      for(const file of files){
-        try {
-          const ts = Date.now(); const ext = file.name.split('.').pop() || 'jpg';
-          const path = `progress_photos/${j.id}/${ts}.${ext}`;
-          const storRef = sRef(window._storage, path);
-          await uploadBytes(storRef, file, { contentType: file.type || 'image/jpeg' });
-          const url = await getDownloadURL(storRef);
-          _fotoUrls.push(url);
-          const img = document.createElement('img');
-          img.src = url; img.style.cssText = 'width:64px;height:64px;object-fit:cover;border:1px solid var(--border)';
-          fotoPreview.appendChild(img);
-        } catch(e){ fotoStatus.textContent = '⚠️ Gagal upload: ' + e.message; }
-      }
-      fotoBtn.disabled = false; fotoStatus.textContent = _fotoUrls.length + ' foto siap dikirim';
-      rebuildTaWithFoto();
-    };
-    fotoRow.appendChild(fotoInput); fotoRow.appendChild(fotoBtn); fotoRow.appendChild(fotoStatus);
+    const fotoRow = document.createElement('div'); // placeholder, tidak dipakai
 
     const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
     const nomor = waNumber(j.wa);
@@ -2245,7 +2268,7 @@ window.openWaUpdate = async function(onlyId){
       try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { lastWaUpdate: today }); } catch(e) {}
     };
     row.appendChild(btn); row.appendChild(info); if (!onlyId) row.appendChild(del);
-    box.appendChild(head); box.appendChild(ta); box.appendChild(fotoRow); box.appendChild(fotoPreview); box.appendChild(row);
+    box.appendChild(head); if(isPc) box.appendChild(pcRow); box.appendChild(ta); box.appendChild(row);
     list.appendChild(box);
   });
   if(!onlyId){ renderCoatWashSection(list, coatDue, today); renderCoatMainSection(list, coatMainDue, today); renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); }
