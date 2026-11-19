@@ -425,6 +425,10 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
       // Composite sticker ke cell canvas + gambar garis cutting
       for (const { cellCanvas, cellCtx, sc, stickerW_px, stickerH_px } of canvases) {
+        // Fill seluruh cell dengan warna hitam (background stiker) supaya sudut rounded corner
+        // dan area di luar stiker tidak putih — vendor butuh full bleed, tidak ada area putih
+        cellCtx.fillStyle = '#080810';
+        cellCtx.fillRect(0, 0, C_W, C_H);
         // Bleed: render sticker sedikit di-scale up supaya warna tepi nyambung ke bleed area
         // Ini memastikan tidak ada area putih di luar cutting line
         cellCtx.drawImage(sc, -BLEED_PX, -BLEED_PX, stickerW_px + BLEED_PX * 2, stickerH_px + BLEED_PX * 2);
