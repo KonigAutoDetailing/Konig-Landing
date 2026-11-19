@@ -216,9 +216,10 @@ async function renderThumb(canvas, url, S, code, whiteBg = false) {
   qCtx.drawImage(qrCanvas, margin, margin);
 
   const ctx = canvas.getContext('2d');
-  // Hanya isi putih kalau untuk PDF — PNG download biarkan transparan
+  // Isi background gelap (warna stiker) untuk PDF — PNG download biarkan transparan
+  // Jangan putih: rounded corner stiker akan menampilkan warna ini di sudut bleed
   if (whiteBg) {
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#080810';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
