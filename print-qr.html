@@ -369,8 +369,8 @@ async function downloadPDF(format = 'a3') {
         cellCanvas.height = C_H;
         const cellCtx = cellCanvas.getContext('2d');
 
-        // Isi area bleed putih
-        cellCtx.fillStyle = '#ffffff';
+        // Isi area bleed dengan warna background sticker (hitam/gelap) supaya tidak ada tepi putih
+        cellCtx.fillStyle = '#080810';
         cellCtx.fillRect(0, 0, C_W, C_H);
 
         // Render sticker di canvas sementara lalu composite ke tengah cell
@@ -391,8 +391,8 @@ async function downloadPDF(format = 'a3') {
         cellCtx.drawImage(sc, BLEED_PX, BLEED_PX, stickerW_px, stickerH_px);
 
         // ── Garis cutting: rounded rect ikutin contour sticker ──
-        // Corner radius ≈ 3.3mm (proporsional dari template asli)
-        const CORNER_MM = 3.3;
+        // Corner radius ≈ 4.5mm (diukur dari template asli: 108px dari 1053px lebar)
+        const CORNER_MM = 4.5;
         const cornerPx = Math.round(CORNER_MM * PX_PER_MM);
         const lineW = Math.max(2, Math.round(0.25 * PX_PER_MM));  // 0.25mm garis cutting
         cellCtx.strokeStyle = '#000000';
