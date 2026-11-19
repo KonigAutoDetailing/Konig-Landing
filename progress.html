@@ -1892,16 +1892,25 @@ function washReminders(jobs, today){
     if (aktif.has(key)) return;
     const age = dayDiff(c.d, today);
     const sent = c.j.washReminders || {};
-    // Kalau voucher diskon 30-hari sudah pernah diterbitkan tapi belum pernah dikirim reminder 30-hari,
-    // skip stage 30 (kemungkinan customer sudah datang lagi atau voucher sudah dipakai).
-    // Kalau voucher sudah dipakai (used=true), means customer sudah datang → hitungan restart dari kunjungan baru.
-    const skipThirty = washedWith30DayVoucher(c.j) && sent['30'];
-    const eligibleStages = WASH_STAGES.filter(x => {
-      if (x === 30 && skipThirty) return false;
-      return x <= age;
-    });
+    const eligibleStages = WASH_STAGES.filter(x => x <= age);
     const stage = eligibleStages.pop();
-    if (stage && !sent[String(stage)]) due.push({ j: c.j, stage, age, visits: c.visits });
+    if (!stage || sent[String(stage)]) return;
+    // Stage 30 selalu kasih voucher
+    // Stage berikutnya (60, 90, ...) kasih voucher kalau voucher stage sebelumnya sudah dipakai
+    let giveVoucher = false;
+    const src = 'wash-reminder-' + stage;
+    if (stage === 30) {
+      giveVoucher = true;
+    } else {
+      // Cek apakah ada voucher dari stage sebelumnya yang sudah dipakai
+      const lastUsed = lastUsedWashVoucherSource(c.j);
+      if (lastUsed) {
+        const lastStage = parseInt(lastUsed.replace('wash-reminder-',''),10)||0;
+        // Stage sebelumnya sudah dipakai & belum pernah issue voucher untuk stage ini
+        if (lastStage < stage && !hasAnyWashDiscountVoucher(c.j, src)) giveVoucher = true;
+      }
+    }
+    due.push({ j: c.j, stage, age, visits: c.visits, giveVoucher });
   });
   return due.sort((a, b) => b.age - a.age);
 }
@@ -1912,7 +1921,7 @@ function washMessage(r){
   const ajak = /Wash/i.test(sv) ? 'pencucian berikutnya' : 'pembersihan interior berikutnya';
   const sejak = r.stage === 14 ? '2 minggu' : 'sekitar ' + Math.round(r.stage / 30) + ' bulan';
   let msg = 'Halo ' + sapa(r.j) + ',\n\nSudah ' + sejak + ' sejak ' + mobil + ' terakhir ' + kerja + ' di KONIG Auto Detailing.';
-  if (r.stage === 30 && r.voucherCode) {
+  if (r.voucherCode) {
     msg += '\n\nSebagai apresiasi, kami memberikan *voucher diskon 15% untuk Premium Wash* (kode: *' + r.voucherCode + '*). Voucher ini bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.';
     msg += '\n\nApabila Anda ingin menjadwalkan ' + ajak + ', silakan balas pesan ini dan kami akan siapkan slotnya.';
   } else {
@@ -1926,23 +1935,34 @@ function makeVoucherCode(prefix){
   for (let i = 0; i < 6; i++) r += chars[Math.floor(Math.random() * chars.length)];
   return (prefix || 'KV') + '-' + r;
 }
-async function generateWashDiscountVoucher(j, today){
+async function generateWashDiscountVoucher(j, today, source){
   try {
     const { doc, updateDoc } = window._fbFns;
     const code = makeVoucherCode('KD');
-    const vouchers = [...(j.vouchers||[]), { code, service: 'Premium Wash', discount: 15, issuedAt: today, invoiceNo: '', used: false, source: 'wash-reminder-30' }];
+    const vouchers = [...(j.vouchers||[]), { code, service: 'Premium Wash', discount: 15, issuedAt: today, invoiceNo: '', used: false, source: source || 'wash-reminder-30' }];
     await updateDoc(doc(window._db, 'konig_progress', j.id), { vouchers });
     j.vouchers = vouchers;
     return code;
   } catch(e) { return null; }
 }
-// Cek apakah sudah ada voucher diskon wash reminder 30-hari yang belum dipakai
-function hasUnusedWashDiscountVoucher(j){
-  return (j.vouchers||[]).some(v => v.source === 'wash-reminder-30' && !v.used);
+// Cek apakah sudah ada voucher diskon wash reminder stage tertentu yang belum dipakai
+function hasUnusedWashDiscountVoucher(j, source){
+  return (j.vouchers||[]).some(v => v.source === source && !v.used);
 }
-// Cek apakah voucher diskon wash reminder pernah dipakai (untuk skip ke 60 hari)
-function washedWith30DayVoucher(j){
-  return (j.vouchers||[]).some(v => v.source === 'wash-reminder-30');
+// Cari voucher wash reminder terakhir yang sudah dipakai — return source string atau null
+function lastUsedWashVoucherSource(j){
+  const used = (j.vouchers||[]).filter(v => v.source && v.source.startsWith('wash-reminder-') && v.used);
+  if (!used.length) return null;
+  // Ambil yang stage-nya paling besar
+  return used.sort((a, b) => {
+    const na = parseInt(a.source.replace('wash-reminder-',''),10)||0;
+    const nb = parseInt(b.source.replace('wash-reminder-',''),10)||0;
+    return nb - na;
+  })[0].source;
+}
+// Cek apakah voucher wash reminder pernah diterbitkan (pakai atau belum)
+function hasAnyWashDiscountVoucher(j, source){
+  return (j.vouchers||[]).some(v => v.source === source);
 }
 async function markWashReminder(j, stage, today){
   try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { ['washReminders.' + stage]: today }); } catch(e) {}
@@ -1962,26 +1982,24 @@ function renderWashSection(list, due, today){
     const head = document.createElement('div');
     head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
     head.textContent = (j.car || '-') + ' ' + (j.plate || '') + ' · ' + (r.stage === 14 ? '2 minggu' : Math.round(r.stage/30) + ' bulan') + ' sejak kunjungan terakhir';
-    // Badge voucher jika stage 30
-    if (r.stage === 30) {
+    // Badge voucher jika stage yang dapat voucher
+    const vSrc = 'wash-reminder-' + r.stage;
+    if (r.giveVoucher) {
       const badge = document.createElement('div');
       badge.style.cssText = 'font-size:12px;color:#f59e0b;margin-bottom:8px';
-      const existing = hasUnusedWashDiscountVoucher(j);
+      const existing = hasUnusedWashDiscountVoucher(j, vSrc);
       badge.textContent = existing ? '🎟 Voucher diskon 15% sudah diterbitkan — cek kode di bawah.' : '🎟 Akan diterbitkan voucher diskon 15% Premium Wash saat kirim/lewati.';
       box.appendChild(head); box.appendChild(badge);
     } else {
       box.appendChild(head);
     }
-    const ta = document.createElement('textarea'); ta.rows = r.stage === 30 ? 8 : 6;
+    const ta = document.createElement('textarea'); ta.rows = r.giveVoucher ? 8 : 6;
     ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
-    // Untuk stage 30, perlu load/generate voucher dulu
-    if (r.stage === 30) {
-      const exv = (j.vouchers||[]).find(v => v.source === 'wash-reminder-30' && !v.used);
+    if (r.giveVoucher) {
+      const exv = (j.vouchers||[]).find(v => v.source === vSrc && !v.used);
       if (exv) { r.voucherCode = exv.code; }
-      ta.value = washMessage(r);
-    } else {
-      ta.value = washMessage(r);
     }
+    ta.value = washMessage(r);
     const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
     const nomor = waNumber(j.wa);
     const done = (txt) => { box.style.opacity = '.5'; head.textContent += '  ✓ ' + txt; row.remove(); };
@@ -1992,8 +2010,8 @@ function renderWashSection(list, due, today){
       btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
       ta.oninput = () => { btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value); };
       btn.onclick = async () => {
-        if (r.stage === 30 && !r.voucherCode) {
-          const code = await generateWashDiscountVoucher(j, today);
+        if (r.giveVoucher && !r.voucherCode) {
+          const code = await generateWashDiscountVoucher(j, today, vSrc);
           if (code) { r.voucherCode = code; ta.value = washMessage(r); btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value); }
         }
         markWashReminder(j, r.stage, today); done('terkirim');
@@ -2001,8 +2019,8 @@ function renderWashSection(list, due, today){
     }
     const skip = document.createElement('button'); skip.className = 'btn-sm'; skip.textContent = 'Lewati';
     skip.onclick = async () => {
-      if (r.stage === 30 && !r.voucherCode) {
-        const code = await generateWashDiscountVoucher(j, today);
+      if (r.giveVoucher && !r.voucherCode) {
+        const code = await generateWashDiscountVoucher(j, today, vSrc);
         if (code) { r.voucherCode = code; }
       }
       markWashReminder(j, r.stage, today); done('dilewati');
