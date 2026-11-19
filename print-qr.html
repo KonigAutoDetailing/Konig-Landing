@@ -425,37 +425,38 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
       // Composite sticker ke cell canvas + gambar garis cutting
       for (const { cellCanvas, cellCtx, sc, stickerW_px, stickerH_px } of canvases) {
-        // Bleed = stretch sticker sedikit lebih besar mengisi seluruh cell
-        // Ini buat warna tepi sticker nyambung ke bleed area (tidak ada pojok putih)
-        cellCtx.drawImage(sc, -BLEED_PX * 0.5, -BLEED_PX * 0.5, C_W + BLEED_PX, C_H + BLEED_PX);
-        // Lalu tempel sticker normal di posisi yang benar (bleed offset)
+        // Bleed: render sticker sedikit di-scale up supaya warna tepi nyambung ke bleed area
+        // Ini memastikan tidak ada area putih di luar cutting line
+        cellCtx.drawImage(sc, -BLEED_PX, -BLEED_PX, stickerW_px + BLEED_PX * 2, stickerH_px + BLEED_PX * 2);
+        // Tempel sticker normal di atas (posisi tepat di bleed offset) supaya desain tidak blur
         cellCtx.drawImage(sc, BLEED_PX, BLEED_PX, stickerW_px, stickerH_px);
 
-        // ── Garis cutting: rounded rect ikutin contour sticker ──
-        // Corner radius ≈ 4.5mm (diukur dari template asli: 108px dari 1053px lebar)
-        const CORNER_MM = 4.5;
-        const cornerPx = Math.round(CORNER_MM * PX_PER_MM);
-        const lineW = Math.max(2, Math.round(0.25 * PX_PER_MM));  // 0.25mm garis cutting
+        // ── Cutting marks: garis pendek di 4 sudut stiker (bukan outline penuh) ──
+        const lineW = Math.max(2, Math.round(0.25 * PX_PER_MM));  // 0.25mm
+        const markLen = Math.round(3 * PX_PER_MM);  // 3mm panjang garis cutting
+        const gap = Math.round(0.5 * PX_PER_MM);    // 0.5mm jarak dari tepi stiker
         cellCtx.strokeStyle = '#000000';
         cellCtx.lineWidth = lineW;
-        cellCtx.setLineDash([]);  // solid line
-        const rx = BLEED_PX + lineW / 2;
-        const ry = BLEED_PX + lineW / 2;
-        const rw = stickerW_px - lineW;
-        const rh = stickerH_px - lineW;
-        const r = cornerPx;
-        cellCtx.beginPath();
-        cellCtx.moveTo(rx + r, ry);
-        cellCtx.lineTo(rx + rw - r, ry);
-        cellCtx.arcTo(rx + rw, ry, rx + rw, ry + r, r);
-        cellCtx.lineTo(rx + rw, ry + rh - r);
-        cellCtx.arcTo(rx + rw, ry + rh, rx + rw - r, ry + rh, r);
-        cellCtx.lineTo(rx + r, ry + rh);
-        cellCtx.arcTo(rx, ry + rh, rx, ry + rh - r, r);
-        cellCtx.lineTo(rx, ry + r);
-        cellCtx.arcTo(rx, ry, rx + r, ry, r);
-        cellCtx.closePath();
-        cellCtx.stroke();
+        cellCtx.setLineDash([]);
+        // sudut kiri-atas
+        const x0 = BLEED_PX, y0 = BLEED_PX;
+        // sudut kanan-atas
+        const x1 = BLEED_PX + stickerW_px, y1 = BLEED_PX;
+        // sudut kiri-bawah
+        const x2 = BLEED_PX, y2 = BLEED_PX + stickerH_px;
+        // sudut kanan-bawah
+        const x3 = BLEED_PX + stickerW_px, y3 = BLEED_PX + stickerH_px;
+        // helper: garis pendek horizontal dan vertikal keluar dari tiap sudut
+        function cutMark(cx, cy, dirX, dirY) {
+          // horizontal
+          cellCtx.beginPath(); cellCtx.moveTo(cx + dirX * gap, cy); cellCtx.lineTo(cx + dirX * (gap + markLen), cy); cellCtx.stroke();
+          // vertical
+          cellCtx.beginPath(); cellCtx.moveTo(cx, cy + dirY * gap); cellCtx.lineTo(cx, cy + dirY * (gap + markLen)); cellCtx.stroke();
+        }
+        cutMark(x0, y0, -1, -1);  // kiri-atas: keluar ke kiri & atas
+        cutMark(x1, y1,  1, -1);  // kanan-atas
+        cutMark(x2, y2, -1,  1);  // kiri-bawah
+        cutMark(x3, y3,  1,  1);  // kanan-bawah
       }
 
       // Tempatkan cell (sticker+bleed) di PDF — grid di-center horizontal & vertikal
