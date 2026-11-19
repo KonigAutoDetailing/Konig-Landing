@@ -188,7 +188,7 @@ function makeCode(prefix, num) {
 const TMPL_CROP = { x: 34, y: 29, w: 1088, h: 1373 };  // full template: 1122x1402, crop from (34,29)
 
 // whiteBg: true untuk PDF (JPEG tidak support alpha), false untuk PNG download
-async function renderThumb(canvas, url, S, code, whiteBg = false) {
+async function renderThumb(canvas, url, S, code) {
   const scaleX = canvas.width / TMPL_CROP.w;
   const scaleY = canvas.height / TMPL_CROP.h;
 
@@ -244,26 +244,14 @@ async function renderThumb(canvas, url, S, code, whiteBg = false) {
     tCtx.fillText(code, cx, text_y);
   }
 
-  if (whiteBg) {
-    // PDF: background putih dulu, lalu clip stiker ke rounded rect
-    // → sudut stiker = putih kertas (tidak ada kotak hitam di pojok)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, W, H);
-    ctx.save();
-    ctx.beginPath();
-    ctx.roundRect(0, 0, W, H, R);
-    ctx.clip();
-    ctx.drawImage(tmp, 0, 0);
-    ctx.restore();
-  } else {
-    // PNG download: transparan di luar rounded rect
-    ctx.save();
-    ctx.beginPath();
-    ctx.roundRect(0, 0, W, H, R);
-    ctx.clip();
-    ctx.drawImage(tmp, 0, 0);
-    ctx.restore();
-  }
+  // Selalu transparan di luar rounded rect — background putih ada di cell canvas (PDF)
+  // atau di halaman (preview). Ini penting agar bleed zone bisa ambil warna tepi stiker.
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(0, 0, W, H, R);
+  ctx.clip();
+  ctx.drawImage(tmp, 0, 0);
+  ctx.restore();
 }
 
 async function generatePreview() {
