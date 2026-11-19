@@ -438,28 +438,18 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, CW, CH);
 
-        // 2. Bleed layer: flatten stiker ke hitam (warna tepi stiker), draw di -BLEED_PX offset
-        //    Flatten ke hitam dulu agar anti-aliased corner tidak transparan → bleed solid hitam
-        const flat = document.createElement('canvas');
-        flat.width = SW; flat.height = SH;
-        const fCtx = flat.getContext('2d');
-        fCtx.fillStyle = '#000000';  // tepi stiker = hitam
-        fCtx.fillRect(0, 0, SW, SH);
-        fCtx.drawImage(sc, 0, 0);   // overlay stiker (RGBA) di atas hitam → sudut tidak transparan
-
-        ctx.save();
+        // 2. Bleed = rounded rect hitam solid (warna tepi stiker) ukuran CW×CH (= stiker + 2mm semua sisi)
+        ctx.fillStyle = '#000000';
         ctx.beginPath();
         ctx.roundRect(0, 0, CW, CH, R_bleed);
-        ctx.clip();
-        ctx.drawImage(flat, -BLEED_PX, -BLEED_PX);  // tepi hitam solid mengisi bleed zone
-        ctx.restore();
+        ctx.fill();
 
-        // 3. Stiker asli sharp di tengah cell (offset BLEED_PX), clip ke R_sticker
+        // 3. Stiker asli di tengah cell (offset BLEED_PX), clip ke R_sticker
         ctx.save();
         ctx.beginPath();
         ctx.roundRect(BLEED_PX, BLEED_PX, SW, SH, R_sticker);
         ctx.clip();
-        ctx.drawImage(sc, BLEED_PX, BLEED_PX);  // stiker tepat di cutting outline
+        ctx.drawImage(sc, BLEED_PX, BLEED_PX);
         ctx.restore();
 
         return { cell, code };
