@@ -320,15 +320,15 @@ async function downloadPDF(format = 'a3') {
   const PAGE_H = isA4 ? 297 : 420;
   const AREA_W = PAGE_W - MARGIN_MM * 2;
   const AREA_H = PAGE_H - MARGIN_MM * 2;
-  const COLS = Math.floor((AREA_W + GAP_MM) / (STICKER_W_MM + GAP_MM));  // 4
-  const ROWS = Math.floor((AREA_H + GAP_MM) / (STICKER_H_MM + GAP_MM));  // 4
-  const PER_PAGE = COLS * ROWS;  // 16
+  const COLS = Math.floor((AREA_W + GAP_MM) / (STICKER_W_MM + GAP_MM));  // 6
+  const ROWS = Math.floor((AREA_H + GAP_MM) / (STICKER_H_MM + GAP_MM));  // 7
+  const PER_PAGE = COLS * ROWS;  // 42
 
   // Render canvas di resolusi tinggi untuk kualitas PDF bagus
-  // 600dpi = 23.62px/mm → stiker 44×55mm = 1040×1299px
-  const PX_PER_MM = 600 / 25.4;  // ≈ 23.62
-  const C_W = Math.round(STICKER_W_MM * PX_PER_MM);  // 44mm × 11.81 ≈ 520px
-  const C_H = Math.round(STICKER_H_MM * PX_PER_MM);  // 55mm × 11.81 ≈ 650px
+  // 1200dpi = 47.24px/mm → stiker 44×55mm = 2079×2598px
+  const PX_PER_MM = 1200 / 25.4;  // ≈ 47.24
+  const C_W = Math.round(STICKER_W_MM * PX_PER_MM);  // 44mm × 47.24 ≈ 2079px
+  const C_H = Math.round(STICKER_H_MM * PX_PER_MM);  // 55mm × 47.24 ≈ 2598px
   const RENDER_SCALE = C_W / 1053;
 
   const totalPages = Math.ceil(count / PER_PAGE);
