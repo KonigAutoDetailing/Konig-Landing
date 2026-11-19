@@ -218,8 +218,8 @@ async function renderThumb(canvas, url, S, code, whiteBg = false) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
 
-  // Corner radius: 12.45% dari tinggi stiker (dari pengukuran template)
-  const R = Math.round(H * 0.1245);
+  // Corner radius: 10.42% dari lebar stiker (diukur dari PNG asli 4212px, inset 439px)
+  const R = Math.round(W * 0.1042);
 
   // Render stiker ke canvas sementara (transparan background)
   const tmp = document.createElement('canvas');
