@@ -333,8 +333,8 @@ async function downloadPDF(format = 'a3') {
   const PER_PAGE = COLS * ROWS;  // 30
 
   // Render canvas di resolusi tinggi untuk kualitas PDF bagus
-  // 600dpi = 23.62px/mm → canvas 48×59mm = 1134×1393px
-  const PX_PER_MM = 600 / 25.4;  // ≈ 23.62
+  // 1200dpi = 47.24px/mm → canvas 48×59mm = 2268×2787px
+  const PX_PER_MM = 1200 / 25.4;  // ≈ 47.24
   const C_W = Math.round(CELL_W_MM * PX_PER_MM);   // 48mm × 11.81 ≈ 567px (inkl bleed)
   const C_H = Math.round(CELL_H_MM * PX_PER_MM);   // 59mm × 11.81 ≈ 697px (inkl bleed)
   const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM);  // 2mm → ≈ 24px
