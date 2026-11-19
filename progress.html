@@ -930,7 +930,7 @@
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, arrayUnion } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getStorage, ref as sRef, listAll, deleteObject } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+import { getStorage, ref as sRef, listAll, deleteObject, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es",
@@ -2177,6 +2177,51 @@ window.openWaUpdate = async function(onlyId){
     const ta = document.createElement('textarea');
     ta.value = waMessage(j); ta.rows = 7;
     ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
+    // ── FOTO PROGRESS ──
+    const fotoRow = document.createElement('div');
+    fotoRow.style.cssText = 'margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+    const fotoInput = document.createElement('input');
+    fotoInput.type = 'file'; fotoInput.accept = 'image/*'; fotoInput.multiple = true; fotoInput.style.display = 'none';
+    const fotoBtn = document.createElement('button');
+    fotoBtn.className = 'btn-sm'; fotoBtn.style.cssText = 'background:rgba(123,47,190,0.25);color:var(--purpleB);border:1px solid var(--purpleB)';
+    fotoBtn.textContent = '📸 Tambah Foto Progress';
+    fotoBtn.onclick = () => fotoInput.click();
+    const fotoStatus = document.createElement('span');
+    fotoStatus.style.cssText = 'font-size:12px;color:var(--muted)';
+    const fotoPreview = document.createElement('div');
+    fotoPreview.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:8px';
+    let _fotoUrls = [];
+    function rebuildTaWithFoto(){
+      const base = waMessage(j);
+      if(!_fotoUrls.length){ ta.value = base; }
+      else {
+        const fotoLines = '\n\n📸 Foto progress:\n' + _fotoUrls.join('\n');
+        ta.value = base + fotoLines;
+      }
+      if(nomor) btn.href = 'https://wa.me/' + nomor + '?text=' + encodeURIComponent(ta.value);
+    }
+    fotoInput.onchange = async () => {
+      const files = Array.from(fotoInput.files);
+      if(!files.length) return;
+      fotoBtn.disabled = true; fotoStatus.textContent = '⏳ Mengupload foto…';
+      for(const file of files){
+        try {
+          const ts = Date.now(); const ext = file.name.split('.').pop() || 'jpg';
+          const path = `progress_photos/${j.id}/${ts}.${ext}`;
+          const storRef = sRef(window._storage, path);
+          await uploadBytes(storRef, file, { contentType: file.type || 'image/jpeg' });
+          const url = await getDownloadURL(storRef);
+          _fotoUrls.push(url);
+          const img = document.createElement('img');
+          img.src = url; img.style.cssText = 'width:64px;height:64px;object-fit:cover;border:1px solid var(--border)';
+          fotoPreview.appendChild(img);
+        } catch(e){ fotoStatus.textContent = '⚠️ Gagal upload: ' + e.message; }
+      }
+      fotoBtn.disabled = false; fotoStatus.textContent = _fotoUrls.length + ' foto siap dikirim';
+      rebuildTaWithFoto();
+    };
+    fotoRow.appendChild(fotoInput); fotoRow.appendChild(fotoBtn); fotoRow.appendChild(fotoStatus);
+
     const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center';
     const nomor = waNumber(j.wa);
     const btn = document.createElement('a');
@@ -2200,7 +2245,7 @@ window.openWaUpdate = async function(onlyId){
       try { const { doc, updateDoc } = window._fbFns; await updateDoc(doc(window._db, 'konig_progress', j.id), { lastWaUpdate: today }); } catch(e) {}
     };
     row.appendChild(btn); row.appendChild(info); if (!onlyId) row.appendChild(del);
-    box.appendChild(head); box.appendChild(ta); box.appendChild(row);
+    box.appendChild(head); box.appendChild(ta); box.appendChild(fotoRow); box.appendChild(fotoPreview); box.appendChild(row);
     list.appendChild(box);
   });
   if(!onlyId){ renderCoatWashSection(list, coatDue, today); renderCoatMainSection(list, coatMainDue, today); renderWashSection(list, washDue, today); renderReviewSection(list, reviewDue, today); }
