@@ -311,25 +311,35 @@ async function downloadPDF(format = 'a3') {
   const start = parseInt(document.getElementById('ctrlStart').value) || 1;
   const count = Math.min(parseInt(document.getElementById('ctrlCount').value) || 20, 200);
 
-  // Sticker ukuran: 44mm x 55mm, gap 3mm, margin 10mm
+  // Sticker ukuran: 44mm x 55mm, bleed 2mm di semua sisi, gap 2mm antar sticker
   const STICKER_W_MM = 44;
   const STICKER_H_MM = 55;
-  const GAP_MM = 2;
+  const BLEED_MM = 2;       // bleed di luar sticker
+  const GAP_MM = 2;         // gap antar sticker (bleed kiri + bleed kanan = 4mm total ruang, tapi overlap jadi 2mm per sisi)
   const MARGIN_MM = 10;
   const PAGE_W = isA4 ? 210 : 297;
   const PAGE_H = isA4 ? 297 : 420;
+  // Canvas per sticker = sticker + bleed kiri + bleed kanan
+  const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;  // 48mm
+  const CELL_H_MM = STICKER_H_MM + BLEED_MM * 2;  // 59mm
   const AREA_W = PAGE_W - MARGIN_MM * 2;
   const AREA_H = PAGE_H - MARGIN_MM * 2;
-  const COLS = Math.floor((AREA_W + GAP_MM) / (STICKER_W_MM + GAP_MM));  // 6
-  const ROWS = Math.floor((AREA_H + GAP_MM) / (STICKER_H_MM + GAP_MM));  // 7
+  // Layout: tiap cell 48×59mm, overlap bleed antar cell = 2mm → step = cell - bleed = 46×57mm
+  // Tapi supaya mudah, pakai step = STICKER + GAP (bleed tumpang tindih intentionally)
+  const STEP_W = STICKER_W_MM + GAP_MM;  // 46mm per kolom
+  const STEP_H = STICKER_H_MM + GAP_MM;  // 57mm per baris
+  const COLS = Math.floor((AREA_W + GAP_MM) / STEP_W);  // 6
+  const ROWS = Math.floor((AREA_H + GAP_MM) / STEP_H);  // 7
   const PER_PAGE = COLS * ROWS;  // 42
 
   // Render canvas di resolusi tinggi untuk kualitas PDF bagus
-  // 1200dpi = 47.24px/mm → stiker 44×55mm = 2079×2598px
-  const PX_PER_MM = 1200 / 25.4;  // ≈ 47.24
-  const C_W = Math.round(STICKER_W_MM * PX_PER_MM);  // 44mm × 47.24 ≈ 2079px
-  const C_H = Math.round(STICKER_H_MM * PX_PER_MM);  // 55mm × 47.24 ≈ 2598px
-  const RENDER_SCALE = C_W / 1053;
+  // 300dpi = 11.81px/mm → canvas 48×59mm = 567×697px
+  const PX_PER_MM = 300 / 25.4;  // ≈ 11.81
+  const C_W = Math.round(CELL_W_MM * PX_PER_MM);   // 48mm × 11.81 ≈ 567px (inkl bleed)
+  const C_H = Math.round(CELL_H_MM * PX_PER_MM);   // 59mm × 11.81 ≈ 697px (inkl bleed)
+  const BLEED_PX = Math.round(BLEED_MM * PX_PER_MM);  // 2mm → ≈ 24px
+  // renderThumb menggambar sticker di area tengah (tanpa bleed), skala dari 1053px lebar template
+  const RENDER_SCALE = Math.round(STICKER_W_MM * PX_PER_MM) / 1053;
 
   const totalPages = Math.ceil(count / PER_PAGE);
 
@@ -346,20 +356,55 @@ async function downloadPDF(format = 'a3') {
       btn.textContent = `⏳ Halaman ${page+1}/${totalPages}...`;
 
       // Render semua sticker di halaman ini secara parallel
+      // Setiap canvas = sticker + bleed 2mm di semua sisi
       const canvases = [];
       const jobs = [];
       for (let i = 0; i < pageCount; i++) {
         const code = makeCode(prefix, start + pageStart + i);
         const url = BASE_URL + '?code=' + code;
-        const c = document.createElement('canvas');
-        c.width = C_W;
-        c.height = C_H;
-        canvases.push(c);
-        jobs.push(renderThumb(c, url, RENDER_SCALE, code, true));  // whiteBg for PDF
+
+        // Canvas ukuran penuh termasuk bleed
+        const cellCanvas = document.createElement('canvas');
+        cellCanvas.width = C_W;
+        cellCanvas.height = C_H;
+        const cellCtx = cellCanvas.getContext('2d');
+
+        // Isi area bleed putih
+        cellCtx.fillStyle = '#ffffff';
+        cellCtx.fillRect(0, 0, C_W, C_H);
+
+        // Render sticker di canvas sementara lalu composite ke tengah cell
+        const stickerW_px = Math.round(STICKER_W_MM * PX_PER_MM);
+        const stickerH_px = Math.round(STICKER_H_MM * PX_PER_MM);
+        const sc = document.createElement('canvas');
+        sc.width = stickerW_px;
+        sc.height = stickerH_px;
+
+        canvases.push({ cellCanvas, cellCtx, sc, stickerW_px, stickerH_px });
+        jobs.push(renderThumb(sc, url, RENDER_SCALE, code, true));
       }
       await Promise.all(jobs);
 
-      // Tempatkan sticker di PDF — grid di-center horizontal & vertikal
+      // Composite sticker ke cell canvas + gambar garis cutting
+      for (const { cellCanvas, cellCtx, sc, stickerW_px, stickerH_px } of canvases) {
+        // Composite sticker ke posisi bleed offset
+        cellCtx.drawImage(sc, BLEED_PX, BLEED_PX, stickerW_px, stickerH_px);
+
+        // ── Garis cutting: outline tepat di tepi sticker (di dalam bleed area) ──
+        const lineW = Math.max(2, Math.round(0.25 * PX_PER_MM));  // 0.25mm garis cutting
+        cellCtx.strokeStyle = '#000000';
+        cellCtx.lineWidth = lineW;
+        cellCtx.setLineDash([]);  // solid line
+        cellCtx.strokeRect(
+          BLEED_PX + lineW / 2,
+          BLEED_PX + lineW / 2,
+          stickerW_px - lineW,
+          stickerH_px - lineW
+        );
+      }
+
+      // Tempatkan cell (sticker+bleed) di PDF — grid di-center horizontal & vertikal
+      // Cell dimulai dari (x - BLEED_MM) supaya bleed keluar ke sisi
       const gridW = COLS * STICKER_W_MM + (COLS - 1) * GAP_MM;
       const gridH = ROWS * STICKER_H_MM + (ROWS - 1) * GAP_MM;
       const offsetX = (PAGE_W - gridW) / 2;
@@ -367,10 +412,12 @@ async function downloadPDF(format = 'a3') {
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
+        // Posisi sticker (tanpa bleed)
         const x = offsetX + col * (STICKER_W_MM + GAP_MM);
         const y = offsetY + row * (STICKER_H_MM + GAP_MM);
-        const imgData = canvases[i].toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', x, y, STICKER_W_MM, STICKER_H_MM);
+        // addImage dari posisi bleed (x - BLEED_MM, y - BLEED_MM), ukuran cell penuh
+        const imgData = canvases[i].cellCanvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', x - BLEED_MM, y - BLEED_MM, CELL_W_MM, CELL_H_MM);
       }
     }
 
