@@ -359,10 +359,11 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
   // Canvas per sticker = sticker + bleed kiri + bleed kanan
   const CELL_W_MM = STICKER_W_MM + BLEED_MM * 2;  // 48mm
   const CELL_H_MM = STICKER_H_MM + BLEED_MM * 2;  // 59mm
-  const AREA_W = PAGE_W - MARGIN_MM * 2;
-  const AREA_H = PAGE_H - MARGIN_MM * 2;
-  // Layout: step = ukuran sticker saja (tanpa gap), bleed dari tiap sisi masuk ke margin
-  // Grid width = COLS * STICKER_W, bleed terluar = 2mm masuk ke MARGIN_MM (10mm) → aman
+  // Area efektif dikurangi 2×BLEED_MM di tiap dimensi:
+  // bleed stiker pertama & terakhir harus muat dalam halaman
+  const AREA_W = PAGE_W - MARGIN_MM * 2 - BLEED_MM * 2;
+  const AREA_H = PAGE_H - MARGIN_MM * 2 - BLEED_MM * 2;
+  // Layout: step = ukuran sticker saja (cutting ke cutting), bleed ada di luar grid
   const COLS = Math.floor(AREA_W / STICKER_W_MM);
   const ROWS = Math.floor(AREA_H / STICKER_H_MM);
   const PER_PAGE = COLS * ROWS;  // 30
@@ -483,9 +484,10 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       // Grid dimulai dari MARGIN_MM — bleed stiker pertama extend ke dalam margin (tidak ada gap putih)
       const gridW = COLS * STICKER_W_MM;
       const gridH = ROWS * STICKER_H_MM;
-      // Center grid di dalam halaman — pastikan minimal BLEED_MM dari tepi agar sel pertama tidak terpotong
-      const offsetX = Math.max(BLEED_MM, (PAGE_W - gridW) / 2);
-      const offsetY = Math.max(BLEED_MM, (PAGE_H - gridH) / 2);
+      // Center grid cutting-line di halaman; bleed (2mm) extend ke luar dari sini
+      // (PAGE_W - gridW)/2 = sisa margin; stiker pertama mulai di sini, bleednya di sini-2mm
+      const offsetX = (PAGE_W - gridW) / 2;
+      const offsetY = (PAGE_H - gridH) / 2;
       // Background PDF putih — dicetak di kertas putih, area di luar grid = kertas
       // (tidak perlu fill, PDF default putih)
       for (let i = 0; i < pageCount; i++) {
