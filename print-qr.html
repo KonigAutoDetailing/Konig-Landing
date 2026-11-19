@@ -424,7 +424,7 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       // Stiker nomor berapa di lembar ini
       const pageStartCode = startAll + pageStart;
 
-      btn.textContent = `⏳ Halaman ${page+1}/${totalPages}...`;
+      btn.textContent = `⏳ Lembar ${sheetNum || 1}...`;
 
       // ── Center grid di halaman ──
       const totalCellW = COLS * STEP_W + BLEED_MM * 2;
@@ -446,7 +446,7 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
       // ── Render + composite + addImage satu per satu (hemat memori) ──
       for (let i = 0; i < pageCount; i++) {
-        const pct = (page / totalPages) * 90 + (i / pageCount) * (90 / totalPages);
+        const pct = (i / pageCount) * 90;
         setProgress(pct, `Render stiker ${pageStart + i + 1}/${totalCount}...`);
 
         const code = makeCode(prefix, pageStartCode + i);
