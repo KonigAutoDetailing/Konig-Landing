@@ -425,15 +425,30 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
       // Composite sticker ke cell canvas + gambar garis cutting
       for (const { cellCanvas, cellCtx, sc, stickerW_px, stickerH_px } of canvases) {
-        // Fill seluruh cell dengan warna hitam (background stiker) supaya sudut rounded corner
-        // dan area di luar stiker tidak putih — vendor butuh full bleed, tidak ada area putih
-        cellCtx.fillStyle = '#080810';
+        // Radius rounded corner stiker: ~8% dari lebar stiker (dari template image)
+        const CORNER_R_PX = Math.round(stickerW_px * 0.08);
+        // 1. Background cell = putih (kertas putih, area di luar bleed zone)
+        cellCtx.fillStyle = '#ffffff';
         cellCtx.fillRect(0, 0, C_W, C_H);
-        // Bleed: render sticker sedikit di-scale up supaya warna tepi nyambung ke bleed area
-        // Ini memastikan tidak ada area putih di luar cutting line
-        cellCtx.drawImage(sc, -BLEED_PX, -BLEED_PX, stickerW_px + BLEED_PX * 2, stickerH_px + BLEED_PX * 2);
-        // Tempel sticker normal di atas (posisi tepat di bleed offset) supaya desain tidak blur
+
+        // 2. Bleed zone: clip ke rounded rect yang sedikit lebih besar dari stiker (extend BLEED_PX)
+        //    Radius bleed = radius stiker + BLEED_PX (proporsional, sudut konsisten)
+        const bleedR = CORNER_R_PX + BLEED_PX;
+        cellCtx.save();
+        cellCtx.beginPath();
+        cellCtx.roundRect(0, 0, C_W, C_H, bleedR);
+        cellCtx.clip();
+        // Draw stiker di-scale up ke ukuran bleed — warna tepi stiker mengisi bleed zone
+        cellCtx.drawImage(sc, 0, 0, C_W, C_H);
+        cellCtx.restore();
+
+        // 3. Stiker asli di tengah (posisi tepat, tidak blur) — clipped ke rounded rect stiker
+        cellCtx.save();
+        cellCtx.beginPath();
+        cellCtx.roundRect(BLEED_PX, BLEED_PX, stickerW_px, stickerH_px, CORNER_R_PX);
+        cellCtx.clip();
         cellCtx.drawImage(sc, BLEED_PX, BLEED_PX, stickerW_px, stickerH_px);
+        cellCtx.restore();
 
         // ── Cutting marks: garis pendek di 4 sudut stiker (bukan outline penuh) ──
         const lineW = Math.max(2, Math.round(0.25 * PX_PER_MM));  // 0.25mm
@@ -470,9 +485,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
       // Center grid di dalam halaman (sisa margin kiri-kanan/atas-bawah sama)
       const offsetX = (PAGE_W - gridW) / 2;
       const offsetY = (PAGE_H - gridH) / 2;
-      // Fill seluruh background PDF dengan hitam supaya area di luar grid tidak putih
-      pdf.setFillColor(8, 8, 16);
-      pdf.rect(0, 0, PAGE_W, PAGE_H, 'F');
+      // Background PDF putih — dicetak di kertas putih, area di luar grid = kertas
+      // (tidak perlu fill, PDF default putih)
       for (let i = 0; i < pageCount; i++) {
         const col = i % COLS;
         const row = Math.floor(i / COLS);
