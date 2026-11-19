@@ -185,7 +185,7 @@ function makeCode(prefix, num) {
 }
 
 // Crop padding: template 1122x1402, content bbox x=34-1087, y=29-1356
-const TMPL_CROP = { x: 34, y: 29, w: 1053, h: 1327 };
+const TMPL_CROP = { x: 34, y: 29, w: 1088, h: 1373 };  // full template: 1122x1402, crop from (34,29)
 
 // whiteBg: true untuk PDF (JPEG tidak support alpha), false untuk PNG download
 async function renderThumb(canvas, url, S, code, whiteBg = false) {
@@ -424,9 +424,8 @@ async function downloadPDF(format = 'a3', sheetNum = null) {
 
       // Composite sticker ke cell canvas + gambar garis cutting
       for (const { cellCanvas, cellCtx, sc, stickerW_px, stickerH_px } of canvases) {
-        // Radius corner stiker KONIG: ~10mm dari 44mm wide = ~22.7% lebar
-        // Diukur visual dari template — sudut sangat melengkung
-        const CORNER_R_PX = Math.round(stickerW_px * 0.227);
+        // Radius corner dari template: 171px dari tinggi 1373px = 12.45% tinggi
+        const CORNER_R_PX = Math.round(stickerH_px * 0.1245);
 
         // 1. Background cell = putih (dicetak di kertas putih, area luar bleed = kertas)
         cellCtx.fillStyle = '#ffffff';
