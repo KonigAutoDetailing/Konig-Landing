@@ -203,6 +203,13 @@
     .hist-review-d{font-size:13px;color:var(--text);margin:4px 0 14px}
     .hist-review-btn{display:inline-block;background:#facc15;color:#111;text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1.5px;font-size:15px;padding:12px 20px}
     .hist-wa{display:block;text-align:center;margin-top:14px;color:#25D366;text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:1px;font-size:14px;border:1px solid rgba(37,211,102,.4);padding:12px}
+    .trk-referral{margin:0 0 22px;padding:16px;border:1px dashed rgba(167,139,250,.5);background:rgba(124,58,237,.07);text-align:left}
+    .trk-referral-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#c4b5fd;margin-bottom:4px}
+    .trk-referral-sub{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+    .trk-referral-code{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,0,0,.3);border:1px solid rgba(167,139,250,.3);padding:10px 14px;margin-bottom:12px}
+    .trk-referral-code span{font-family:monospace;font-size:20px;letter-spacing:3px;color:#c4b5fd;font-weight:bold}
+    .trk-referral-copy{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;background:rgba(124,58,237,.4);border:none;color:#fff;padding:7px 14px;cursor:pointer}
+    .trk-referral-tnc{font-size:11px;color:var(--muted);line-height:1.6;border-top:1px solid rgba(255,255,255,.07);padding-top:10px;margin-top:4px}
     .prog-bar-bg{background:var(--panel);border:1px solid var(--border);height:16px;border-radius:8px;overflow:hidden;position:relative}
     .prog-bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--purple),var(--purpleB));transition:width 1.8s cubic-bezier(.22,1,.36,1);width:0%;position:relative;overflow:hidden}
     .prog-bar-fill.working{background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.18) 0 10px,transparent 10px 20px),linear-gradient(90deg,var(--purple),var(--purpleB));background-size:28px 100%,100% 100%;animation:barStripes 1s linear infinite}
@@ -490,6 +497,7 @@
       <div class="track-service" id="trackService">-</div>
     </div>
     <div id="trackVouchers" class="trk-vouch" style="display:none"></div>
+    <div id="trackReferral" style="display:none"></div>
 
     <div id="trackLive">
     <div class="prog-bar-wrap">
@@ -1043,6 +1051,54 @@ function toDateObj(t){ try { return t && t.toDate ? t.toDate() : (t ? new Date(t
 const COLOR_EN = { 'HITAM':'Black','PUTIH':'White','PEARL WHITE':'Pearl White','SILVER':'Silver','ABU-ABU':'Grey','ABU-ABU GELAP':'Dark Grey','MERAH':'Red','MAROON':'Maroon','BIRU':'Blue','NAVY':'Navy','HIJAU':'Green','KUNING':'Yellow','ORANYE':'Orange','COKLAT':'Brown','GOLD':'Gold','CHAMPAGNE':'Champagne','UNGU':'Purple','HITAM DOFF':'Matte Black','ABU-ABU DOFF':'Matte Grey','TWO TONE':'Two Tone' };
 function colorEn(c){ const k = String(c||'').trim().toUpperCase(); return COLOR_EN[k] || titleCase(k); }
 function fmtTgl(d){ return d ? d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta' }) : '-'; }
+async function renderTrackReferral(data, jobCode, isHist){
+  const el = document.getElementById('trackReferral');
+  if (!el) return;
+  // Hanya tampil kalau sudah selesai (history) — bukan untuk job yang masih aktif
+  if (!isHist) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  // Cari atau buat kode referral untuk customer ini
+  let refCode = data.myReferralCode || null;
+  if (!refCode) {
+    // Generate kode baru: REF- + 4 huruf dari nama/plat + 4 random
+    const base = String(data.custName || data.plate || '').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4) || 'KONIG';
+    const rand = Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);
+    refCode = 'REF-' + base + rand;
+    // Simpan ke Firestore supaya kode tidak berubah
+    try {
+      const { doc, updateDoc } = window._fbFns;
+      await updateDoc(doc(window._db, 'konig_progress', jobCode), { myReferralCode: refCode });
+      data.myReferralCode = refCode;
+    } catch(e) {}
+  }
+  el.className = 'trk-referral';
+  el.innerHTML = `
+    <div class="trk-referral-title">🎁 Refer a Friend</div>
+    <div class="trk-referral-sub">Share your code with a friend — they get <b style="color:#c4b5fd">10% off</b> their first service at KONIG, and you get a <b style="color:#c4b5fd">Free Premium Wash</b> once they complete their booking.</div>
+    <div class="trk-referral-code">
+      <span id="refCodeDisplay">${refCode}</span>
+      <button class="trk-referral-copy" onclick="copyRefCode('${refCode}')">COPY</button>
+    </div>
+    <div class="trk-referral-tnc">
+      <b style="color:#a78bfa;font-size:11px;letter-spacing:1px">TERMS & CONDITIONS</b><br>
+      • Valid for new customers only — first visit to KONIG.<br>
+      • Friend must mention or enter the code when registering their vehicle.<br>
+      • Free Premium Wash voucher is issued to you after your friend's invoice is confirmed.<br>
+      • Voucher has no expiry date and can be used on any subsequent visit.<br>
+      • KONIG reserves the right to verify referrals before issuing the reward.
+    </div>`;
+  el.style.display = 'block';
+}
+window.copyRefCode = function(code){
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.trk-referral-copy');
+    if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => { btn.textContent = 'COPY'; }, 2000); }
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea'); ta.value = code; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    const btn = document.querySelector('.trk-referral-copy');
+    if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => { btn.textContent = 'COPY'; }, 2000); }
+  });
+};
 function renderHistory(data){
   const done = (data.doneSteps||[]).includes('done');
   const out = toDateObj(data.doneAt) || (done ? toDateObj(data.updatedAt) : null);
@@ -1148,6 +1204,8 @@ function renderTrack(code, data) {
   tv.style.display = vv.length ? 'block' : 'none';
   renderTrackInspection(data);
   const isHist = renderHistory(data);
+  // Referral card — tampil hanya kalau sudah selesai (history), jobCode = code (Firestore doc ID)
+  renderTrackReferral(data, code, isHist);
   document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
   document.getElementById('trackHelloSub').textContent = isHist ? 'Thank you for trusting your car to KONIG.' : 'Your car is in good hands. Track its progress here.';
   if (isHist) { showScreen('screenTrack'); return; }
