@@ -796,13 +796,16 @@
           <option value="percent">Diskon persen (%)</option>
           <option value="amount">Potongan harga (Rp)</option>
           <option value="free">Gratis layanan</option>
+          <option value="referral">Referral (diskon 10% + free wash untuk pengaju)</option>
         </select></div>
       <div class="form-row2">
         <div class="form-group" id="pValueGroup"><label id="pValueLbl">Diskon (%)</label><input type="text" id="pValue" inputmode="numeric" placeholder="10" style="text-align:center"/></div>
         <div class="form-group" id="pServiceGroup" style="display:none"><label>Layanan gratis</label>
           <select id="pService" class="inv-select"><option>Premium Wash Exterior</option><option>Premium Maintenance</option><option>Professional Maintenance</option><option>Engine Detailing</option><option>Window Coating — Kaca Depan</option><option>Interior Detailing — 1 Row</option></select></div>
+        <div class="form-group" id="pRefJobGroup" style="display:none"><label>ID Job Pengaju</label><input type="text" id="pRefJobId" placeholder="ID job pemilik kode" style="text-align:center;letter-spacing:1px"/></div>
         <div class="form-group"><label>Batas pemakaian</label><input type="text" id="pMax" inputmode="numeric" placeholder="Tanpa batas" style="text-align:center"/></div>
       </div>
+      <div id="pReferralNote" style="display:none;font-size:12px;color:#f59e0b;margin-bottom:8px">🎟 Teman dapat diskon 10%. Pemilik kode otomatis dapat voucher <b>Free Premium Wash</b> setiap kali kodenya dipakai.</div>
       <button onclick="savePromo()" class="inv-btn-main" style="width:100%">Simpan Kode</button>
     </div>
   </div>
@@ -1797,7 +1800,15 @@ function waMessage(j){
         + 'Pembayaran dapat ditransfer ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\n';
     const vList = iv ? (iv.items||[]).filter(it => it.voucherCode) : [];
     const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.\n\n' : '';
-    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
+    // Info link progress tetap berlaku + promo berikutnya
+    const trackUrl = 'https://www.konigautodetailing.com/progress?code=' + (j.id || '');
+    const unusedVouchers = (j.vouchers||[]).filter(v => !v.used);
+    const hasPromo = unusedVouchers.length > 0 || (window._promos||[]).some(p => promoUsable(p) && p.type !== 'referral');
+    const persistLine = '\nLink progress kendaraan Anda tetap aktif dan bisa dibuka kapan saja untuk melihat riwayat pengerjaan'
+      + (unusedVouchers.length ? ' serta voucher yang Anda miliki' : '')
+      + ':\n' + trackUrl + '\n\n'
+      + (unusedVouchers.length ? '' : 'Apabila Anda memiliki rekan yang ingin menggunakan layanan KONIG, kami juga memiliki program referral — teman Anda mendapat diskon 10%, dan Anda mendapat voucher gratis. Hubungi kami untuk informasi lebih lanjut.\n\n');
+    return 'Halo ' + sapa(j) + ',\n\nKami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.\n\n' + infoPaket(j) + invLine + vLine + persistLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.' + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
   let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
@@ -3088,15 +3099,20 @@ async function loadPromos(){
   return window._promos;
 }
 async function savePromos(){ const { doc, setDoc } = window._fbFns; await setDoc(doc(window._db, 'konig_progress', '_config'), { promos: window._promos }, { merge: true }); }
-function promoBenefit(p){ return p.type === 'percent' ? 'Diskon ' + p.value + '%' : p.type === 'amount' ? 'Potongan Rp ' + Number(p.value).toLocaleString('id-ID') : 'Gratis ' + p.service; }
+function promoBenefit(p){ return p.type === 'referral' ? 'Diskon 10% (referral)' : p.type === 'percent' ? 'Diskon ' + p.value + '%' : p.type === 'amount' ? 'Potongan Rp ' + Number(p.value).toLocaleString('id-ID') : 'Gratis ' + p.service; }
 function findPromo(code){ code = String(code||'').trim().toUpperCase(); return (window._promos||[]).find(p => p.code === code) || null; }
 function promoUsable(p){ return p && p.active !== false && (!p.max || (p.uses||[]).length < p.max); }
 window.promoTypeChanged = function(){
   const t = document.getElementById('pType').value;
-  document.getElementById('pValueGroup').style.display = t === 'free' ? 'none' : '';
+  const isRef = t === 'referral';
+  document.getElementById('pRefJobGroup').style.display = isRef ? '' : 'none';
+  document.getElementById('pReferralNote').style.display = isRef ? '' : 'none';
+  document.getElementById('pValueGroup').style.display = (t === 'free' || isRef) ? 'none' : '';
   document.getElementById('pServiceGroup').style.display = t === 'free' ? '' : 'none';
-  document.getElementById('pValueLbl').textContent = t === 'percent' ? 'Diskon (%)' : 'Potongan (Rp)';
-  document.getElementById('pValue').placeholder = t === 'percent' ? '10' : '200.000';
+  if (!isRef) {
+    document.getElementById('pValueLbl').textContent = t === 'percent' ? 'Diskon (%)' : 'Potongan (Rp)';
+    document.getElementById('pValue').placeholder = t === 'percent' ? '10' : '200.000';
+  }
 };
 function renderPromos(){
   const box = document.getElementById('promoList');
@@ -3105,7 +3121,8 @@ function renderPromos(){
   window._promos.slice().reverse().forEach(p => {
     const d = document.createElement('div'); d.className = 'promo-item' + (p.active === false ? ' off' : '');
     const used = (p.uses||[]).length;
-    d.innerHTML = `<div class="pc">${p.code}</div><div class="pd">${promoBenefit(p)}${p.owner ? ' · ' + p.owner.replace(/</g,'&lt;') : ''}<br>Dipakai ${used}x${p.max ? ' / maks ' + p.max : ''}</div>`;
+    const refTag = p.type === 'referral' && p.refJobId ? ` · <span style="color:#f59e0b">Referral</span>` : '';
+    d.innerHTML = `<div class="pc">${p.code}</div><div class="pd">${promoBenefit(p)}${p.owner ? ' · ' + p.owner.replace(/</g,'&lt;') : ''}${refTag}<br>Dipakai ${used}x${p.max ? ' / maks ' + p.max : ''}</div>`;
     const tog = document.createElement('button'); tog.className = 'btn-sm'; tog.textContent = p.active === false ? 'Aktifkan' : 'Nonaktif';
     tog.onclick = async () => { p.active = p.active === false; await savePromos(); renderPromos(); };
     const del = document.createElement('button'); del.className = 'btn-sm'; del.textContent = 'Hapus'; del.style.color = '#f87171';
@@ -3119,10 +3136,19 @@ window.savePromo = async function(){
   const type = document.getElementById('pType').value;
   const value = type === 'percent' ? Math.min(100, parseFloat(document.getElementById('pValue').value) || 0) : rupiahNum(document.getElementById('pValue').value);
   if (!/^[A-Z0-9-]{3,15}$/.test(code)) { alert('Kode 3–15 huruf/angka.'); return; }
-  if (/^KV-/.test(code)) { alert('Awalan KV- dipakai untuk voucher bonus. Pakai kode lain.'); return; }
+  if (/^KV-/.test(code) || /^KD-/.test(code)) { alert('Awalan KV- dan KD- dipakai untuk voucher sistem. Pakai kode lain.'); return; }
   if (findPromo(code)) { alert('Kode ' + code + ' sudah ada.'); return; }
-  if (type !== 'free' && !value) { alert('Isi nilai diskon.'); return; }
-  const p = { code, owner: document.getElementById('pOwner').value.trim(), type, value: type === 'free' ? 0 : value, service: type === 'free' ? document.getElementById('pService').value : '', max: parseInt(document.getElementById('pMax').value) || 0, active: true, uses: [], createdAt: todayWIB() };
+  if (type !== 'free' && type !== 'referral' && !value) { alert('Isi nilai diskon.'); return; }
+  let p;
+  if (type === 'referral') {
+    const refJobId = document.getElementById('pRefJobId').value.trim();
+    const refJob = refJobId ? (window._allJobs||[]).find(x => x.id === refJobId) : null;
+    if (!refJobId) { alert('Isi ID Job pengaju untuk kode referral.'); return; }
+    if (!refJob) { alert('Job ID "' + refJobId + '" tidak ditemukan. Cek kembali ID-nya.'); return; }
+    p = { code, owner: document.getElementById('pOwner').value.trim() || (refJob.custName ? titleCase(refJob.custName) : refJob.plate || ''), type: 'referral', value: 10, refJobId, max: parseInt(document.getElementById('pMax').value) || 0, active: true, uses: [], createdAt: todayWIB() };
+  } else {
+    p = { code, owner: document.getElementById('pOwner').value.trim(), type, value: type === 'free' ? 0 : value, service: type === 'free' ? document.getElementById('pService').value : '', max: parseInt(document.getElementById('pMax').value) || 0, active: true, uses: [], createdAt: todayWIB() };
+  }
   window._promos.push(p);
   try { await savePromos(); } catch(e) { window._promos.pop(); alert('Gagal menyimpan: ' + e.message); return; }
   ['pCode','pOwner','pValue','pMax'].forEach(id => document.getElementById(id).value = '');
@@ -3141,11 +3167,12 @@ window.saveAutoPromo = async function(){
 };
 // Terapkan kode promo di invoice baru
 function applyPromoToInvoice(p){
-  if (p.type === 'percent') { document.getElementById('invDiskon').value = p.value + '%'; }
+  if (p.type === 'percent' || p.type === 'referral') { document.getElementById('invDiskon').value = p.value + '%'; }
   else if (p.type === 'amount') { document.getElementById('invDiskon').value = Number(p.value).toLocaleString('id-ID'); }
   else { removeInvItemByBase(p.service); const harga = pricelistPrice(p.service, document.getElementById('invSize').value) || pricelistPrice(p.service, '') || 0;
     document.getElementById('invItems').insertAdjacentHTML('beforeend', invItemHtml({ produk: p.service + ' (Kode ' + p.code + ')', desc: 'Gratis dari kode ' + p.code + '.', qty: 1, harga, discPct: 100, disc: harga })); }
-  const k = document.getElementById('invKet'); if (!k.value) k.value = 'Kode ' + p.code + ': ' + promoBenefit(p);
+  const k = document.getElementById('invKet');
+  if (!k.value) k.value = p.type === 'referral' ? 'Kode referral ' + p.code + ': diskon 10%' : 'Kode ' + p.code + ': ' + promoBenefit(p);
   window._invPromo = p.code;
   invCalc();
 }
@@ -3201,7 +3228,10 @@ window.checkJobVoucher = function(){
   info.style.display = 'block';
   if (!v) {
     const p = findPromo(code);
-    if (p) { const ok = promoUsable(p); info.style.color = ok ? '#4ade80' : '#f87171'; info.textContent = ok ? '✓ Kode ' + p.code + ': ' + promoBenefit(p) + (p.owner ? ' (' + p.owner + ')' : '') + '. Otomatis dipakai di invoice.' : '✗ Kode ' + p.code + ' tidak aktif / sudah mencapai batas'; if (ok && p.type === 'free' && typeof addService === 'function' && !selectedServices.includes(p.service)) addService(p.service, true); return; }
+    if (p) { const ok = promoUsable(p); info.style.color = ok ? '#4ade80' : '#f87171';
+      if (ok && p.type === 'referral') info.textContent = '✓ Kode referral ' + p.code + (p.owner ? ' (' + p.owner + ')' : '') + ': diskon 10%. Pemilik kode dapat Free Premium Wash.';
+      else info.textContent = ok ? '✓ Kode ' + p.code + ': ' + promoBenefit(p) + (p.owner ? ' (' + p.owner + ')' : '') + '. Otomatis dipakai di invoice.' : '✗ Kode ' + p.code + ' tidak aktif / sudah mencapai batas';
+      if (ok && p.type === 'free' && typeof addService === 'function' && !selectedServices.includes(p.service)) addService(p.service, true); return; }
     info.style.color = 'var(--muted)'; info.textContent = code.length >= 4 ? '✗ Kode tidak ditemukan' : ''; return;
   }
   if (v.used) { info.style.color = '#f87171'; info.textContent = '✗ Voucher sudah dipakai' + (v.usedAt ? ' (' + v.usedAt + ')' : ''); return; }
@@ -3695,7 +3725,24 @@ window.saveInvoice = async function(save){
         else { await updateDoc(doc(window._db, 'konig_progress', src.id), { vouchers: arr }); src.vouchers = arr; }
       }
       const j = (window._allJobs||[]).find(x => x.id === id); if (j) { j.invoice = invoice; j.vouchers = vouchers; }
-      if (window._invPromo) { invoice.promo = window._invPromo; const pr = findPromo(window._invPromo); if (pr && !(pr.uses||[]).some(u => u.jobId === id)) { pr.uses = (pr.uses||[]).concat([{ jobId: id, invoiceNo: invoice.no, date: invoice.date }]); try { await savePromos(); } catch(e) {} } await updateDoc(doc(window._db, 'konig_progress', id), { 'invoice.promo': invoice.promo }); }
+      if (window._invPromo) {
+        invoice.promo = window._invPromo;
+        const pr = findPromo(window._invPromo);
+        if (pr && !(pr.uses||[]).some(u => u.jobId === id)) {
+          pr.uses = (pr.uses||[]).concat([{ jobId: id, invoiceNo: invoice.no, date: invoice.date }]);
+          try { await savePromos(); } catch(e) {}
+          // Referral: beri free Premium Wash untuk pemilik kode
+          if (pr.type === 'referral' && pr.refJobId) {
+            const refJob = (window._allJobs||[]).find(x => x.id === pr.refJobId);
+            if (refJob) {
+              const refCode = makeVoucherCode('KR');
+              const refVouchers = [...(refJob.vouchers||[]), { code: refCode, service: 'Premium Wash', issuedAt: invoice.date, invoiceNo: invoice.no, used: false, source: 'referral-' + pr.code }];
+              try { await updateDoc(doc(window._db, 'konig_progress', pr.refJobId), { vouchers: refVouchers }); refJob.vouchers = refVouchers; } catch(e) {}
+            }
+          }
+        }
+        await updateDoc(doc(window._db, 'konig_progress', id), { 'invoice.promo': invoice.promo });
+      }
       if (window._doneJobData && window._doneJobData.id === id) window._doneJobData.invoice = invoice;
     } catch(e) { alert('Gagal menyimpan invoice: ' + e.message); return; }
   }
