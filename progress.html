@@ -1877,7 +1877,7 @@ function waMessage(j){
     const intro = hasCoating(j) && !isQuick(j)
       ? 'Kami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan saat ini sedang dalam masa curing. Besok kendaraan sudah siap untuk diambil.'
       : 'Kami informasikan bahwa ' + mobil + ' telah selesai dikerjakan dan siap untuk diambil.';
-    return 'Halo ' + sapa(j) + ',\n\n' + intro + '\n\n' + infoPaket(j) + invLine + vLine + persistLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
+    return 'Halo ' + sapa(j) + ',\n\n' + intro + ' Terima kasih telah mempercayakan kendaraan Anda kepada KONIG.\n\n' + infoPaket(j) + invLine + vLine + persistLine + (custReviewed(j) ? '' : REVIEW_TEXT.replace(/^\n+/, '') + '\n\n') + ambil + (hasCoating(j) && !isQuick(j) ? COATING_CARE : '') + salam;
   }
   const tahap = s ? (STEP_ID[s.id] || s.name) : 'Menunggu antrean';
   let msg = 'Halo ' + sapa(j) + ',\n\nBerikut update pengerjaan ' + mobil + ' hari ini.\n\nProgres: ' + pct + '% — ' + tahap;
