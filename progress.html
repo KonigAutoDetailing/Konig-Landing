@@ -2219,14 +2219,14 @@ window.openWaUpdate = async function(onlyId){
     const head = document.createElement('div');
     head.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--white);margin-bottom:6px";
     head.textContent = (j.car || '-') + ' ' + (j.plate || '') + (sent ? '  ✓ sudah dikirim hari ini' : '');
-    const ta = document.createElement('textarea');
-    ta.value = waUpdateNarasi(j, _pcLevel); ta.rows = 9;
-    ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
     // ── SELECTOR LEVEL (khusus paint correction) ──
     const steps2 = window.stepsFor(j.service);
     const curStep = steps2.find(x => x.id === j.activeStep);
     const isPc = curStep && curStep.id === 'correction';
     let _pcLevel = 50;
+    const ta = document.createElement('textarea');
+    ta.value = waUpdateNarasi(j, _pcLevel); ta.rows = 9;
+    ta.style.cssText = 'width:100%;background:var(--dark);color:var(--text);border:1px solid var(--border);padding:10px;font:14px/1.5 Barlow,sans-serif;resize:vertical';
     const pcRow = document.createElement('div');
     if(isPc){
       pcRow.style.cssText = 'margin-top:10px;padding:10px 12px;background:rgba(123,47,190,0.12);border:1px solid rgba(123,47,190,0.3)';
