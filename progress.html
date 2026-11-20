@@ -1986,34 +1986,6 @@ window.renderJobList = function(){
     return;
   }
 
-  // History: group per customer (berdasarkan WA yang dinormalisasi)
-  if (tab === 'history') {
-    const normWaLocal = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
-    const groups = new Map();
-    shown.forEach(j => {
-      const key = normWaLocal(j.wa).length >= 9 ? normWaLocal(j.wa) : ('__' + String(j.custName||j.id).toUpperCase());
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(j);
-    });
-    let html = '';
-    groups.forEach((gjobs, key) => {
-      const rep = gjobs[0];
-      const custLabel = (rep.custTitle ? rep.custTitle + ' ' : '') + (rep.custName ? rep.custName : '—');
-      const waLabel = rep.wa || '-';
-      const totalJobs = gjobs.length;
-      html += `<div style="margin:0 0 4px;padding:8px 12px;background:rgba(123,47,190,0.1);border-left:3px solid #7B2FBE;display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--white);letter-spacing:1px">${custLabel}</span>
-          <span style="font-size:11px;color:var(--muted);margin-left:10px">${waLabel}</span>
-        </div>
-        <span style="font-size:11px;color:#a78bfa;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px">${totalJobs} KUNJUNGAN</span>
-      </div>`;
-      gjobs.forEach(j => { html += jobCardHtml(j); });
-    });
-    list.innerHTML = html;
-    return;
-  }
-
   list.innerHTML = shown.map(j => jobCardHtml(j)).join('');
 }
 
