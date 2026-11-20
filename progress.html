@@ -1173,7 +1173,7 @@ window.copyRefCode = function(code){
 function renderHistory(data){
   const done = (data.doneSteps||[]).includes('done');
   const out = toDateObj(data.doneAt) || (done ? toDateObj(data.updatedAt) : null);
-  if (!done || !out || (Date.now() - out.getTime()) < 3 * 864e5) return false;
+  if (!done || !out) return false;
   const inn = toDateObj(data.createdAt);
   document.getElementById('trackLive').style.display = 'none';
   document.getElementById('trackHistory').style.display = '';
@@ -4303,7 +4303,8 @@ window.showQR = async function(code, car, wa) {
         id: j.id, s: j.service || '',
         ci: j.createdAt ? (typeof j.createdAt.toDate === 'function' ? j.createdAt.toDate().toISOString() : String(j.createdAt)) : '',
         da: j.doneAt ? (typeof j.doneAt.toDate === 'function' ? j.doneAt.toDate().toISOString() : String(j.doneAt)) : '',
-        c: j.car || '', cl: j.color || '', p: j.plate || ''
+        c: j.car || '', cl: j.color || '', p: j.plate || '',
+        d: (j.doneSteps||[]).includes('done') ? 1 : 0
       }));
       url += '&h=' + btoa(JSON.stringify(encoded));
     }
@@ -4374,7 +4375,8 @@ window.openCustomerView = function(canonCode, wa) {
         s: j.service || '',
         ci: j.createdAt ? (typeof j.createdAt.toDate === 'function' ? j.createdAt.toDate().toISOString() : String(j.createdAt)) : '',
         da: j.doneAt ? (typeof j.doneAt.toDate === 'function' ? j.doneAt.toDate().toISOString() : String(j.doneAt)) : '',
-        c: j.car || '', cl: j.color || '', p: j.plate || ''
+        c: j.car || '', cl: j.color || '', p: j.plate || '',
+        d: (j.doneSteps||[]).includes('done') ? 1 : 0
       }));
       const param = btoa(JSON.stringify(encoded));
       window.open('https://www.konigautodetailing.com/progress?code=' + canonCode + '&h=' + param, '_blank');
@@ -4422,7 +4424,8 @@ if (urlCode) {
         createdAt: j.ci,
         doneAt: j.da,
         car: j.c, color: j.cl, plate: j.p,
-        wa: '' // sudah tidak dibutuhkan
+        doneSteps: j.d ? ['done'] : [],
+        wa: ''
       }));
       console.log('[KONIG] History dari URL param:', window._sameWaJobs.length, 'jobs');
     } catch(e) { window._sameWaJobs = null; }
