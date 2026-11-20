@@ -1627,6 +1627,20 @@ window.loadJobs = async function() {
   if (window.autoCloseWashJobs) await window.autoCloseWashJobs(jobs);
 
   window._allJobs = jobs;
+
+  // Build WA → newest job code map (untuk canonical QR di job cards lama)
+  (function buildWaNewestMap() {
+    const normW = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
+    const map = new Map();
+    jobs.forEach(j => {
+      const wa = normW(j.wa);
+      if (wa.length < 9) return;
+      const t = (() => { const v = j.visits; if (v && v.length) { const last = v[v.length-1]; return new Date(last.doneAt||last.createdAt||0).getTime(); } return new Date(j.doneAt||j.createdAt||0).getTime(); })();
+      if (!map.has(wa) || t > map.get(wa).t) map.set(wa, { code: j.id, t });
+    });
+    window._waToNewestCode = map;
+  })();
+
   syncVoucherStatus(jobs);
   loadPromos();
   renderJobList();
@@ -2004,6 +2018,10 @@ window.renderJobList = function(){
 }
 
 function jobCardHtml(j) {
+    // Cari canonical code (job terbaru) untuk WA yang sama
+    const _normWj = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
+    const _waKey = _normWj(j.wa);
+    const canonCode = (_waKey.length >= 9 && window._waToNewestCode?.get(_waKey)?.code) || j.id;
     const steps = window.stepsFor(j.service);
     const doneSteps = j.doneSteps || [];
     const activeStep = j.activeStep || null;
@@ -2027,9 +2045,9 @@ function jobCardHtml(j) {
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
         </div>
-        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions"><a class="btn-sm btn-qr" href="https://www.konigautodetailing.com/progress?code=${j.id}" target="_blank">👁 Customer View</a>${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span class="lock-note">Tanpa invoice</span>'}${lunasBtn(j)}${Date.now() - jobDoneTime(j) > 3 * 864e5 ? `<span class="lock-note">🔒 Terkunci</span><button class="btn-sm" style="background:${j.reviewed ? 'rgba(250,204,21,.15)' : 'transparent'};color:${j.reviewed ? '#facc15' : 'var(--muted)'};border:1px solid ${j.reviewed ? 'rgba(250,204,21,.5)' : 'var(--border)'}" onclick="toggleReviewedDirect('${j.id}', this)">${j.reviewed ? '⭐ Sudah Review' : '⭐ Mark Reviewed'}</button>` : ''}<button class="btn-sm" style="background:#7B2FBE;color:#fff" onclick="openReminderModal('${j.id}')">⏰ Reminder</button><button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
+        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions"><a class="btn-sm btn-qr" href="https://www.konigautodetailing.com/progress?code=${canonCode}" target="_blank">👁 Customer View</a>${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${canonCode}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span class="lock-note">Tanpa invoice</span>'}${lunasBtn(j)}${Date.now() - jobDoneTime(j) > 3 * 864e5 ? `<span class="lock-note">🔒 Terkunci</span><button class="btn-sm" style="background:${j.reviewed ? 'rgba(250,204,21,.15)' : 'transparent'};color:${j.reviewed ? '#facc15' : 'var(--muted)'};border:1px solid ${j.reviewed ? 'rgba(250,204,21,.5)' : 'var(--border)'}" onclick="toggleReviewedDirect('${j.id}', this)">${j.reviewed ? '⭐ Sudah Review' : '⭐ Mark Reviewed'}</button>` : ''}<button class="btn-sm" style="background:#7B2FBE;color:#fff" onclick="openReminderModal('${j.id}')">⏰ Reminder</button><button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
-          <button class="btn-sm btn-qr" onclick="showQR('${j.id}', '${j.car || ''}')">📱 QR / Link</button>
+          <button class="btn-sm btn-qr" onclick="showQR('${canonCode}', '${j.car || ''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
           <button class="btn-sm" style="background:#128C7E;color:#fff" onclick="sendWelcomeForJob('${j.id}')">💬 WA Welcome</button>
           ${!isDone ? `<button class="btn-sm" style="background:#25D366;color:#fff" onclick="window.openWaUpdate('${j.id}')">📲 Update WA</button>` : ''}
