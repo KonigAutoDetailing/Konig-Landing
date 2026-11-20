@@ -73,7 +73,7 @@
     .track-wrap{width:100%;max-width:520px}
     .track-header{text-align:center;margin-bottom:32px}
     .track-hello{margin-bottom:22px;animation:helloIn .7s ease both}
-    .track-hello-main{font-size:24px;font-weight:700;color:#fff;letter-spacing:.5px}
+    .track-hello-main{font-size:24px;font-weight:700;color:#fff;letter-spacing:.5px;word-break:break-word;overflow-wrap:break-word}
     .track-hello-sub{font-size:13px;color:var(--muted);margin-top:4px}
     @keyframes helloIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
     @media (prefers-reduced-motion:reduce){.track-hello{animation:none}}
@@ -498,6 +498,7 @@
       <div class="track-service" id="trackService" style="display:none">-</div>
     </div>
     <div id="trackVouchers" class="trk-vouch" style="display:none"></div>
+    <div id="trackCoatingCert" style="display:none;margin-bottom:20px"></div>
     <div id="trackReferral" style="display:none"></div>
 
     <div id="trackLive">
@@ -1341,32 +1342,56 @@ function renderTrack(code, data) {
   tv.style.display = vv.length ? 'block' : 'none';
   renderTrackInspection(data);
   const isHist = renderHistory(data);
-  // Coating protection badge
+  // Coating certificate card
   (function() {
+    const certEl = document.getElementById('trackCoatingCert');
     const badge = document.getElementById('trackCoatingBadge');
-    if (!badge) return;
-    // Cari coating terbaru dari semua kunjungan
+    if (badge) badge.style.display = 'none';
+    if (!certEl) return;
     const allJ = window._sameWaJobs || [];
     const isCoatSvc = s => /Coating/i.test(s||'') && !/Window/i.test(s||'');
-    let bestDate = null, bestSvc = '';
+    let bestDate = null, bestSvc = '', bestCust = '';
     allJ.forEach(j => {
       if (!isCoatSvc(j.service)) return;
       const d = toDateObj(j.doneAt || j.createdAt);
-      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = j.service; }
+      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = j.service; bestCust = j.custName || ''; }
     });
-    // Juga cek job sekarang
     if (isCoatSvc(data.service)) {
       const d = toDateObj(data.doneAt || data.createdAt);
-      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = data.service; }
+      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = data.service; bestCust = data.custName || ''; }
     }
-    if (!bestDate || !bestSvc) { badge.style.display = 'none'; return; }
-    const days = Math.floor((Date.now() - bestDate.getTime()) / 864e5);
-    let dur;
-    if (days < 30) dur = days + (days === 1 ? ' day' : ' days');
-    else if (days < 365) { const m = Math.floor(days/30); dur = m + (m === 1 ? ' month' : ' months'); }
-    else { const y = Math.floor(days/365), rem = Math.floor((days % 365)/30); dur = y + (y===1?' year':' years') + (rem > 0 ? ' ' + rem + (rem===1?' month':' months') : ''); }
-    badge.textContent = '🛡 This car is protected by ' + fixMojibake(bestSvc) + ' · ' + dur;
-    badge.style.display = 'block';
+    if (!bestDate || !bestSvc) { certEl.style.display = 'none'; return; }
+    const appliedDate = bestDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+    const custDisplay = bestCust ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(bestCust)) : (data.car || '');
+    const svcClean = fixMojibake(bestSvc);
+    // Graphene logo SVG (merah, simplified)
+    const logoSvg = `<img src="$" width="40" height="40" style="border-radius:50%;display:block" />`;
+    certEl.innerHTML = `
+      <div style="position:relative;border:1px solid rgba(180,160,100,0.35);border-radius:10px;padding:18px 20px 16px;background:linear-gradient(135deg,rgba(20,15,5,0.95) 0%,rgba(30,22,8,0.95) 50%,rgba(20,15,5,0.95) 100%);overflow:hidden">
+        <!-- Gold shimmer lines -->
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)"></div>
+        <div style="position:absolute;top:0;left:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,rgba(212,175,55,0.4),transparent)"></div>
+        <div style="position:absolute;top:0;right:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,rgba(212,175,55,0.4),transparent)"></div>
+        <!-- Content row -->
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="flex-shrink:0">${logoSvg}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:3px;color:rgba(212,175,55,0.7);text-transform:uppercase;margin-bottom:3px">Certificate of Protection</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${svcClean}</div>
+            <div style="font-size:11px;color:rgba(212,175,55,0.65);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap">
+              <span>${custDisplay}</span>
+              <span style="color:rgba(255,255,255,0.3)">·</span>
+              <span>Applied ${appliedDate}</span>
+            </div>
+          </div>
+          <div style="flex-shrink:0;text-align:center">
+            <div style="font-size:18px">🛡</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;letter-spacing:1px;color:rgba(212,175,55,0.5);text-transform:uppercase;margin-top:2px">Active</div>
+          </div>
+        </div>
+      </div>`;
+    certEl.style.display = 'block';
   })();
   // Referral card — tampil hanya kalau sudah selesai (history), jobCode = code (Firestore doc ID)
   renderTrackReferral(data, code, isHist);
