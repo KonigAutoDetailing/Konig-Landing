@@ -494,6 +494,7 @@
       <div class="track-car" id="trackCar">-</div>
       <div class="track-color" id="trackColor" style="display:none"></div>
       <div class="track-plate" id="trackPlate">-</div>
+      <div id="trackCoatingBadge" style="display:none;font-size:11px;letter-spacing:1px;color:#a78bfa;text-transform:uppercase;margin-top:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600"></div>
       <div class="track-service" id="trackService" style="display:none">-</div>
     </div>
     <div id="trackVouchers" class="trk-vouch" style="display:none"></div>
@@ -1297,6 +1298,33 @@ function renderTrack(code, data) {
   tv.style.display = vv.length ? 'block' : 'none';
   renderTrackInspection(data);
   const isHist = renderHistory(data);
+  // Coating protection badge
+  (function() {
+    const badge = document.getElementById('trackCoatingBadge');
+    if (!badge) return;
+    // Cari coating terbaru dari semua kunjungan
+    const allJ = window._sameWaJobs || [];
+    const isCoatSvc = s => /Coating/i.test(s||'') && !/Window/i.test(s||'');
+    let bestDate = null, bestSvc = '';
+    allJ.forEach(j => {
+      if (!isCoatSvc(j.service)) return;
+      const d = toDateObj(j.doneAt || j.createdAt);
+      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = j.service; }
+    });
+    // Juga cek job sekarang
+    if (isCoatSvc(data.service)) {
+      const d = toDateObj(data.doneAt || data.createdAt);
+      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = data.service; }
+    }
+    if (!bestDate || !bestSvc) { badge.style.display = 'none'; return; }
+    const days = Math.floor((Date.now() - bestDate.getTime()) / 864e5);
+    let dur;
+    if (days < 30) dur = days + (days === 1 ? ' day' : ' days');
+    else if (days < 365) { const m = Math.floor(days/30); dur = m + (m === 1 ? ' month' : ' months'); }
+    else { const y = Math.floor(days/365), rem = Math.floor((days % 365)/30); dur = y + (y===1?' year':' years') + (rem > 0 ? ' ' + rem + (rem===1?' month':' months') : ''); }
+    badge.textContent = '🛡 This car is protected by ' + bestSvc + ' · ' + dur;
+    badge.style.display = 'block';
+  })();
   // Referral card — tampil hanya kalau sudah selesai (history), jobCode = code (Firestore doc ID)
   renderTrackReferral(data, code, isHist);
   document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
