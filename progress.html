@@ -1635,10 +1635,19 @@ window.loadJobs = async function() {
     jobs.forEach(j => {
       const wa = normW(j.wa);
       if (wa.length < 9) return;
-      const t = new Date(j.createdAt||0).getTime();
+      const t = new Date(j.createdAt||j.doneAt||0).getTime();
       if (!map.has(wa) || t > map.get(wa).t) map.set(wa, { code: j.id, t });
     });
     window._waToNewestCode = map;
+    // Debug: log semua WA yang punya multiple jobs
+    const dupeWas = [...map.entries()].filter(([wa]) => jobs.filter(j => normW(j.wa) === wa).length > 1);
+    if (dupeWas.length) {
+      console.log('[KONIG] WA dengan multiple jobs (' + dupeWas.length + ' customer):');
+      dupeWas.forEach(([wa, {code}]) => {
+        const all = jobs.filter(j => normW(j.wa) === wa).map(j => j.id);
+        console.log('  WA ' + wa + ' → canonical: ' + code + ' | semua: ' + all.join(', '));
+      });
+    }
   })();
 
   syncVoucherStatus(jobs);
