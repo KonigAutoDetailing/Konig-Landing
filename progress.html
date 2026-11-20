@@ -1353,10 +1353,13 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
     }
     const allVisits = [];
 
+    console.log('[KONIG visits] waKey:', waKey, '| total docs:', allJobDocs.length);
     allJobDocs.forEach(d => {
       if (d.id.startsWith('_')) return;
       const j = d.data();
-      if (normWaLocal(j.wa) !== waKey) return;
+      const jWa = normWaLocal(j.wa);
+      if (jWa !== waKey) return;
+      console.log('[KONIG visits] match:', d.id, '| visits[]:', (j.visits||[]).length, '| wa:', j.wa, '→', jWa);
 
       const isDone = (j.doneSteps||[]).includes('done');
 
@@ -1391,6 +1394,7 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
       return tb - ta;
     });
 
+    console.log('[KONIG visits] total allVisits:', allVisits.length, allVisits.map(v=>v.code+'/'+v.visitIdx));
     // Kalau cuma 1 atau 0 kunjungan, tidak perlu section ini
     if (allVisits.length <= 1) return;
 
