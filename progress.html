@@ -1328,65 +1328,39 @@ function renderTrack(code, data) {
   renderAllVisitsForCustomer(code, data);
 }
 
-async function renderAllVisitsForCustomer(currentCode, currentData) {
+function renderAllVisitsForCustomer(currentCode, currentData) {
   const sec = document.getElementById('prevVisitsSection');
   const listEl = document.getElementById('prevVisitsList');
   if (!sec || !listEl) return;
   sec.style.display = 'none';
 
-  const wa = currentData.wa;
-  console.log('[VISITS] code:', currentCode, '| wa field:', wa);
-  if (!wa) { console.log('[VISITS] no WA, exit'); return; }
-
-  const normWaLocal = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
-  const waKey = normWaLocal(wa);
-  console.log('[VISITS] waKey:', waKey, '| length:', waKey.length);
-  if (waKey.length < 9) { console.log('[VISITS] waKey too short, exit'); return; }
-
   try {
-    // Gunakan cache _allJobs kalau sudah ada (admin), atau fetch dari Firestore
-    let allJobDocs = [];
-    if (window._allJobs && window._allJobs.length > 0) {
-      allJobDocs = window._allJobs.map(j => ({ id: j.id, data: () => j }));
-    } else {
-      const { collection, getDocs } = window._fbFns;
-      const snap = await getDocs(collection(window._db, 'konig_progress'));
-      snap.forEach(d => allJobDocs.push(d));
-    }
+    // Semua history sudah ada di currentData.visits[] — tidak perlu fetch Firestore
     const allVisits = [];
+    const isDone = (currentData.doneSteps||[]).includes('done');
 
-    console.log('[KONIG visits] waKey:', waKey, '| total docs:', allJobDocs.length);
-    allJobDocs.forEach(d => {
-      if (d.id.startsWith('_')) return;
-      const j = d.data();
-      const jWa = normWaLocal(j.wa);
-      if (jWa !== waKey) return;
-      console.log('[KONIG visits] match:', d.id, '| visits[]:', (j.visits||[]).length, '| wa:', j.wa, '→', jWa);
-
-      const isDone = (j.doneSteps||[]).includes('done');
-
-      // Kunjungan lama dari visits[] array
-      (j.visits||[]).forEach((v, vi) => {
-        allVisits.push({
-          code: d.id, visitIdx: vi,
-          service: v.service || j.service,
-          createdAt: v.createdAt || v.masuk || j.createdAt,
-          doneAt: v.doneAt || v.updatedAt,
-          car: v.car || j.car, color: v.color || j.color, plate: v.plate || j.plate,
-          isCurrent: false
-        });
-      });
-
-      // Job utama (kunjungan terbaru dari job ini) — masuk selalu, done maupun aktif
+    // Kunjungan lama dari visits[] array (tersimpan di job doc)
+    (currentData.visits||[]).forEach((v, vi) => {
       allVisits.push({
-        code: d.id, visitIdx: null,
-        service: j.service,
-        createdAt: j.createdAt,
-        doneAt: j.doneAt || j.updatedAt,
-        car: j.car, color: j.color, plate: j.plate,
-        isCurrent: d.id === currentCode,
-        isActive: !isDone
+        visitIdx: vi,
+        service: v.service || currentData.service,
+        createdAt: v.createdAt || v.masuk || currentData.createdAt,
+        doneAt: v.doneAt || v.updatedAt,
+        car: v.car || currentData.car,
+        color: v.color || currentData.color,
+        plate: v.plate || currentData.plate,
+        isCurrent: false, isActive: false
       });
+    });
+
+    // Kunjungan sekarang
+    allVisits.push({
+      visitIdx: null,
+      service: currentData.service,
+      createdAt: currentData.createdAt,
+      doneAt: currentData.doneAt || currentData.updatedAt,
+      car: currentData.car, color: currentData.color, plate: currentData.plate,
+      isCurrent: true, isActive: !isDone
     });
 
     // Sort terbaru dulu
@@ -1396,11 +1370,10 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
       return tb - ta;
     });
 
-    console.log('[KONIG visits] total allVisits:', allVisits.length, allVisits.map(v=>v.code+'/'+v.visitIdx));
-    // Kalau cuma 1 atau 0 kunjungan, tidak perlu section ini
+    // Kalau cuma 1 kunjungan, tidak perlu section ini
     if (allVisits.length <= 1) return;
 
-    // Group per mobil (by normalized plate, fallback ke car label)
+    // Group per mobil (by normalized plate)
     const normPlateLocal = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
     const carGroups = new Map();
     allVisits.forEach(v => {
@@ -1409,15 +1382,11 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
       carGroups.get(key).push(v);
     });
 
-    // Sort grup: mobil yang punya kunjungan terbaru duluan
     const sortedGroups = [...carGroups.entries()].sort((a, b) => {
       const ta = toDateObj(a[1][0].doneAt||a[1][0].createdAt)||new Date(0);
       const tb = toDateObj(b[1][0].doneAt||b[1][0].createdAt)||new Date(0);
       return tb - ta;
     });
-
-    // Kalau semua kunjungan dari 1 mobil saja dan cuma 1 kunjungan, sembunyikan
-    if (allVisits.length <= 1) return;
 
     let html = '';
     sortedGroups.forEach(([key, visits]) => {
@@ -1427,7 +1396,6 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
       const colorLabel = rep.color ? ' · ' + colorEn(rep.color) : '';
       const isCurrentCar = normPlateLocal(currentData.plate) && normPlateLocal(currentData.plate) === normPlateLocal(rep.plate);
 
-      // Header mobil — hanya tampil kalau ada lebih dari 1 mobil
       if (sortedGroups.length > 1) {
         html += `<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:${isCurrentCar ? '#a78bfa' : 'var(--muted)'};text-transform:uppercase;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">${carLabel}${plateLabel ? ' · ' + plateLabel : ''}${colorLabel}</div>`;
       }
@@ -1455,6 +1423,7 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
     sec.style.display = 'block';
   } catch(e) { console.error('[KONIG] renderAllVisitsForCustomer error:', e); }
 }
+
 
 // ── REMINDER ──
 window.openReminderModal = function(jobId) {
