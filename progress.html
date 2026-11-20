@@ -1161,6 +1161,7 @@ window.lookupCode = async function() {
 
 // Setelah 3 hari sejak selesai, halaman customer berubah jadi riwayat
 function toDateObj(t){ try { return t && t.toDate ? t.toDate() : (t ? new Date(t) : null); } catch(e) { return null; } }
+function fixMojibake(s){ try { return decodeURIComponent(escape(String(s||''))); } catch(e) { return String(s||''); } }
 const COLOR_EN = { 'HITAM':'Black','PUTIH':'White','PEARL WHITE':'Pearl White','SILVER':'Silver','ABU-ABU':'Grey','ABU-ABU GELAP':'Dark Grey','MERAH':'Red','MAROON':'Maroon','BIRU':'Blue','NAVY':'Navy','HIJAU':'Green','KUNING':'Yellow','ORANYE':'Orange','COKLAT':'Brown','GOLD':'Gold','CHAMPAGNE':'Champagne','UNGU':'Purple','HITAM DOFF':'Matte Black','ABU-ABU DOFF':'Matte Grey','TWO TONE':'Two Tone' };
 function colorEn(c){ const k = String(c||'').trim().toUpperCase(); return COLOR_EN[k] || titleCase(k); }
 function fmtTgl(d){ return d ? d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta' }) : '-'; }
@@ -1227,7 +1228,7 @@ function renderHistory(data){
   document.getElementById('histDur').textContent = dur;
   document.getElementById('histColor').textContent = data.color ? colorEn(data.color) : '-';
   const tags = document.getElementById('histServices'); tags.textContent = '';
-  String(data.service||'').split(', ').filter(Boolean).forEach(x => { const sp = document.createElement('span'); sp.textContent = x; tags.appendChild(sp); });
+  String(data.service||'').split(', ').filter(Boolean).forEach(x => { const sp = document.createElement('span'); sp.textContent = fixMojibake(x); tags.appendChild(sp); });
   if (!tags.children.length) tags.textContent = '-';
   document.getElementById('histReviewBtn').href = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
   const ph = document.getElementById('photosSection'); if (ph) ph.style.display = 'none';
@@ -1245,7 +1246,7 @@ window._selectVisit = function(v) {
   document.getElementById('histDur').textContent = dur;
   document.getElementById('histColor').textContent = v.color ? colorEn(v.color) : '-';
   const tags = document.getElementById('histServices'); tags.textContent = '';
-  String(v.service||'').split(', ').filter(Boolean).forEach(x => { const sp = document.createElement('span'); sp.textContent = x; tags.appendChild(sp); });
+  String(v.service||'').split(', ').filter(Boolean).forEach(x => { const sp = document.createElement('span'); sp.textContent = fixMojibake(x); tags.appendChild(sp); });
   if (!tags.children.length) tags.textContent = '-';
   // scroll ke atas SERVICE HISTORY
   const th = document.getElementById('trackHistory');
@@ -1329,7 +1330,7 @@ function renderTrack(code, data) {
   tc.textContent = warna ? 'Color: ' + colorEn(warna) : '';
   tc.style.display = warna ? 'block' : 'none';
   document.getElementById('trackPlate').textContent = data.plate || '-';
-  document.getElementById('trackService').textContent = data.service || '-';
+  document.getElementById('trackService').textContent = fixMojibake(data.service) || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
   const tv = document.getElementById('trackVouchers'), vv = (data.vouchers||[]).filter(v => !v.used);
   tv.innerHTML = vv.length ? '<b>🎁 Your Vouchers</b><div style="color:var(--muted);font-size:12px">No expiry date. Show the code on your next visit.</div>' + vv.map(v => {
@@ -1364,7 +1365,7 @@ function renderTrack(code, data) {
     if (days < 30) dur = days + (days === 1 ? ' day' : ' days');
     else if (days < 365) { const m = Math.floor(days/30); dur = m + (m === 1 ? ' month' : ' months'); }
     else { const y = Math.floor(days/365), rem = Math.floor((days % 365)/30); dur = y + (y===1?' year':' years') + (rem > 0 ? ' ' + rem + (rem===1?' month':' months') : ''); }
-    badge.textContent = '🛡 This car is protected by ' + bestSvc + ' · ' + dur;
+    badge.textContent = '🛡 This car is protected by ' + fixMojibake(bestSvc) + ' · ' + dur;
     badge.style.display = 'block';
   })();
   // Referral card — tampil hanya kalau sudah selesai (history), jobCode = code (Firestore doc ID)
