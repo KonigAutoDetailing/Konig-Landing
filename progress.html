@@ -1522,8 +1522,7 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
         const doneDate = toDateObj(v.doneAt);
         const inDate = toDateObj(v.createdAt);
         const dateLabel = v.isActive ? '🔧 Sedang dikerjakan' : (doneDate ? fmtTgl(doneDate) : (inDate ? fmtTgl(inDate) : '-'));
-        const doneAgo = doneDate ? (Date.now() - doneDate.getTime()) / 864e5 : 0;
-        const isThis = v.isCurrent && (v.isActive || doneAgo < 1);
+        const isThis = v.isCurrent;
         const rowId = 'vrow_' + currentCode + '_' + vi;
         html += `<div id="${rowId}" data-vi="${vi}" style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px;cursor:pointer" onclick="window._selectVisit && window._selectVisit(${JSON.stringify(v).replace(/"/g,'&quot;')})">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
