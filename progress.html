@@ -3264,10 +3264,14 @@ window.cleanupCustomerNames = async function(){
 function isRealCustomer(j){ return (j.doneSteps||[]).includes('done') || (j.visits||[]).length > 0; }
 function customerIndex(){
   const map = new Map();
-  // Hanya customer yang mobilnya sudah selesai dikerjakan (customer KONIG yang sebenarnya)
+  // Sort ascending dulu sehingga job terbaru OVERWRITE yang lama (data terbaru menang)
   (window._allJobs||[]).filter(isRealCustomer).slice().sort((a,b) => (visitDate(a)||0) - (visitDate(b)||0)).forEach(j => {
     const nm = String(j.custName||'').trim().toUpperCase(); if (!nm) return;
-    map.set(nm + '|' + normWa(j.wa), { name: nm, title: j.custTitle || 'Mr.', wa: j.wa || '', car: j.car || '', plate: j.plate || '', t: visitDate(j) });
+    const waKey = normWa(j.wa);
+    // Key = nomor WA yang dinormalisasi (628xxx) — jika ada. Tanpa WA, fallback ke nama.
+    // Ini memastikan customer yang sama dengan nomor berbeda format (081 vs 628) di-merge jadi satu.
+    const key = waKey.length >= 9 ? waKey : ('NAME|' + nm);
+    map.set(key, { name: nm, title: j.custTitle || 'Mr.', wa: j.wa || '', car: j.car || '', plate: j.plate || '', t: visitDate(j) });
   });
   return [...map.values()].sort((a,b) => (b.t||0) - (a.t||0));
 }
