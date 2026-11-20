@@ -2262,11 +2262,31 @@ function infoPaket(j){
   const lama = lamaKerja(j);
   return (j.service ? 'Layanan: ' + j.service + '\n' : '') + (lama ? 'Lama pengerjaan: ' + lama + '\n' : '') + '\n';
 }
+function buildProgressUrl(j) {
+  const base = location.origin + '/progress?code=' + j.id;
+  try {
+    const normW = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
+    const waKey = normW(j.wa||'');
+    const allJobs = window._allJobs || [];
+    const sameWa = waKey.length >= 9 ? allJobs.filter(x => normW(x.wa) === waKey) : [];
+    if (sameWa.length > 1) {
+      const enc = sameWa.map(x => ({
+        id: x.id, s: x.service||'',
+        ci: x.createdAt ? (typeof x.createdAt.toDate==='function' ? x.createdAt.toDate().toISOString() : String(x.createdAt)) : '',
+        da: x.doneAt ? (typeof x.doneAt.toDate==='function' ? x.doneAt.toDate().toISOString() : String(x.doneAt)) : '',
+        c: x.car||'', cl: x.color||'', p: x.plate||'',
+        d: (x.doneSteps||[]).includes('done') ? 1 : 0
+      }));
+      return base + '&h=' + btoa(JSON.stringify(enc));
+    }
+  } catch(e) {}
+  return base;
+}
 function waMessage(j){
   const steps = window.stepsFor(j.service), done = (j.doneSteps||[]).includes('done');
   const s = steps.find(x => x.id === j.activeStep);
   const pct = done ? 100 : (s ? s.pct : 0);
-  const url = location.origin + '/progress?code=' + j.id;
+  const url = buildProgressUrl(j);
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   // Coating butuh curing overnight → ambil besok; job lain → hari ini; multi-hari → jam operasional umum
   const ambilBase = hasCoating(j) && !isQuick(j)
@@ -2290,7 +2310,7 @@ function waMessage(j){
     const vList = iv ? (iv.items||[]).filter(it => it.voucherCode) : [];
     const vLine = vList.length ? '🎁 Bonus untuk Anda: ' + vList.map(it => 'voucher gratis ' + it.bonus + ' (kode ' + it.voucherCode + ')').join(', ') + '. Voucher bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.\n\n' : '';
     // Info link progress tetap berlaku + promo berikutnya
-    const trackUrl = 'https://www.konigautodetailing.com/progress?code=' + (j.id || '');
+    const trackUrl = buildProgressUrl(j);
     const unusedVouchers = (j.vouchers||[]).filter(v => !v.used);
     const hasPromo = unusedVouchers.length > 0 || (window._promos||[]).some(p => promoUsable(p) && p.type !== 'referral');
     const persistLine = '\nLink progress kendaraan Anda tetap aktif dan bisa dibuka kapan saja untuk melihat riwayat pengerjaan'
@@ -2316,7 +2336,7 @@ function waUpdateNarasi(j, pcLevel){
   const stepId = s ? s.id : null;
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const nm = sapa(j);
-  const url = location.origin + '/progress?code=' + j.id;
+  const url = buildProgressUrl(j);
   const hasCoat = hasCoating(j);
   const isCoat = isCoatingJob(j.service);
   const salam = '\n\nSalam,\nKONIG Auto Detailing';
@@ -2746,7 +2766,7 @@ function renderReviewSection(list, due, today){
 function isCoatingJob(service){ return String(service||'').split(', ').some(x => /Coating/i.test(x) && !/Window/i.test(x)); }
 function welcomeMessage(j){
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
-  const url = location.origin + '/progress?code=' + j.id;
+  const url = buildProgressUrl(j);
   return 'Halo ' + sapa(j) + ',\n\nSelamat datang di KONIG Auto Detailing. Terima kasih telah mempercayakan ' + mobil + ' kepada kami.\n\n'
     + (j.service ? 'Layanan: ' + j.service + '\n\n' : '')
     + 'Kendaraan Anda akan dikerjakan oleh tim kami sesuai standar KONIG. Progres pengerjaan dapat dipantau secara langsung melalui tautan berikut:\n' + url + '\n\n'
