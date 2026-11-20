@@ -1283,7 +1283,7 @@ function renderTrack(code, data) {
   renderTrackReferral(data, code, isHist);
   document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
   document.getElementById('trackHelloSub').textContent = isHist ? 'Thank you for trusting your car to KONIG.' : 'Your car is in good hands. Track its progress here.';
-  if (isHist) { showScreen('screenTrack'); return; }
+  if (isHist) { showScreen('screenTrack'); renderAllVisitsForCustomer(code, data); return; }
   document.getElementById('trackLive').style.display = ''; document.getElementById('trackHistory').style.display = 'none';
 
   // Find current step
