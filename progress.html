@@ -1379,24 +1379,58 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
     // Kalau cuma 1 atau 0 kunjungan, tidak perlu section ini
     if (allVisits.length <= 1) return;
 
-    listEl.innerHTML = allVisits.map((v, i) => {
-      const doneDate = toDateObj(v.doneAt);
-      const inDate = toDateObj(v.createdAt);
-      const dateLabel = doneDate ? fmtTgl(doneDate) : (inDate ? fmtTgl(inDate) : '-');
-      const isThis = v.code === currentCode && v.visitIdx === null;
-      return `<div style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--white)">${v.service || '-'}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px">${v.car || '-'}${v.plate ? ' · ' + v.plate : ''}${v.color ? ' · ' + colorEn(v.color) : ''}</div>
-          </div>
-          <div style="font-size:11px;color:${isThis ? '#a78bfa' : 'var(--muted)'};text-align:right;flex-shrink:0;margin-left:10px">
-            ${isThis ? '<span style="color:#a78bfa">This visit</span><br>' : ''}${dateLabel}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+    // Group per mobil (by normalized plate, fallback ke car label)
+    const normPlateLocal = p => String(p||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const carGroups = new Map();
+    allVisits.forEach(v => {
+      const key = normPlateLocal(v.plate) || (v.car||'').toUpperCase() || 'UNKNOWN';
+      if (!carGroups.has(key)) carGroups.set(key, []);
+      carGroups.get(key).push(v);
+    });
 
+    // Sort grup: mobil yang punya kunjungan terbaru duluan
+    const sortedGroups = [...carGroups.entries()].sort((a, b) => {
+      const ta = toDateObj(a[1][0].doneAt||a[1][0].createdAt)||new Date(0);
+      const tb = toDateObj(b[1][0].doneAt||b[1][0].createdAt)||new Date(0);
+      return tb - ta;
+    });
+
+    // Kalau semua kunjungan dari 1 mobil saja dan cuma 1 kunjungan, sembunyikan
+    if (allVisits.length <= 1) return;
+
+    let html = '';
+    sortedGroups.forEach(([key, visits]) => {
+      const rep = visits[0];
+      const carLabel = rep.car || '-';
+      const plateLabel = rep.plate || '';
+      const colorLabel = rep.color ? ' · ' + colorEn(rep.color) : '';
+      const isCurrentCar = normPlateLocal(currentData.plate) && normPlateLocal(currentData.plate) === normPlateLocal(rep.plate);
+
+      // Header mobil — hanya tampil kalau ada lebih dari 1 mobil
+      if (sortedGroups.length > 1) {
+        html += `<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:${isCurrentCar ? '#a78bfa' : 'var(--muted)'};text-transform:uppercase;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">${carLabel}${plateLabel ? ' · ' + plateLabel : ''}${colorLabel}</div>`;
+      }
+
+      visits.forEach(v => {
+        const doneDate = toDateObj(v.doneAt);
+        const inDate = toDateObj(v.createdAt);
+        const dateLabel = doneDate ? fmtTgl(doneDate) : (inDate ? fmtTgl(inDate) : '-');
+        const isThis = v.code === currentCode && v.visitIdx === null;
+        html += `<div style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--white)">${v.service || '-'}</div>
+              ${sortedGroups.length > 1 ? '' : `<div style="font-size:11px;color:var(--muted);margin-top:2px">${carLabel}${plateLabel ? ' · ' + plateLabel : ''}</div>`}
+            </div>
+            <div style="font-size:11px;color:${isThis ? '#a78bfa' : 'var(--muted)'};text-align:right;flex-shrink:0;margin-left:10px">
+              ${isThis ? '<span style="color:#a78bfa">This visit</span><br>' : ''}${dateLabel}
+            </div>
+          </div>
+        </div>`;
+      });
+    });
+
+    listEl.innerHTML = html;
     sec.style.display = 'block';
   } catch(e) {}
 }
