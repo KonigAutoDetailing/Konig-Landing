@@ -2046,9 +2046,9 @@ function jobCardHtml(j) {
           <div class="job-prog-bg"><div class="job-prog-fill" style="width:${pct}%"></div></div>
           <div class="job-pct-label">${pct}% — ${statusName}</div>
         </div>
-        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions"><button class="btn-sm btn-qr" onclick="openCustomerView('${canonCode}', '${j.wa||''}')">👁 Customer View</button>${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${canonCode}', '${j.car || ''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span class="lock-note">Tanpa invoice</span>'}${lunasBtn(j)}${Date.now() - jobDoneTime(j) > 3 * 864e5 ? `<span class="lock-note">🔒 Terkunci</span><button class="btn-sm" style="background:${j.reviewed ? 'rgba(250,204,21,.15)' : 'transparent'};color:${j.reviewed ? '#facc15' : 'var(--muted)'};border:1px solid ${j.reviewed ? 'rgba(250,204,21,.5)' : 'var(--border)'}" onclick="toggleReviewedDirect('${j.id}', this)">${j.reviewed ? '⭐ Sudah Review' : '⭐ Mark Reviewed'}</button>` : ''}<button class="btn-sm" style="background:#7B2FBE;color:#fff" onclick="openReminderModal('${j.id}')">⏰ Reminder</button><button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
+        ${j._vi != null || (isDone && Date.now() - jobDoneTime(j) > 3 * 864e5) ? `<div class="job-actions"><button class="btn-sm btn-qr" onclick="openCustomerView('${canonCode}', '${j.wa||''}')">👁 Customer View</button>${j._vi == null ? `<button class="btn-sm btn-qr" onclick="showQR('${canonCode}', '${j.car || ''}', '${j.wa||''}')">📱 QR / Link</button>` : ''}${j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}${j._vi != null ? '&v=' + j._vi : ''}&a=1" target="_blank">📄 Invoice</a>` : '<span class="lock-note">Tanpa invoice</span>'}${lunasBtn(j)}${Date.now() - jobDoneTime(j) > 3 * 864e5 ? `<span class="lock-note">🔒 Terkunci</span><button class="btn-sm" style="background:${j.reviewed ? 'rgba(250,204,21,.15)' : 'transparent'};color:${j.reviewed ? '#facc15' : 'var(--muted)'};border:1px solid ${j.reviewed ? 'rgba(250,204,21,.5)' : 'var(--border)'}" onclick="toggleReviewedDirect('${j.id}', this)">${j.reviewed ? '⭐ Sudah Review' : '⭐ Mark Reviewed'}</button>` : ''}<button class="btn-sm" style="background:#7B2FBE;color:#fff" onclick="openReminderModal('${j.id}')">⏰ Reminder</button><button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', ${j._vi == null ? 'null' : j._vi})">🗑️ Hapus kunjungan</button></div>` : `<div class="job-actions">
           <button class="btn-sm btn-edit" onclick="openEditJobModal('${j.id}')">✏️ Update Progress</button>
-          <button class="btn-sm btn-qr" onclick="showQR('${canonCode}', '${j.car || ''}')">📱 QR / Link</button>
+          <button class="btn-sm btn-qr" onclick="showQR('${canonCode}', '${j.car || ''}', '${j.wa||''}')">📱 QR / Link</button>
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
           <button class="btn-sm" style="background:#128C7E;color:#fff" onclick="sendWelcomeForJob('${j.id}')">💬 WA Welcome</button>
           ${!isDone ? `<button class="btn-sm" style="background:#25D366;color:#fff" onclick="window.openWaUpdate('${j.id}')">📲 Update WA</button>` : ''}
@@ -4270,8 +4270,24 @@ async function renderQrSticker(code, S){
   ctx.fillText(code, cx, qb + Math.floor(gap/2));
   return c;
 }
-window.showQR = async function(code, car) {
-  const url = QR_BASE + '?code=' + code;
+window.showQR = async function(code, car, wa) {
+  // Encode history ke URL jika customer punya multiple jobs
+  let url = QR_BASE + '?code=' + code;
+  try {
+    const normW = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
+    const waKey = normW(wa||'');
+    const allJobs = window._allJobs || [];
+    const sameWaJobs = waKey.length >= 9 ? allJobs.filter(j => normW(j.wa) === waKey) : [];
+    if (sameWaJobs.length > 1) {
+      const encoded = sameWaJobs.map(j => ({
+        id: j.id, s: j.service || '',
+        ci: j.createdAt ? (typeof j.createdAt.toDate === 'function' ? j.createdAt.toDate().toISOString() : String(j.createdAt)) : '',
+        da: j.doneAt ? (typeof j.doneAt.toDate === 'function' ? j.doneAt.toDate().toISOString() : String(j.doneAt)) : '',
+        c: j.car || '', cl: j.color || '', p: j.plate || ''
+      }));
+      url += '&h=' + btoa(JSON.stringify(encoded));
+    }
+  } catch(e) {};
   document.getElementById('qrCodeText').textContent = code;
   document.getElementById('qrLink').textContent = url;
   const box = document.getElementById('qrCanvas');
