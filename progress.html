@@ -1238,6 +1238,10 @@ function renderTrackInspection(data){
 }
 
 function renderTrack(code, data) {
+  // Simpan data ke window untuk debugging
+  window._currentTrackData = data;
+  window._currentTrackCode = code;
+  console.log('[KONIG] renderTrack called:', code, '| visits array length:', (data.visits||[]).length, '| wa:', data.wa);
   // Track customer view
   try {
     const { doc, updateDoc, arrayUnion } = window._fbFns;
@@ -1336,6 +1340,7 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
 
   try {
     // Semua history sudah ada di currentData.visits[] — tidak perlu fetch Firestore
+    console.log('[KONIG] renderAllVisitsForCustomer:', currentCode, '| visits:', (currentData.visits||[]).length, '| visits data:', JSON.stringify(currentData.visits||[]).slice(0,200));
     const allVisits = [];
     const isDone = (currentData.doneSteps||[]).includes('done');
 
