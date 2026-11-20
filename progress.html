@@ -1091,12 +1091,22 @@ window.lookupCode = async function() {
             const t = toDateObj(j.updatedAt||j.createdAt)||new Date(0);
             if (t > newestTime) { newestTime = t; newestCode = d.id; }
           });
+          // Kumpulkan semua jobs milik WA ini untuk history
+          const sameWaJobs = [];
+          allSnap.forEach(d => {
+            if (d.id.startsWith('_')) return;
+            const j = d.data();
+            if (normWaLocal(j.wa) !== waKey) return;
+            sameWaJobs.push({ id: d.id, ...j });
+          });
+          window._sameWaJobs = sameWaJobs;
+
           if (newestCode !== code) {
             // Redirect ke job terbaru
             const newestSnap = await getDoc(doc(window._db, 'konig_progress', newestCode));
             if (newestSnap.exists()) { renderTrack(newestCode, newestSnap.data()); return; }
           }
-        } catch(e) {}
+        } catch(e) { window._sameWaJobs = null; }
       }
     }
 
@@ -1339,34 +1349,49 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
   sec.style.display = 'none';
 
   try {
-    // Semua history sudah ada di currentData.visits[] — tidak perlu fetch Firestore
-    console.log('[KONIG] renderAllVisitsForCustomer:', currentCode, '| visits:', (currentData.visits||[]).length, '| visits data:', JSON.stringify(currentData.visits||[]).slice(0,200));
+    // Ambil data dari _sameWaJobs (semua job docs per WA) atau fallback ke visits[]
+    console.log('[KONIG] renderAllVisitsForCustomer:', currentCode, '| sameWaJobs:', (window._sameWaJobs||[]).length, '| visits[]:', (currentData.visits||[]).length);
     const allVisits = [];
     const isDone = (currentData.doneSteps||[]).includes('done');
 
-    // Kunjungan lama dari visits[] array (tersimpan di job doc)
-    (currentData.visits||[]).forEach((v, vi) => {
-      allVisits.push({
-        visitIdx: vi,
-        service: v.service || currentData.service,
-        createdAt: v.createdAt || v.masuk || currentData.createdAt,
-        doneAt: v.doneAt || v.updatedAt,
-        car: v.car || currentData.car,
-        color: v.color || currentData.color,
-        plate: v.plate || currentData.plate,
-        isCurrent: false, isActive: false
+    if (window._sameWaJobs && window._sameWaJobs.length > 0) {
+      // Mode: multi-job per WA (tiap kunjungan = job doc sendiri)
+      window._sameWaJobs.forEach(j => {
+        const isCurrent = j.id === currentCode;
+        const jIsDone = (j.doneSteps||[]).includes('done');
+        allVisits.push({
+          jobId: j.id,
+          service: j.service,
+          createdAt: j.createdAt,
+          doneAt: j.doneAt || j.updatedAt,
+          car: j.car, color: j.color, plate: j.plate,
+          isCurrent: isCurrent, isActive: isCurrent && !isDone
+        });
       });
-    });
-
-    // Kunjungan sekarang
-    allVisits.push({
-      visitIdx: null,
-      service: currentData.service,
-      createdAt: currentData.createdAt,
-      doneAt: currentData.doneAt || currentData.updatedAt,
-      car: currentData.car, color: currentData.color, plate: currentData.plate,
-      isCurrent: true, isActive: !isDone
-    });
+    } else {
+      // Fallback: visits[] array di dalam job doc
+      (currentData.visits||[]).forEach((v, vi) => {
+        allVisits.push({
+          visitIdx: vi,
+          service: v.service || currentData.service,
+          createdAt: v.createdAt || v.masuk || currentData.createdAt,
+          doneAt: v.doneAt || v.updatedAt,
+          car: v.car || currentData.car,
+          color: v.color || currentData.color,
+          plate: v.plate || currentData.plate,
+          isCurrent: false, isActive: false
+        });
+      });
+      // Kunjungan sekarang
+      allVisits.push({
+        visitIdx: null,
+        service: currentData.service,
+        createdAt: currentData.createdAt,
+        doneAt: currentData.doneAt || currentData.updatedAt,
+        car: currentData.car, color: currentData.color, plate: currentData.plate,
+        isCurrent: true, isActive: !isDone
+      });
+    }
 
     // Sort terbaru dulu
     allVisits.sort((a, b) => {
