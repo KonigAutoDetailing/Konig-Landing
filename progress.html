@@ -1342,11 +1342,18 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
   if (waKey.length < 9) return;
 
   try {
-    const { collection, getDocs } = window._fbFns;
-    const snap = await getDocs(collection(window._db, 'konig_progress'));
+    // Gunakan cache _allJobs kalau sudah ada (admin), atau fetch dari Firestore
+    let allJobDocs = [];
+    if (window._allJobs && window._allJobs.length > 0) {
+      allJobDocs = window._allJobs.map(j => ({ id: j.id, data: () => j }));
+    } else {
+      const { collection, getDocs } = window._fbFns;
+      const snap = await getDocs(collection(window._db, 'konig_progress'));
+      snap.forEach(d => allJobDocs.push(d));
+    }
     const allVisits = [];
 
-    snap.forEach(d => {
+    allJobDocs.forEach(d => {
       if (d.id.startsWith('_')) return;
       const j = d.data();
       if (normWaLocal(j.wa) !== waKey) return;
@@ -1440,7 +1447,7 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
 
     listEl.innerHTML = html;
     sec.style.display = 'block';
-  } catch(e) {}
+  } catch(e) { console.error('[KONIG] renderAllVisitsForCustomer error:', e); }
 }
 
 // ── REMINDER ──
