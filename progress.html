@@ -1107,7 +1107,49 @@ window.lookupCode = async function() {
             const newestSnap = await getDoc(doc(window._db, 'konig_progress', newestCode));
             if (newestSnap.exists()) { renderTrack(newestCode, newestSnap.data()); return; }
           }
-        } catch(e) { window._sameWaJobs = null; }
+        } catch(e) {
+          // Fallback: Firestore SDK blocked (Safari CORS/ITP) → pakai REST API
+          try {
+            const proj = 'konig-auto-detailing';
+            const apiKey = 'AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es';
+            const url = `https://firestore.googleapis.com/v1/projects/${proj}/databases/(default)/documents/konig_progress?key=${apiKey}&pageSize=300`;
+            const resp = await fetch(url);
+            if (resp.ok) {
+              const json = await resp.json();
+              const docs = json.documents || [];
+              const parseFs = (fields) => {
+                if (!fields) return {};
+                const out = {};
+                for (const [k, v] of Object.entries(fields)) {
+                  if (v.stringValue !== undefined) out[k] = v.stringValue;
+                  else if (v.integerValue !== undefined) out[k] = Number(v.integerValue);
+                  else if (v.timestampValue !== undefined) out[k] = v.timestampValue;
+                  else if (v.arrayValue !== undefined) out[k] = (v.arrayValue.values||[]).map(x => x.stringValue||x.integerValue||'');
+                  else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
+                }
+                return out;
+              };
+              const sameWaJobs = [];
+              let newestCode = code, newestTime = toDateObj(data.updatedAt||data.createdAt)||new Date(0);
+              docs.forEach(d => {
+                const id = d.name.split('/').pop();
+                if (id.startsWith('_')) return;
+                const j = parseFs(d.fields);
+                if (normWaLocal(j.wa) !== waKey) return;
+                sameWaJobs.push({ id, ...j });
+                if (id !== code) {
+                  const t = toDateObj(j.updatedAt||j.createdAt)||new Date(0);
+                  if (t > newestTime) { newestTime = t; newestCode = id; }
+                }
+              });
+              window._sameWaJobs = sameWaJobs;
+              if (newestCode !== code) {
+                const newestDoc = docs.find(d => d.name.split('/').pop() === newestCode);
+                if (newestDoc) { renderTrack(newestCode, parseFs(newestDoc.fields)); return; }
+              }
+            } else { window._sameWaJobs = null; }
+          } catch(e2) { window._sameWaJobs = null; }
+        }
       }
     }
 
