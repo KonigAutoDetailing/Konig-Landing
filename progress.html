@@ -1635,7 +1635,7 @@ window.loadJobs = async function() {
     jobs.forEach(j => {
       const wa = normW(j.wa);
       if (wa.length < 9) return;
-      const t = (() => { const v = j.visits; if (v && v.length) { const last = v[v.length-1]; return new Date(last.doneAt||last.createdAt||0).getTime(); } return new Date(j.doneAt||j.createdAt||0).getTime(); })();
+      const t = new Date(j.createdAt||0).getTime();
       if (!map.has(wa) || t > map.get(wa).t) map.set(wa, { code: j.id, t });
     });
     window._waToNewestCode = map;
