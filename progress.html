@@ -186,7 +186,7 @@
     .trk-vouch .vc{display:flex;justify-content:space-between;gap:10px;margin-top:6px;color:#fff}
     .trk-vouch .vc span:last-child{font-family:monospace;letter-spacing:1px;color:#facc15}
     .track-color{font-size:14px;color:#c9b8e6;margin-top:4px;letter-spacing:.5px}
-    .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--muted);margin-top:4px}
+    .track-plate{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-top:4px}
     .track-service{font-size:13px;color:var(--muted);margin-top:8px}
 
     /* Progress bar */
@@ -1329,7 +1329,7 @@ function renderTrack(code, data) {
   const warna = String(data.color||'').trim();
   tc.textContent = warna ? 'Color: ' + colorEn(warna) : '';
   tc.style.display = warna ? 'block' : 'none';
-  document.getElementById('trackPlate').textContent = data.plate || '-';
+  document.getElementById('trackPlate').textContent = (data.plate || '-').toUpperCase().replace(/\s+/g,' ').trim();
   document.getElementById('trackService').textContent = fixMojibake(data.service) || '-';
   const nm = String(data.custName||'').trim(), siapa = nm ? ((data.custTitle ? data.custTitle + ' ' : '') + titleCase(nm)) : '';
   const tv = document.getElementById('trackVouchers'), vv = (data.vouchers||[]).filter(v => !v.used);
