@@ -1191,6 +1191,24 @@ function renderHistory(data){
   return true;
 }
 
+// ── SELECT VISIT (klik row di visit history → update SERVICE HISTORY box) ──
+window._selectVisit = function(v) {
+  const inn = toDateObj(v.createdAt);
+  const out = toDateObj(v.doneAt);
+  document.getElementById('histIn').textContent = inn ? fmtTgl(inn) : '-';
+  document.getElementById('histOut').textContent = out ? fmtTgl(out) : '-';
+  let dur = '-';
+  if (inn && out) { const d0 = new Date(inn.getFullYear(), inn.getMonth(), inn.getDate()), d1 = new Date(out.getFullYear(), out.getMonth(), out.getDate()); const n = Math.round((d1 - d0) / 864e5); dur = n <= 0 ? 'Same day' : n + (n === 1 ? ' day' : ' days'); }
+  document.getElementById('histDur').textContent = dur;
+  document.getElementById('histColor').textContent = v.color ? colorEn(v.color) : '-';
+  const tags = document.getElementById('histServices'); tags.textContent = '';
+  String(v.service||'').split(', ').filter(Boolean).forEach(x => { const sp = document.createElement('span'); sp.textContent = x; tags.appendChild(sp); });
+  if (!tags.children.length) tags.textContent = '-';
+  // scroll ke atas SERVICE HISTORY
+  const th = document.getElementById('trackHistory');
+  if (th) th.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 // ── TEMUAN INSPEKSI (halaman customer) ──
 const INSP_PANELS = { bumper_depan:'Front Bumper', kap_mesin:'Hood', kaca_depan:'Windshield', fender_kiri_depan:'Front Left Fender', fender_kanan_depan:'Front Right Fender', pintu_kiri_depan:'Front Left Door', pintu_kanan_depan:'Front Right Door', atap:'Roof', pintu_kiri_belakang:'Rear Left Door', pintu_kanan_belakang:'Rear Right Door', fender_kiri_belakang:'Rear Left Fender', fender_kanan_belakang:'Rear Right Fender', kaca_belakang:'Rear Window', bagasi:'Trunk', bumper_belakang:'Rear Bumper', velg_kiri_depan:'Front Left Wheel', velg_kanan_depan:'Front Right Wheel', velg_kiri_belakang:'Rear Left Wheel', velg_kanan_belakang:'Rear Right Wheel', interior:'Interior' };
 const INSP_STATUS = { minor:['Minor Scratch','#facc15'], deep:['Deep Scratch','#f87171'], dent:['Dent','#fb923c'], other:['Note','#a78bfa'], ok:['Good','#4ade80'] };
@@ -1430,13 +1448,14 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
         html += `<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:${isCurrentCar ? '#a78bfa' : 'var(--muted)'};text-transform:uppercase;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">${carLabel}${plateLabel ? ' · ' + plateLabel : ''}${colorLabel}</div>`;
       }
 
-      visits.forEach(v => {
+      visits.forEach((v, vi) => {
         const doneDate = toDateObj(v.doneAt);
         const inDate = toDateObj(v.createdAt);
         const dateLabel = v.isActive ? '🔧 Sedang dikerjakan' : (doneDate ? fmtTgl(doneDate) : (inDate ? fmtTgl(inDate) : '-'));
         const doneAgo = doneDate ? (Date.now() - doneDate.getTime()) / 864e5 : 0;
         const isThis = v.isCurrent && (v.isActive || doneAgo < 1);
-        html += `<div style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px">
+        const rowId = 'vrow_' + currentCode + '_' + vi;
+        html += `<div id="${rowId}" data-vi="${vi}" style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px;cursor:pointer" onclick="window._selectVisit && window._selectVisit(${JSON.stringify(v).replace(/"/g,'&quot;')})">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--white)">${v.service || '-'}</div>
