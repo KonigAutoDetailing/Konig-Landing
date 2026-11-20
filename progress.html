@@ -543,6 +543,11 @@
       <div class="photos-grid" id="photosGrid"></div>
     </div>
 
+    <div id="prevVisitsSection" style="display:none;margin-top:24px">
+      <div class="hist-badge" style="margin-bottom:12px">VISIT HISTORY</div>
+      <div id="prevVisitsList"></div>
+    </div>
+
     <div style="text-align:center;margin-top:28px">
       <button class="btn-back" onclick="showScreen('screenEnter')">← Back</button>
     </div>
@@ -1291,6 +1296,82 @@ function renderTrack(code, data) {
   });
 
   showScreen('screenTrack');
+
+  // Load semua kunjungan customer berdasarkan WA yang sama
+  renderAllVisitsForCustomer(code, data);
+}
+
+async function renderAllVisitsForCustomer(currentCode, currentData) {
+  const sec = document.getElementById('prevVisitsSection');
+  const listEl = document.getElementById('prevVisitsList');
+  if (!sec || !listEl) return;
+  sec.style.display = 'none';
+
+  const wa = currentData.wa;
+  if (!wa) return;
+
+  const normWaLocal = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
+  const waKey = normWaLocal(wa);
+  if (waKey.length < 9) return;
+
+  try {
+    const { collection, getDocs } = window._fbFns;
+    const snap = await getDocs(collection(window._db, 'konig_progress'));
+    const allVisits = [];
+
+    snap.forEach(d => {
+      if (d.id.startsWith('_')) return;
+      const j = d.data();
+      if (normWaLocal(j.wa) !== waKey) return;
+
+      // Job utama
+      const isDone = (j.doneSteps||[]).includes('done');
+      const doneAt = toDateObj(j.doneAt) || (isDone ? toDateObj(j.updatedAt) : null);
+
+      // Kunjungan lama (visits array)
+      (j.visits||[]).forEach((v, vi) => {
+        const vDone = toDateObj(v.doneAt) || toDateObj(v.updatedAt);
+        allVisits.push({ code: d.id, visitIdx: vi, service: v.service || j.service, createdAt: v.createdAt || v.masuk, doneAt: v.doneAt || v.updatedAt, car: v.car || j.car, color: v.color || j.color, plate: v.plate || j.plate, isCurrent: false });
+      });
+
+      // Kunjungan saat ini / terbaru dari job ini
+      if (isDone && doneAt) {
+        allVisits.push({ code: d.id, visitIdx: null, service: j.service, createdAt: j.createdAt, doneAt: j.doneAt || j.updatedAt, car: j.car, color: j.color, plate: j.plate, isCurrent: d.id === currentCode && !(j.doneSteps||[]).includes('done') === false });
+      } else if (!isDone && d.id === currentCode) {
+        // Job sedang berjalan — tidak masuk "past visits"
+      }
+    });
+
+    // Sort terbaru dulu
+    allVisits.sort((a, b) => {
+      const ta = toDateObj(a.doneAt) || toDateObj(a.createdAt) || new Date(0);
+      const tb = toDateObj(b.doneAt) || toDateObj(b.createdAt) || new Date(0);
+      return tb - ta;
+    });
+
+    // Kalau cuma 1 atau 0 kunjungan, tidak perlu section ini
+    if (allVisits.length <= 1) return;
+
+    listEl.innerHTML = allVisits.map((v, i) => {
+      const doneDate = toDateObj(v.doneAt);
+      const inDate = toDateObj(v.createdAt);
+      const dateLabel = doneDate ? fmtTgl(doneDate) : (inDate ? fmtTgl(inDate) : '-');
+      const isThis = v.code === currentCode && v.visitIdx === null;
+      return `<div style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--white)">${v.service || '-'}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">${v.car || '-'}${v.plate ? ' · ' + v.plate : ''}${v.color ? ' · ' + colorEn(v.color) : ''}</div>
+          </div>
+          <div style="font-size:11px;color:${isThis ? '#a78bfa' : 'var(--muted)'};text-align:right;flex-shrink:0;margin-left:10px">
+            ${isThis ? '<span style="color:#a78bfa">This visit</span><br>' : ''}${dateLabel}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    sec.style.display = 'block';
+  } catch(e) {}
 }
 
 // ── REMINDER ──
@@ -1830,7 +1911,38 @@ window.renderJobList = function(){
     return;
   }
 
-  list.innerHTML = shown.map(j => {
+  // History: group per customer (berdasarkan WA yang dinormalisasi)
+  if (tab === 'history') {
+    const normWaLocal = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
+    const groups = new Map();
+    shown.forEach(j => {
+      const key = normWaLocal(j.wa).length >= 9 ? normWaLocal(j.wa) : ('__' + String(j.custName||j.id).toUpperCase());
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(j);
+    });
+    let html = '';
+    groups.forEach((gjobs, key) => {
+      const rep = gjobs[0];
+      const custLabel = (rep.custTitle ? rep.custTitle + ' ' : '') + (rep.custName ? rep.custName : '—');
+      const waLabel = rep.wa || '-';
+      const totalJobs = gjobs.length;
+      html += `<div style="margin:0 0 4px;padding:8px 12px;background:rgba(123,47,190,0.1);border-left:3px solid #7B2FBE;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--white);letter-spacing:1px">${custLabel}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:10px">${waLabel}</span>
+        </div>
+        <span style="font-size:11px;color:#a78bfa;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px">${totalJobs} KUNJUNGAN</span>
+      </div>`;
+      gjobs.forEach(j => { html += jobCardHtml(j); });
+    });
+    list.innerHTML = html;
+    return;
+  }
+
+  list.innerHTML = shown.map(j => jobCardHtml(j)).join('');
+}
+
+function jobCardHtml(j) {
     const steps = window.stepsFor(j.service);
     const doneSteps = j.doneSteps || [];
     const activeStep = j.activeStep || null;
@@ -1872,7 +1984,6 @@ window.renderJobList = function(){
         <span class="job-status-badge" style="${badgeColor}">${isDone ? '✓ Selesai' : 'Aktif'}</span>${isDone && isLunas(j) ? '<span class="job-status-badge" style="border-color:#16a34a;color:#4ade80">✓ Lunas</span>' : ''}
       </div>
     </div>`;
-  }).join('');
 }
 
 
