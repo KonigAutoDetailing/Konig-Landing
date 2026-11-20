@@ -1351,22 +1351,30 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
       const j = d.data();
       if (normWaLocal(j.wa) !== waKey) return;
 
-      // Job utama
       const isDone = (j.doneSteps||[]).includes('done');
-      const doneAt = toDateObj(j.doneAt) || (isDone ? toDateObj(j.updatedAt) : null);
 
-      // Kunjungan lama (visits array)
+      // Kunjungan lama dari visits[] array
       (j.visits||[]).forEach((v, vi) => {
-        const vDone = toDateObj(v.doneAt) || toDateObj(v.updatedAt);
-        allVisits.push({ code: d.id, visitIdx: vi, service: v.service || j.service, createdAt: v.createdAt || v.masuk, doneAt: v.doneAt || v.updatedAt, car: v.car || j.car, color: v.color || j.color, plate: v.plate || j.plate, isCurrent: false });
+        allVisits.push({
+          code: d.id, visitIdx: vi,
+          service: v.service || j.service,
+          createdAt: v.createdAt || v.masuk || j.createdAt,
+          doneAt: v.doneAt || v.updatedAt,
+          car: v.car || j.car, color: v.color || j.color, plate: v.plate || j.plate,
+          isCurrent: false
+        });
       });
 
-      // Kunjungan saat ini / terbaru dari job ini
-      if (isDone && doneAt) {
-        allVisits.push({ code: d.id, visitIdx: null, service: j.service, createdAt: j.createdAt, doneAt: j.doneAt || j.updatedAt, car: j.car, color: j.color, plate: j.plate, isCurrent: d.id === currentCode && !(j.doneSteps||[]).includes('done') === false });
-      } else if (!isDone && d.id === currentCode) {
-        // Job sedang berjalan — tidak masuk "past visits"
-      }
+      // Job utama (kunjungan terbaru dari job ini) — masuk selalu, done maupun aktif
+      allVisits.push({
+        code: d.id, visitIdx: null,
+        service: j.service,
+        createdAt: j.createdAt,
+        doneAt: j.doneAt || j.updatedAt,
+        car: j.car, color: j.color, plate: j.plate,
+        isCurrent: d.id === currentCode,
+        isActive: !isDone
+      });
     });
 
     // Sort terbaru dulu
@@ -1414,8 +1422,8 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
       visits.forEach(v => {
         const doneDate = toDateObj(v.doneAt);
         const inDate = toDateObj(v.createdAt);
-        const dateLabel = doneDate ? fmtTgl(doneDate) : (inDate ? fmtTgl(inDate) : '-');
-        const isThis = v.code === currentCode && v.visitIdx === null;
+        const dateLabel = v.isActive ? '🔧 Sedang dikerjakan' : (doneDate ? fmtTgl(doneDate) : (inDate ? fmtTgl(inDate) : '-'));
+        const isThis = v.isCurrent;
         html += `<div style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
@@ -1423,7 +1431,7 @@ async function renderAllVisitsForCustomer(currentCode, currentData) {
               ${sortedGroups.length > 1 ? '' : `<div style="font-size:11px;color:var(--muted);margin-top:2px">${carLabel}${plateLabel ? ' · ' + plateLabel : ''}</div>`}
             </div>
             <div style="font-size:11px;color:${isThis ? '#a78bfa' : 'var(--muted)'};text-align:right;flex-shrink:0;margin-left:10px">
-              ${isThis ? '<span style="color:#a78bfa">This visit</span><br>' : ''}${dateLabel}
+              ${isThis ? '<span style="color:#a78bfa;font-size:10px">Kunjungan ini</span><br>' : ''}${dateLabel}
             </div>
           </div>
         </div>`;
