@@ -4457,7 +4457,7 @@ window.openCustomerView = function(canonCode, wa) {
     const sameWaJobs = waKey.length >= 9
       ? allJobs.filter(j => normW(j.wa) === waKey)
       : [];
-    if (sameWaJobs.length > 1) {
+    if (sameWaJobs.length >= 1) {
       // Encode ringkas: hanya field yang dibutuhkan untuk history display
       const encoded = sameWaJobs.map(j => ({
         id: j.id,
@@ -4467,10 +4467,8 @@ window.openCustomerView = function(canonCode, wa) {
         c: j.car || '', cl: j.color || '', p: j.plate || '',
         d: (j.doneSteps||[]).includes('done') ? 1 : 0
       }));
-      const param = btoa(JSON.stringify(encoded));
+      const param = btoa(unescape(encodeURIComponent(JSON.stringify(encoded))));
       window.open('https://www.konigautodetailing.com/progress?code=' + canonCode + '&h=' + param, '_blank');
-    } else {
-      window.open('https://www.konigautodetailing.com/progress?code=' + canonCode, '_blank');
     }
   } catch(e) {
     window.open('https://www.konigautodetailing.com/progress?code=' + canonCode, '_blank');
