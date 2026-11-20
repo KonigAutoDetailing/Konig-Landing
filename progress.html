@@ -4479,7 +4479,13 @@ if (urlCode) {
     } catch(e) { window._sameWaJobs = null; }
   }
   document.getElementById('codeInput').value = urlCode;
-  window.lookupCode();
+  // Tunggu Firebase module siap sebelum lookup (module script async)
+  const waitFirebase = (cb, tries) => {
+    if (window._db && window._fbFns) { cb(); return; }
+    if ((tries||0) > 50) { cb(); return; } // fallback setelah 2.5s
+    setTimeout(() => waitFirebase(cb, (tries||0)+1), 50);
+  };
+  waitFirebase(() => window.lookupCode());
 } else if (isAdmin || localStorage.getItem('konig_admin')) {
   if (localStorage.getItem('konig_admin')) {
     showScreen('screenAdmin');
