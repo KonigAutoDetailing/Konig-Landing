@@ -1529,7 +1529,7 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
         html += `<div id="${rowId}" data-vi="${vi}" style="padding:12px 14px;border:1px solid ${isThis ? 'rgba(123,47,190,0.5)' : 'var(--border)'};background:${isThis ? 'rgba(123,47,190,0.08)' : 'rgba(255,255,255,0.02)'};margin-bottom:8px;cursor:pointer" onclick="window._selectVisit && window._selectVisit(${JSON.stringify(v).replace(/"/g,'&quot;')})">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--white)">${v.service || '-'}</div>
+              <div style="font-size:13px;font-weight:600;color:var(--white)">${fixMojibake(v.service) || '-'}</div>
               ${sortedGroups.length > 1 ? '' : `<div style="font-size:11px;color:var(--muted);margin-top:2px">${carLabel}${plateLabel ? ' · ' + plateLabel : ''}</div>`}
             </div>
             <div style="font-size:11px;color:${isThis ? '#a78bfa' : 'var(--muted)'};text-align:right;flex-shrink:0;margin-left:10px">
