@@ -1380,7 +1380,7 @@ function renderTrack(code, data) {
           <!-- Text -->
           <div style="flex:1;min-width:0">
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:3.5px;color:rgba(167,139,250,0.65);text-transform:uppercase;margin-bottom:5px">Certificate of Protection</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:#fff;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${svcClean}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:#fff;line-height:1.15;word-break:break-word">${svcClean}</div>
             <div style="margin-top:7px;display:flex;flex-direction:column;gap:2px">
               <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(255,255,255,0.55);letter-spacing:.5px">${custDisplay}</div>
               <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(167,139,250,0.5);letter-spacing:.5px">Applied ${appliedDate}</div>
@@ -1396,7 +1396,11 @@ function renderTrack(code, data) {
   })();
   // Referral card — tampil hanya kalau sudah selesai (history), jobCode = code (Firestore doc ID)
   renderTrackReferral(data, code, isHist);
-  document.getElementById('trackHelloMain').textContent = siapa ? (isHist ? 'Welcome back, ' : 'Welcome, ') + siapa : 'Welcome to KONIG';
+  if (siapa) {
+    document.getElementById('trackHelloMain').innerHTML = (isHist ? 'Welcome back,<br>' : 'Welcome,<br>') + '<span style="font-size:0.9em">' + siapa + '</span>';
+  } else {
+    document.getElementById('trackHelloMain').textContent = 'Welcome to KONIG';
+  }
   document.getElementById('trackHelloSub').textContent = isHist ? 'Thank you for trusting your car to KONIG.' : 'Your car is in good hands. Track its progress here.';
   if (isHist) { showScreen('screenTrack'); renderAllVisitsForCustomer(code, data); return; }
   document.getElementById('trackLive').style.display = ''; document.getElementById('trackHistory').style.display = 'none';
