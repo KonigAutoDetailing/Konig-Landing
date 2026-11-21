@@ -1369,25 +1369,26 @@ function renderTrack(code, data) {
     const formatSvcTitle = s => {
       return s.replace(/^(Ceramic Coating|Graphene Coating|Matte Coating)\s+(?!—|–|-)/i, (m, base) => base + ' – ');
     };
-    // Collect all unique coating entries per vehicle (car+plate)
-    const certMap = new Map(); // key: plate||car → {svc, date, custName, car, plate}
+    // Collect all unique coating entries per vehicle (by plate preferred, else car model)
+    const certMap = new Map(); // key: normalized plate or car → {svc, date, custName, car, plate}
+    const vehicleKey = j => {
+      const p = String(j.plate||'').toUpperCase().replace(/\s+/g,'').replace(/[^A-Z0-9]/g,'');
+      const c = String(j.car||'').toUpperCase().replace(/\s+/g,'');
+      return p || c || 'unknown';
+    };
     const addEntry = j => {
       const coat = extractCoatSvc(j.service);
       if (!coat) return;
       const d = toDateObj(j.doneAt || j.createdAt);
       if (!d) return;
-      const key = (j.plate||j.car||'unknown').toUpperCase().replace(/\s+/g,'');
+      const key = vehicleKey(j);
       const existing = certMap.get(key);
       if (!existing || d > existing.date) {
         certMap.set(key, { svc: coat, date: d, custName: j.custName || '', car: j.car || '', plate: j.plate || '' });
       }
     };
-    // Hanya ambil job dengan kendaraan yang sama (plate/car) sebagai current job
-    const curKey = (data.plate || data.car || '').toUpperCase().replace(/\s+/g,'');
-    allJ.forEach(j => {
-      const jKey = ((j.plate || j.car || '')).toUpperCase().replace(/\s+/g,'');
-      if (curKey && jKey === curKey) addEntry(j);
-    });
+    // Semua job dari WA yang sama (semua kendaraan customer)
+    allJ.forEach(addEntry);
     addEntry({ service: data.service, doneAt: data.doneAt, createdAt: data.createdAt, custName: data.custName, car: data.car, plate: data.plate });
     if (certMap.size === 0) { certEl.style.display = 'none'; return; }
     // Render all certificates
