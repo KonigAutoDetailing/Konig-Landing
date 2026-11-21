@@ -1358,16 +1358,20 @@ function renderTrack(code, data) {
     if (badge) badge.style.display = 'none';
     if (!certEl) return;
     const allJ = window._sameWaJobs || [];
-    const isCoatSvc = s => /Coating/i.test(s||'') && !/Window/i.test(s||'');
+    // Extract only coating service(s) from a combined service string
+    const extractCoatSvc = s => (s||'').split(/,\s*/).map(x=>x.trim()).filter(x => /Coating/i.test(x) && !/Window/i.test(x)).join(', ');
+    const isCoatSvc = s => !!extractCoatSvc(s);
     let bestDate = null, bestSvc = '', bestCust = '';
     allJ.forEach(j => {
-      if (!isCoatSvc(j.service)) return;
+      const coat = extractCoatSvc(j.service);
+      if (!coat) return;
       const d = toDateObj(j.doneAt || j.createdAt);
-      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = j.service; bestCust = j.custName || ''; }
+      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = coat; bestCust = j.custName || ''; }
     });
-    if (isCoatSvc(data.service)) {
+    const coatOnly = extractCoatSvc(data.service);
+    if (coatOnly) {
       const d = toDateObj(data.doneAt || data.createdAt);
-      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = data.service; bestCust = data.custName || ''; }
+      if (d && (!bestDate || d > bestDate)) { bestDate = d; bestSvc = coatOnly; bestCust = data.custName || ''; }
     }
     if (!bestDate || !bestSvc) { certEl.style.display = 'none'; return; }
     const appliedDate = bestDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
