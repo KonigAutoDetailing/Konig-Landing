@@ -2300,7 +2300,7 @@ function isQuick(j){
 }
 function titleCase(t){ return String(t||'').toLowerCase().replace(/(^|[\s\-'])(\S)/g, (m,a,b) => a + b.toUpperCase()); }
 function sapa(j){ const n = String(j.custName||'').trim(); return n ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(n)) : 'Bapak/Ibu'; }
-function sapaGreet(j){ const h = new Date().getHours(); const g = h < 12 ? 'Selamat pagi' : h < 18 ? 'Selamat siang' : 'Selamat malam'; return g + ' ' + sapa(j); }
+function sapaGreet(j){ const h = new Date().getHours(); const g = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; return g + ' ' + sapa(j); }
 const REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
 const REVIEW_TEXT = '\n\nApabila berkenan, kami akan sangat menghargai ulasan Anda di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.';
 // Link tracking hanya untuk Coating (bukan Window Coating) & Premium Polish
@@ -2420,7 +2420,7 @@ function waUpdateNarasi(j, pcLevel){
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const nm = sapa(j);
   const _gh = new Date().getHours();
-  const _gw = _gh < 12 ? 'Selamat pagi' : _gh < 18 ? 'Selamat siang' : 'Selamat malam';
+  const _gw = _gh < 12 ? 'Good morning' : _gh < 18 ? 'Good afternoon' : 'Good evening';
   const gnm = _gw + ' ' + nm;
   const url = buildProgressUrl(j);
   const hasCoat = hasCoating(j);
