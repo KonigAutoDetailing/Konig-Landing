@@ -1403,10 +1403,12 @@ function renderTrack(code, data) {
   })();
   // Referral card — tampil hanya kalau sudah selesai (history), jobCode = code (Firestore doc ID)
   renderTrackReferral(data, code, isHist);
+  const _hr = new Date().getHours();
+  const _greet = _hr < 12 ? 'Good morning,' : _hr < 18 ? 'Good afternoon,' : 'Good evening,';
   if (siapa) {
-    document.getElementById('trackHelloMain').innerHTML = (isHist ? 'Welcome back,<br>' : 'Welcome,<br>') + '<span style="font-size:0.9em">' + siapa + '</span>';
+    document.getElementById('trackHelloMain').innerHTML = (isHist ? 'Welcome back,<br>' : _greet + '<br>') + '<span style="font-size:0.9em">' + siapa + '</span>';
   } else {
-    document.getElementById('trackHelloMain').textContent = 'Welcome to KONIG';
+    document.getElementById('trackHelloMain').textContent = _greet.replace(',','') + ' — Welcome to KONIG';
   }
   document.getElementById('trackHelloSub').textContent = isHist ? 'Thank you for trusting your car to KONIG.' : 'Your car is in good hands. Track its progress here.';
   if (isHist) { showScreen('screenTrack'); renderAllVisitsForCustomer(code, data); return; }
