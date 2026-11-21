@@ -612,7 +612,7 @@
       <button type="button" class="job-tab" id="tabCalendar" onclick="setJobTab('calendar')">📅 Jadwal</button>
       <button type="button" class="job-tab" id="tabReminders" onclick="setJobTab('reminders')">🔔 Reminder <span id="cntReminders">0</span></button>
     </div>
-    <input type="search" id="histSearch" class="hist-search" placeholder="Cari plat, nama, mobil, kode..." oninput="renderJobList()" style="display:none">
+    <input type="search" id="histSearch" class="hist-search" placeholder="Cari plat, nama, mobil, coating, kode..." oninput="renderJobList()" style="display:none">
     <div id="jobsList"></div>
     <div id="calendarView" style="display:none"></div>
     <div id="remindersView" style="display:none"></div>
@@ -2197,7 +2197,7 @@ window.renderJobList = function(){
   if (tab === 'reminders') { renderRemindersView(); return; }
   let shown = tab === 'active' ? active : history;
   const q = tab === 'history' ? search.value.trim().toUpperCase().replace(/\s+/g,'') : '';
-  if (q) shown = shown.filter(j => [j.id, j.plate, j.custName, j.car, j.color, j.wa].join(' ').toUpperCase().replace(/\s+/g,'').includes(q));
+  if (q) shown = shown.filter(j => [j.id, j.plate, j.custName, j.car, j.color, j.wa, j.service].join(' ').toUpperCase().replace(/\s+/g,'').includes(q));
 
   const list = document.getElementById('jobsList');
   if (shown.length === 0) {
