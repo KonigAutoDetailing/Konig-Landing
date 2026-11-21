@@ -1392,11 +1392,18 @@ function renderTrack(code, data) {
       matte:    { c1:'rgba(10,80,60,0.15)',   c2:'rgba(52,211,153,0.9)',  c3:'rgba(167,243,208,1)',   bg1:'rgba(4,14,10,0.99)',   bg2:'rgba(8,24,18,0.99)',   label:'rgba(167,243,208,0.85)', sub:'rgba(134,239,172,0.75)', badge:'rgba(167,243,208,0.9)', badgeBorder:'rgba(52,211,153,0.5)' },
     };
     const svcTrim = svcClean.trim();
+    // Prestige: Sonax CC EVO, Gyeon Q² Syncro EVO, CarPro D.Quartz GO
+    // Signature: Sonax CC Pro, Gyeon Q² Pure EVO, CarPro CQUK
+    // Essential: Sonax CC One, CarPro Lite, Sapphire 10H
+    // Matte: Gyeon Q² Matte
     let tier = 'graphene';
-    if (/prestige/i.test(svcTrim)) tier = 'prestige';
+    if (/CC EVO|Syncro EVO|D\.Quartz/i.test(svcTrim)) tier = 'prestige';
+    else if (/CC Pro|Pure EVO|CQUK/i.test(svcTrim)) tier = 'signature';
+    else if (/CC One|CarPro Lite|Sapphire/i.test(svcTrim)) tier = 'essential';
+    else if (/Matte/i.test(svcTrim)) tier = 'matte';
+    else if (/prestige/i.test(svcTrim)) tier = 'prestige';
     else if (/signature/i.test(svcTrim)) tier = 'signature';
     else if (/essential/i.test(svcTrim)) tier = 'essential';
-    else if (/matte/i.test(svcTrim)) tier = 'matte';
     const th = CERT_THEMES[tier];
     const thStyle = `--cert-c1:${th.c1};--cert-c2:${th.c2};--cert-c3:${th.c3};--cert-bg1:${th.bg1};--cert-bg2:${th.bg2}`;
     certEl.innerHTML = `
