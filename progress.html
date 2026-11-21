@@ -1447,6 +1447,7 @@ function renderTrack(code, data) {
               <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:#fff;line-height:1.15;word-break:break-word">${svcClean}</div>
               <div style="margin-top:7px;display:flex;flex-direction:column;gap:2px">
                 <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,0.85);letter-spacing:.5px">${custDisplay}</div>
+                ${(entry.car || entry.plate) ? `<div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:.5px">${[entry.car ? entry.car.toUpperCase() : '', entry.plate ? entry.plate.toUpperCase() : ''].filter(Boolean).join(' · ')}</div>` : ''}
                 <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:${th.sub};letter-spacing:.5px">Applied ${appliedDate}</div>
               </div>
             </div>
