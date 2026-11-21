@@ -1359,7 +1359,12 @@ function renderTrack(code, data) {
     if (!certEl) return;
     const allJ = window._sameWaJobs || [];
     // Extract only coating service(s) from a combined service string
-    const extractCoatSvc = s => (s||'').split(/,\s*/).map(x=>x.trim()).filter(x => /Coating/i.test(x) && !/Window/i.test(x)).join(', ');
+    const extractCoatSvc = s => {
+      const parts = (s||'').split(/,\s*/).map(x=>x.trim()).filter(x => /Coating/i.test(x) && !/Window/i.test(x));
+      // Remove generic "Ceramic Coating" / "Graphene Coating" etc if a more specific one exists
+      const specific = parts.filter(x => x.replace(/coating/i,'').replace(/ceramic|graphene|matte/i,'').trim().length > 0);
+      return (specific.length ? specific : parts).join(', ');
+    };
     const isCoatSvc = s => !!extractCoatSvc(s);
     let bestDate = null, bestSvc = '', bestCust = '';
     allJ.forEach(j => {
