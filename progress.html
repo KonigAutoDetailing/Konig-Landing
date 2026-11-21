@@ -1382,7 +1382,12 @@ function renderTrack(code, data) {
         certMap.set(key, { svc: coat, date: d, custName: j.custName || '', car: j.car || '', plate: j.plate || '' });
       }
     };
-    allJ.forEach(addEntry);
+    // Hanya ambil job dengan kendaraan yang sama (plate/car) sebagai current job
+    const curKey = (data.plate || data.car || '').toUpperCase().replace(/\s+/g,'');
+    allJ.forEach(j => {
+      const jKey = ((j.plate || j.car || '')).toUpperCase().replace(/\s+/g,'');
+      if (curKey && jKey === curKey) addEntry(j);
+    });
     addEntry({ service: data.service, doneAt: data.doneAt, createdAt: data.createdAt, custName: data.custName, car: data.car, plate: data.plate });
     if (certMap.size === 0) { certEl.style.display = 'none'; return; }
     // Render all certificates
