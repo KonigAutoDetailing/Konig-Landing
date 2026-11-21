@@ -1397,13 +1397,9 @@ function renderTrack(code, data) {
     else if (/^Essential/i.test(svcClean)) tier = 'essential';
     else if (/^Matte/i.test(svcClean)) tier = 'matte';
     const th = CERT_THEMES[tier];
-    certEl.style.setProperty('--cert-c1', th.c1);
-    certEl.style.setProperty('--cert-c2', th.c2);
-    certEl.style.setProperty('--cert-c3', th.c3);
-    certEl.style.setProperty('--cert-bg1', th.bg1);
-    certEl.style.setProperty('--cert-bg2', th.bg2);
+    const thStyle = `--cert-c1:${th.c1};--cert-c2:${th.c2};--cert-c3:${th.c3};--cert-bg1:${th.bg1};--cert-bg2:${th.bg2}`;
     certEl.innerHTML = `
-      <div class="cert-card-wrap">
+      <div class="cert-card-wrap" style="${thStyle}">
         <div class="cert-card-inner">
           <div style="display:flex;align-items:center;gap:16px">
             <!-- Logo -->
