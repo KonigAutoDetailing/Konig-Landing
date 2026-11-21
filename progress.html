@@ -1700,7 +1700,7 @@ function reminderCard(r, today, isDue) {
   // Draft WA
   const svc = r.service || j.service || '';
   const waMsg = encodeURIComponent(
-    'Halo ' + (j.custTitle ? j.custTitle + ' ' : '') + (j.custName ? titleCase(j.custName) : '') + ',\n\n' +
+    sapaGreet(j) + ',\n\n' +
     'Kami dari KONIG Auto Detailing ingin mengingatkan bahwa kendaraan Anda ' + (car ? '(' + car + ') ' : '') +
     'sudah waktunya untuk perawatan kembali' + (svc ? ' (' + svc + ')' : '') + '.\n\n' +
     'Silakan hubungi kami untuk penjadwalan. Terima kasih atas kepercayaan Anda kepada KONIG 🙏'
@@ -2529,7 +2529,7 @@ function washMessage(r){
   const kerja = /Wash/i.test(sv) ? 'dicuci' : 'dibersihkan interiornya';
   const ajak = /Wash/i.test(sv) ? 'pencucian berikutnya' : 'pembersihan interior berikutnya';
   const sejak = r.stage === 14 ? '2 minggu' : 'sekitar ' + Math.round(r.stage / 30) + ' bulan';
-  let msg = 'Halo ' + sapa(r.j) + ',\n\nSudah ' + sejak + ' sejak ' + mobil + ' terakhir ' + kerja + ' di KONIG Auto Detailing.';
+  let msg = sapaGreet(r.j) + ',\n\nSudah ' + sejak + ' sejak ' + mobil + ' terakhir ' + kerja + ' di KONIG Auto Detailing.';
   if (r.voucherCode) {
     msg += '\n\nSebagai apresiasi, kami memberikan *voucher diskon 15% untuk Premium Wash* (kode: *' + r.voucherCode + '*). Voucher ini bisa dipakai kapan saja tanpa batas waktu, cukup tunjukkan kodenya saat datang.';
     msg += '\n\nApabila Anda ingin menjadwalkan ' + ajak + ', silakan balas pesan ini dan kami akan siapkan slotnya.';
@@ -2654,7 +2654,7 @@ function coatingWashReminders(jobs, today){
 function coatingWashMessage(r){
   const j = r.j, mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const fw = jobVouchers(j).filter(v => !v.used && /Wash/i.test(v.service||''));
-  let msg = 'Halo ' + sapa(j) + ',\n\nSudah ' + (r.age <= 9 ? '1 minggu' : r.age + ' hari') + ' sejak ' + mobil + ' selesai di-coating di KONIG Auto Detailing. Masa curing coating sudah lewat, jadi mobil Anda sekarang sudah boleh dicuci.\n\n';
+  let msg = sapaGreet(j) + ',\n\nSudah ' + (r.age <= 9 ? '1 minggu' : r.age + ' hari') + ' sejak ' + mobil + ' selesai di-coating di KONIG Auto Detailing. Masa curing coating sudah lewat, jadi mobil Anda sekarang sudah boleh dicuci.\n\n';
   if (fw.length) {
     const v = fw[0];
     msg += 'Anda memiliki voucher *Free ' + v.service + '* (kode ' + v.code + ') yang bisa dipakai untuk cuci pertama ini. Cuci pertama di KONIG sangat kami sarankan, karena sekaligus kami cek kondisi coating-nya dan kami bersihkan dengan metode yang aman untuk coating.\n\n'
@@ -2738,7 +2738,7 @@ function coatingMaintenanceMessage(r){
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const bulan = Math.round(r.age / 30);
   const fm = jobVouchers(j).filter(v => !v.used && /Maintenance/i.test(v.service||''));
-  let msg = 'Halo ' + sapa(j) + ',\n\nSudah sekitar ' + bulan + ' bulan sejak ' + mobil + ' di-coating di KONIG Auto Detailing. Pada usia ini, coating mulai memerlukan perawatan agar proteksinya tetap optimal.\n\nKami mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk *Coating Maintenance* — kami akan inspeksi kondisi coating, bersihkan kontaminan, dan lakukan top-up jika diperlukan, agar coating tetap bekerja maksimal melindungi cat mobil Anda.\n\n';
+  let msg = sapaGreet(j) + ',\n\nSudah sekitar ' + bulan + ' bulan sejak ' + mobil + ' di-coating di KONIG Auto Detailing. Pada usia ini, coating mulai memerlukan perawatan agar proteksinya tetap optimal.\n\nKami mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk *Coating Maintenance* — kami akan inspeksi kondisi coating, bersihkan kontaminan, dan lakukan top-up jika diperlukan, agar coating tetap bekerja maksimal melindungi cat mobil Anda.\n\n';
   if (fm.length) {
     const v = fm[0];
     msg += 'Anda memiliki voucher *Free ' + v.service + '* (kode ' + v.code + ') yang bisa dipakai untuk kunjungan maintenance ini, sehingga tidak ada biaya yang perlu dibayarkan.\n\n';
@@ -2807,7 +2807,7 @@ function reviewMessage(r){
   const intro = isCoating
     ? 'Sudah 7 hari sejak ' + mobil + ' selesai di-coating di KONIG. Masa curing sudah lewat, jadi mobil Anda sekarang sudah boleh dicuci seperti biasa ya.\n\nBagaimana hasilnya sejauh ini? Apabila ada pertanyaan atau hal yang ingin dikonsultasikan mengenai perawatan coating, jangan ragu untuk menghubungi kami.\n\nSelain itu, kami juga mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk Premium Wash dengan harga spesial Rp 100.000 (diskon 50%). Sekaligus kami akan cek kondisi coating dan memastikan tidak ada hal yang perlu kami perbaiki.'
     : 'Bagaimana hasil pengerjaan ' + mobil + ' sejauh ini? Apabila ada keluhan atau hal yang ingin dikonsultasikan, silakan sampaikan kepada kami — kami siap membantu.';
-  return 'Halo ' + sapa(r.j) + ',\n\n' + intro + '\n\nApabila berkenan, kami juga akan sangat menghargai ulasan Anda di Google:\n' + REVIEW_URL + '\nSetiap ulasan sangat berarti bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
+  return sapaGreet(r.j) + ',\n\n' + intro + '\n\nApabila berkenan, kami juga akan sangat menghargai ulasan Anda di Google:\n' + REVIEW_URL + '\nSetiap ulasan sangat berarti bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
 }
 function renderReviewSection(list, due, today){
   const h = document.createElement('div');
@@ -2853,7 +2853,7 @@ function isCoatingJob(service){ return String(service||'').split(', ').some(x =>
 function welcomeMessage(j){
   const mobil = (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '');
   const url = buildProgressUrl(j);
-  return 'Halo ' + sapa(j) + ',\n\nSelamat datang di KONIG Auto Detailing. Terima kasih telah mempercayakan ' + mobil + ' kepada kami.\n\n'
+  return sapaGreet(j) + ',\n\nSelamat datang di KONIG Auto Detailing. Terima kasih telah mempercayakan ' + mobil + ' kepada kami.\n\n'
     + (j.service ? 'Layanan: ' + j.service + '\n\n' : '')
     + 'Kendaraan Anda akan dikerjakan oleh tim kami sesuai standar KONIG. Progres pengerjaan dapat dipantau secara langsung melalui tautan berikut:\n' + url + '\n\n'
     + (isCoatingJob(j.service) ? 'Kami juga akan mengirimkan update progres secara berkala.' : 'Kami akan menginformasikan kembali setelah kendaraan selesai dikerjakan.')
