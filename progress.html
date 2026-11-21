@@ -78,8 +78,13 @@
     @keyframes helloIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
     @keyframes certSpin{from{--cert-angle:0deg}to{--cert-angle:360deg}}
     @property --cert-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
-    .cert-card-wrap{position:relative;border-radius:12px;padding:1.5px;background:conic-gradient(from var(--cert-angle),rgba(123,47,190,0.15) 0%,rgba(167,139,250,0.9) 20%,rgba(196,181,253,1) 25%,rgba(167,139,250,0.9) 30%,rgba(123,47,190,0.15) 50%,rgba(123,47,190,0.15) 100%);animation:certSpin 4s linear infinite}
-    .cert-card-inner{border-radius:11px;padding:20px 20px 18px;background:linear-gradient(135deg,rgba(10,6,20,0.99) 0%,rgba(20,10,40,0.99) 50%,rgba(10,6,20,0.99) 100%);overflow:hidden}
+    @property --cert-c1{syntax:'<color>';initial-value:rgba(123,47,190,0.15);inherits:true}
+    @property --cert-c2{syntax:'<color>';initial-value:rgba(167,139,250,0.9);inherits:true}
+    @property --cert-c3{syntax:'<color>';initial-value:rgba(196,181,253,1);inherits:true}
+    @property --cert-bg1{syntax:'<color>';initial-value:rgba(10,6,20,0.99);inherits:true}
+    @property --cert-bg2{syntax:'<color>';initial-value:rgba(20,10,40,0.99);inherits:true}
+    .cert-card-wrap{position:relative;border-radius:12px;padding:1.5px;background:conic-gradient(from var(--cert-angle),var(--cert-c1) 0%,var(--cert-c2) 20%,var(--cert-c3) 25%,var(--cert-c2) 30%,var(--cert-c1) 50%,var(--cert-c1) 100%);animation:certSpin 4s linear infinite}
+    .cert-card-inner{border-radius:11px;padding:20px 20px 18px;background:linear-gradient(135deg,var(--cert-bg1) 0%,var(--cert-bg2) 50%,var(--cert-bg1) 100%);overflow:hidden}
     @media (prefers-reduced-motion:reduce){.track-hello{animation:none}}
     .track-code{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:4px;color:var(--purpleB);margin-bottom:4px}
     .track-car{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:var(--white);line-height:1}
@@ -1377,6 +1382,26 @@ function renderTrack(code, data) {
     if (/gyeon/i.test(svcClean)) logoSvg = LOGO_GYEON;
     else if (/carpro/i.test(svcClean)) logoSvg = LOGO_CARPRO;
     else if (/sonax/i.test(svcClean)) logoSvg = LOGO_SONAX;
+
+    // Tier color palette
+    const CERT_THEMES = {
+      graphene: { c1:'rgba(88,28,160,0.15)', c2:'rgba(167,139,250,0.9)',  c3:'rgba(196,181,253,1)',   bg1:'rgba(10,6,20,0.99)',   bg2:'rgba(20,10,40,0.99)',  label:'rgba(196,181,253,0.85)', sub:'rgba(196,181,253,0.75)', badge:'rgba(196,181,253,0.9)', badgeBorder:'rgba(167,139,250,0.5)' },
+      prestige: { c1:'rgba(120,80,0,0.15)',   c2:'rgba(234,179,8,0.9)',   c3:'rgba(253,224,71,1)',    bg1:'rgba(12,8,0,0.99)',    bg2:'rgba(28,18,0,0.99)',   label:'rgba(253,224,71,0.85)',  sub:'rgba(253,224,71,0.7)',  badge:'rgba(253,224,71,0.9)',  badgeBorder:'rgba(234,179,8,0.5)' },
+      signature: { c1:'rgba(14,50,120,0.15)', c2:'rgba(59,130,246,0.9)',  c3:'rgba(147,197,253,1)',   bg1:'rgba(4,8,20,0.99)',    bg2:'rgba(8,16,40,0.99)',   label:'rgba(147,197,253,0.85)', sub:'rgba(147,197,253,0.75)', badge:'rgba(147,197,253,0.9)', badgeBorder:'rgba(59,130,246,0.5)' },
+      essential: { c1:'rgba(80,80,90,0.15)',  c2:'rgba(192,192,210,0.9)', c3:'rgba(226,226,235,1)',   bg1:'rgba(10,10,14,0.99)',  bg2:'rgba(20,20,28,0.99)',  label:'rgba(210,210,225,0.85)', sub:'rgba(190,190,210,0.75)', badge:'rgba(210,210,225,0.9)', badgeBorder:'rgba(160,160,185,0.5)' },
+      matte:    { c1:'rgba(10,80,60,0.15)',   c2:'rgba(52,211,153,0.9)',  c3:'rgba(167,243,208,1)',   bg1:'rgba(4,14,10,0.99)',   bg2:'rgba(8,24,18,0.99)',   label:'rgba(167,243,208,0.85)', sub:'rgba(134,239,172,0.75)', badge:'rgba(167,243,208,0.9)', badgeBorder:'rgba(52,211,153,0.5)' },
+    };
+    let tier = 'graphene';
+    if (/^Prestige/i.test(svcClean)) tier = 'prestige';
+    else if (/^Signature/i.test(svcClean)) tier = 'signature';
+    else if (/^Essential/i.test(svcClean)) tier = 'essential';
+    else if (/^Matte/i.test(svcClean)) tier = 'matte';
+    const th = CERT_THEMES[tier];
+    certEl.style.setProperty('--cert-c1', th.c1);
+    certEl.style.setProperty('--cert-c2', th.c2);
+    certEl.style.setProperty('--cert-c3', th.c3);
+    certEl.style.setProperty('--cert-bg1', th.bg1);
+    certEl.style.setProperty('--cert-bg2', th.bg2);
     certEl.innerHTML = `
       <div class="cert-card-wrap">
         <div class="cert-card-inner">
@@ -1385,16 +1410,16 @@ function renderTrack(code, data) {
             <div style="flex-shrink:0;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;overflow:hidden">${logoSvg}</div>
             <!-- Text -->
             <div style="flex:1;min-width:0">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:3.5px;color:rgba(196,181,253,0.85);text-transform:uppercase;margin-bottom:5px">Certificate of Protection</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:3.5px;color:${th.label};text-transform:uppercase;margin-bottom:5px">Certificate of Protection</div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:#fff;line-height:1.15;word-break:break-word">${svcClean}</div>
               <div style="margin-top:7px;display:flex;flex-direction:column;gap:2px">
                 <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:rgba(255,255,255,0.85);letter-spacing:.5px">${custDisplay}</div>
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:rgba(196,181,253,0.75);letter-spacing:.5px">Applied ${appliedDate}</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:${th.sub};letter-spacing:.5px">Applied ${appliedDate}</div>
               </div>
             </div>
             <!-- Active badge -->
             <div style="flex-shrink:0;text-align:center;padding-left:4px">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(196,181,253,0.9);text-transform:uppercase;border:1px solid rgba(167,139,250,0.5);padding:3px 7px;border-radius:3px">Active</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:${th.badge};text-transform:uppercase;border:1px solid ${th.badgeBorder};padding:3px 7px;border-radius:3px">Active</div>
             </div>
           </div>
         </div>
