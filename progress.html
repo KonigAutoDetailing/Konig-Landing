@@ -1656,8 +1656,10 @@ window.openReminderModal = function(jobId) {
   document.getElementById('reminderCustInfo').textContent = (title || '-') + (car ? ' · ' + car : '');
   document.getElementById('reminderService').value = job.service || '';
   document.getElementById('reminderNote').value = '';
-  // Default: 1 bulan dari sekarang
-  const d = new Date(); d.setMonth(d.getMonth() + 1);
+  // Default: 7 hari setelah selesai (doneAt), atau hari ini + 7 hari jika tidak ada
+  const doneDate = toDateObj(job.doneAt || job.updatedAt);
+  const d = doneDate ? new Date(doneDate) : new Date();
+  d.setDate(d.getDate() + 7);
   document.getElementById('reminderDate').value = d.toISOString().slice(0,10);
   openModal('modalReminder');
 };
