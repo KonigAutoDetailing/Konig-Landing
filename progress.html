@@ -2711,7 +2711,8 @@ function renderWashSection(list, due, today){
 function coatingWashReminders(jobs, today){
   const aktif = new Set(jobs.filter(j => !(j.doneSteps||[]).includes('done') && !autoWashDone(j)).map(custKey));
   return jobs.filter(j => isCoatingJob(j.service) && (j.doneSteps||[]).includes('done') && !j.coatWashReminder && !aktif.has(custKey(j)))
-    .map(j => ({ j, age: dayDiff(tsDay(j.doneAt) || tsDay(j.createdAt), today) }))
+    .map(j => ({ j, doneDay: tsDay(j.doneAt) || tsDay(j.updatedAt), age: dayDiff(tsDay(j.doneAt) || tsDay(j.updatedAt), today) }))
+    .filter(r => r.doneDay) // skip job yang tidak ada doneAt/updatedAt — hindari pakai createdAt
     .filter(r => r.age >= 7 && r.age <= 30)
     .sort((a, b) => b.age - a.age);
 }
