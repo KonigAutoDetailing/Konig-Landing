@@ -1117,7 +1117,6 @@ window.lookupCode = async function() {
             sameWaJobs.push({ id: d.id, ...j });
           });
           window._sameWaJobs = sameWaJobs;
-          console.log('[KONIG] sameWaJobs found:', sameWaJobs.length, 'waKey:', waKey, 'custCode:', custCode, 'ids:', sameWaJobs.map(j=>j.id+'/code='+j.code+'/wa='+j.wa));
 
           if (newestCode !== code) {
             // Redirect ke job terbaru
