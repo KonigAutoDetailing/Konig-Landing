@@ -1548,6 +1548,19 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
       window._sameWaJobs.forEach(j => {
         const isCurrent = j.id === currentCode;
         const jIsDone = (j.doneSteps||[]).includes('done');
+        // Expand visits[] lama yang ada di dalam doc ini (backward compat)
+        if (j.visits && j.visits.length > 0) {
+          j.visits.forEach(v => {
+            allVisits.push({
+              jobId: j.id,
+              service: v.service || j.service,
+              createdAt: v.createdAt || v.masuk || j.createdAt,
+              doneAt: v.doneAt || v.updatedAt,
+              car: v.car || j.car, color: v.color || j.color, plate: v.plate || j.plate,
+              isCurrent: false, isActive: false
+            });
+          });
+        }
         allVisits.push({
           jobId: j.id,
           service: j.service,
