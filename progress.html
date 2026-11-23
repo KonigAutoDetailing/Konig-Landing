@@ -4648,6 +4648,8 @@ if (urlCode) {
         wa: ''
       }));
       console.log('[KONIG] History dari URL param:', window._sameWaJobs.length, 'jobs');
+      // Jika hanya 1 job dari URL param, reset agar Firestore query tetap jalan
+      if (window._sameWaJobs.length <= 1) window._sameWaJobs = null;
     } catch(e) { window._sameWaJobs = null; }
   }
   document.getElementById('codeInput').value = urlCode;
