@@ -1140,7 +1140,7 @@ window.lookupCode = async function() {
             const wa0 = '0' + waKey.slice(2); // 081218...
             const wa62 = waKey; // 6281218...
             const waPlus = '+' + waKey; // +6281218...
-            const makeBody = val => ({ structuredQuery: { from: [{ collectionId: 'konig_progress' }], where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: val } } } } });
+            const makeBody = val => ({ structuredQuery: { from: [{ collectionId: 'konig_progress' }], where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: val } } }, limit: 500 } });
             const fetchQuery = async (body) => {
               if (!body) return [];
               const r = await fetch(queryUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -1163,7 +1163,7 @@ window.lookupCode = async function() {
                   if (v.stringValue !== undefined) out[k] = v.stringValue;
                   else if (v.integerValue !== undefined) out[k] = Number(v.integerValue);
                   else if (v.timestampValue !== undefined) out[k] = v.timestampValue;
-                  else if (v.arrayValue !== undefined) out[k] = (v.arrayValue.values||[]).map(x => x.stringValue||x.integerValue||'');
+                  else if (v.arrayValue !== undefined) out[k] = (v.arrayValue.values||[]).map(x => x.mapValue ? parseFs(x.mapValue.fields) : (x.stringValue||x.integerValue||''));
                   else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
                 }
                 return out;
