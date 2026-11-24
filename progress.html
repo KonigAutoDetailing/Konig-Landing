@@ -1124,15 +1124,38 @@ window.lookupCode = async function() {
             if (newestSnap.exists()) { renderTrack(newestCode, newestSnap.data()); return; }
           }
         } catch(e) {
-          // Fallback: Firestore SDK blocked (Safari CORS/ITP) → pakai REST API
+          // Fallback: Firestore SDK blocked (Safari CORS/ITP) → pakai REST API structured query
           try {
             const proj = 'konig-auto-detailing';
             const apiKey = 'AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es';
-            const url = `https://firestore.googleapis.com/v1/projects/${proj}/databases/(default)/documents/konig_progress?key=${apiKey}&pageSize=300`;
-            const resp = await fetch(url);
-            if (resp.ok) {
-              const json = await resp.json();
-              const docs = json.documents || [];
+            // Structured query: filter by WA number langsung, tidak perlu ambil semua
+            const queryUrl = `https://firestore.googleapis.com/v1/projects/${proj}/databases/(default)/documents:runQuery?key=${apiKey}`;
+            const queryBody = waKey.length >= 9 ? {
+              structuredQuery: {
+                from: [{ collectionId: 'konig_progress' }],
+                where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: data.wa } } }
+              }
+            } : null;
+            // Juga coba format 62xxx kalau WA-nya format 0xxx
+            const wa62 = waKey; // sudah dinormalisasi ke 62xxx
+            const queryBody62 = waKey.length >= 9 && waKey !== data.wa ? {
+              structuredQuery: {
+                from: [{ collectionId: 'konig_progress' }],
+                where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: '0' + waKey.slice(2) } } }
+              }
+            } : null;
+            const fetchQuery = async (body) => {
+              if (!body) return [];
+              const r = await fetch(queryUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+              if (!r.ok) return [];
+              const rows = await r.json();
+              return (Array.isArray(rows) ? rows : []).filter(x => x.document).map(x => x.document);
+            };
+            const [docs1, docs2] = await Promise.all([fetchQuery(queryBody), fetchQuery(queryBody62)]);
+            // Gabung, deduplicate by id
+            const seenIds = new Set();
+            const docs = [...docs1, ...docs2].filter(d => { const id = d.name.split('/').pop(); if (seenIds.has(id)) return false; seenIds.add(id); return true; });
+            if (docs.length > 0) {
               const parseFs = (fields) => {
                 if (!fields) return {};
                 const out = {};
@@ -1166,7 +1189,7 @@ window.lookupCode = async function() {
                 const newestDoc = docs.find(d => d.name.split('/').pop() === newestCode);
                 if (newestDoc) { renderTrack(newestCode, parseFs(newestDoc.fields)); return; }
               }
-            } else { window._sameWaJobs = null; }
+            }
           } catch(e2) { window._sameWaJobs = null; }
         }
       }
