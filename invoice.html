@@ -105,6 +105,7 @@ const titleCase = t => String(t||'').toLowerCase().replace(/(^|[\s\-'])(\S)/g, (
 const waNum = raw => { let n = String(raw||'').replace(/[^0-9]/g,''); if(n.startsWith('0')) n = '62' + n.slice(1); else if(n.startsWith('8')) n = '62' + n; return n; };
 
 const code = new URLSearchParams(location.search).get('code');
+const isDpMode = new URLSearchParams(location.search).get('dp') === '1';
 (async () => {
   if (!code) { root.textContent = 'Kode invoice tidak ditemukan.'; return; }
   let snap;
@@ -113,6 +114,65 @@ const code = new URLSearchParams(location.search).get('code');
   if (!snap.exists()) { root.textContent = 'Invoice belum tersedia.'; return; }
   const j0 = snap.data(), vIdx = new URLSearchParams(location.search).get('v');
   const j = vIdx !== null && j0.visits && j0.visits[+vIdx] ? { ...j0, ...j0.visits[+vIdx] } : j0;
+
+  // Mode Tagihan DP — job punya dp nominal tapi belum ada invoice final
+  if (isDpMode && j.dp && !j.invoice) {
+    const nama = j.custName ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(j.custName)) : '-';
+    const dpAmt = Number(j.dp || 0);
+    const today = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta'});
+    const scheduledStr = j.scheduledAt ? new Date(j.scheduledAt).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric', timeZone:'Asia/Jakarta'}) + (j.scheduledAt.includes('T') ? ' pukul ' + new Date(j.scheduledAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta'}) : '') : '';
+    document.title = 'Tagihan DP — KONÏG';
+    root.className = '';
+    root.innerHTML = `<div class="page"><div class="pin">
+      <div class="top">
+        <img class="logo" src="/konig-logo.png" alt="KONÏG">
+        <div class="meta"><h1 style="color:#7B2FBE">Tagihan Down Payment</h1><table>
+          <tr><td>Tanggal</td><td>${today}</td></tr>
+          ${scheduledStr ? `<tr><td>Jadwal Masuk</td><td>${scheduledStr}</td></tr>` : ''}
+          <tr><td>Kode</td><td>${esc(code)}</td></tr></table></div>
+      </div>
+      <div class="parties">
+        <div><div class="ph">Info Perusahaan</div><div class="pname">KONÏG MOBIL INDONESIA</div>
+          <div class="pinfo">Ruko Downtown Drive DBLV 27,<br>Kab. Tangerang,<br>Banten,<br>Telp: 62881080578712<br>Email: konigmobilindonesia@gmail.com</div></div>
+        <div><div class="ph">Tagihan Untuk</div><div class="pname">${esc(nama)}</div>
+          <div class="pinfo">Telp: ${esc(waNum(j.wa) || '-')}</div></div>
+      </div>
+      <div class="bottom" style="margin-top:14mm">
+        <div class="left">
+          ${j.car && j.car !== 'TBD' ? `<div class="ph">Keterangan Kendaraan</div>
+          <table class="ket">
+            <tr><td>Tipe Mobil</td><td>${esc(j.car)}</td></tr>
+            ${j.color ? `<tr><td>Warna</td><td>${esc(titleCase(j.color))}</td></tr>` : ''}
+            ${j.plate ? `<tr><td>Plat Nomor</td><td>${esc(j.plate)}</td></tr>` : ''}
+          </table>` : `<div class="ph">Keterangan</div><div class="txt" style="color:#888">Detail kendaraan & layanan akan dikonfirmasi saat check-in.</div>`}
+          <div class="ph" style="margin-top:8mm">Rekening Pembayaran</div>
+          <div class="txt">Transfer ke:
+Bank BCA
+No. Rekening: 7615866016
+a.n. PT KONIG MOBIL INDONESIA</div>
+          <div class="txt" style="margin-top:6mm;color:#888;font-size:12px">Invoice pelunasan akan dikirimkan setelah pengerjaan selesai.</div>
+        </div>
+        <div class="sum">
+          <table class="st">
+            <tr class="due"><td>Down Payment</td><td>Rp ${money(dpAmt)}</td></tr>
+          </table>
+          <div class="datefoot">${today}</div>
+        </div>
+      </div>
+    </div></div>`;
+    (function(){ const pg = root.querySelector('.page'), pin = root.querySelector('.pin'); const avail = pg.clientHeight - parseFloat(getComputedStyle(pg).paddingTop) - parseFloat(getComputedStyle(pg).paddingBottom); const h = pin.scrollHeight; if (h > avail) pin.style.zoom = (avail / h).toFixed(3); })();
+    const fit = () => { const pg = document.querySelector('.page'); if (!pg) return; const w = document.querySelector('.wrap').clientWidth - 16; pg.style.zoom = w < 794 ? (w / 794).toFixed(3) : ''; };
+    fit(); addEventListener('resize', fit);
+    addEventListener('beforeprint', () => { const pg = document.querySelector('.page'); if (pg) pg.style.zoom = ''; });
+    addEventListener('afterprint', fit);
+    const msgDp = 'Halo ' + nama + ',\n\nTerima kasih telah memesan layanan KONIG Auto Detailing.' + (scheduledStr ? '\n\nJadwal masuk kendaraan Anda: ' + scheduledStr + '.' : '') + '\n\nMohon transfer Down Payment sebesar:\n*Rp ' + dpAmt.toLocaleString('id-ID') + '*\n\nke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\nSetelah DP diterima, slot Anda akan kami konfirmasi. Invoice pelunasan akan dikirimkan setelah pengerjaan selesai.\n\nSalam,\nKONIG Auto Detailing';
+    window.__invMsg = msgDp;
+    if (new URLSearchParams(location.search).get('embed')) { document.getElementById('bar').style.display = 'none'; return; }
+    document.getElementById('bar').style.display = 'flex';
+    if (new URLSearchParams(location.search).get('a') === '1' && localStorage.getItem('konig_admin')) { const wb = document.getElementById('waBtn'); wb.href = 'https://wa.me/' + waNum(j.wa) + '?text=' + encodeURIComponent(msgDp); wb.style.display = ''; }
+    return;
+  }
+
   const inv = j.invoice;
   if (!inv) { root.textContent = 'Invoice belum tersedia.'; return; }
   const nama = j.custName ? ((j.custTitle ? j.custTitle + ' ' : '') + titleCase(j.custName)) : '-';
