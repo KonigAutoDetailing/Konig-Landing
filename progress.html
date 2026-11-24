@@ -2926,8 +2926,11 @@ function welcomeMessage(j){
   const url = buildProgressUrl(j);
   // DP dulu: belum ada data kendaraan/layanan — pesan konfirmasi booking slot
   if (isDpOnly) {
-    const dpLine = j.dp ? 'DP sebesar Rp ' + Number(j.dp).toLocaleString('id-ID') + ' sudah kami terima. ' : '';
-    return sapaGreet(j) + ',\n\nTerima kasih — slot pengerjaan Anda di KONIG Auto Detailing sudah kami catat. ' + dpLine
+    const dpAmt = j.dp ? Number(j.dp).toLocaleString('id-ID') : '';
+    const tagihanUrl = location.origin + '/invoice?code=' + encodeURIComponent(j.id) + '&dp=1';
+    const schedLine = j.scheduledAt ? '\n\nRencana check-in: ' + new Date(j.scheduledAt).toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Jakarta'}) + ' pukul ' + new Date(j.scheduledAt).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Jakarta'}) : '';
+    const dpPayLine = dpAmt ? '\n\nMohon transfer Down Payment sebesar:\n*Rp ' + dpAmt + '*\n\nTagihan DP: ' + tagihanUrl : '';
+    return sapaGreet(j) + ',\n\nTerima kasih — slot pengerjaan Anda di KONIG Auto Detailing sudah kami catat.' + schedLine + dpPayLine
       + '\n\nMohon konfirmasi data kendaraan dan layanan yang diinginkan agar kami dapat mempersiapkan segalanya sebelum kendaraan tiba.'
       + '\n\nSalam,\nKONIG Auto Detailing';
   }
