@@ -2439,13 +2439,8 @@ function buildProgressUrl(j) {
     const allJobs = window._allJobs || [];
     const sameWa = waKey.length >= 9 ? allJobs.filter(x => normW(x.wa) === waKey) : [];
     if (sameWa.length > 1) {
-      const enc = sameWa.map(x => ({
-        id: x.id, s: x.service||'',
-        ci: x.createdAt ? (typeof x.createdAt.toDate==='function' ? x.createdAt.toDate().toISOString() : String(x.createdAt)) : '',
-        da: x.doneAt ? (typeof x.doneAt.toDate==='function' ? x.doneAt.toDate().toISOString() : String(x.doneAt)) : '',
-        c: x.car||'', cl: x.color||'', p: x.plate||'',
-        d: (x.doneSteps||[]).includes('done') ? 1 : 0
-      }));
+      // Encode hanya id — customer view query Firestore sendiri pakai WA number
+      const enc = sameWa.map(x => ({ id: x.id }));
       return base + '&h=' + btoa(JSON.stringify(enc));
     }
   } catch(e) {}
@@ -4596,14 +4591,8 @@ window.openCustomerView = function(canonCode, wa) {
       : [];
     if (sameWaJobs.length >= 1) {
       // Encode ringkas: hanya field yang dibutuhkan untuk history display
-      const encoded = sameWaJobs.map(j => ({
-        id: j.id,
-        s: j.service || '',
-        ci: j.createdAt ? (typeof j.createdAt.toDate === 'function' ? j.createdAt.toDate().toISOString() : String(j.createdAt)) : '',
-        da: j.doneAt ? (typeof j.doneAt.toDate === 'function' ? j.doneAt.toDate().toISOString() : String(j.doneAt)) : '',
-        c: j.car || '', cl: j.color || '', p: j.plate || '',
-        d: (j.doneSteps||[]).includes('done') ? 1 : 0
-      }));
+      // Encode hanya id — customer view query Firestore sendiri pakai WA number
+      const encoded = sameWaJobs.map(j => ({ id: j.id }));
       const param = btoa(unescape(encodeURIComponent(JSON.stringify(encoded))));
       window.open('https://www.konigautodetailing.com/progress?code=' + canonCode + '&h=' + param, '_blank');
     }
@@ -4641,19 +4630,20 @@ if (urlCode) {
   if (urlH) {
     try {
       const decoded = JSON.parse(atob(urlH));
-      // Konversi ke format _sameWaJobs
+      // Format baru: hanya { id } — Firestore query yang ambil detail lengkap
+      // Format lama (backward compat): ada field s, c, ci, dll
       window._sameWaJobs = decoded.map(j => ({
         id: j.id,
-        service: j.s,
-        createdAt: j.ci,
-        doneAt: j.da,
-        car: j.c, color: j.cl, plate: j.p,
+        service: j.s || '',
+        createdAt: j.ci || '',
+        doneAt: j.da || '',
+        car: j.c || '', color: j.cl || '', plate: j.p || '',
         doneSteps: j.d ? ['done'] : [],
         wa: ''
       }));
       console.log('[KONIG] History dari URL param:', window._sameWaJobs.length, 'jobs');
-      // Jika hanya 1 job dari URL param, reset agar Firestore query tetap jalan
-      if (window._sameWaJobs.length <= 1) window._sameWaJobs = null;
+      // Selalu reset agar Firestore query jalan dan ambil data lengkap
+      window._sameWaJobs = null;
     } catch(e) { window._sameWaJobs = null; }
   }
   document.getElementById('codeInput').value = urlCode;
