@@ -165,7 +165,9 @@ a.n. PT KONIG MOBIL INDONESIA</div>
     fit(); addEventListener('resize', fit);
     addEventListener('beforeprint', () => { const pg = document.querySelector('.page'); if (pg) pg.style.zoom = ''; });
     addEventListener('afterprint', fit);
-    const msgDp = 'Halo ' + nama + ',\n\nTerima kasih telah memesan layanan KONIG Auto Detailing.' + (scheduledStr ? '\n\nJadwal masuk kendaraan Anda: ' + scheduledStr + '.' : '') + '\n\nMohon transfer Down Payment sebesar:\n*Rp ' + dpAmt.toLocaleString('id-ID') + '*\n\nke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\nSetelah DP diterima, slot Anda akan kami konfirmasi. Invoice pelunasan akan dikirimkan setelah pengerjaan selesai.\n\nSalam,\nKONIG Auto Detailing';
+    const h = new Date().getHours(); const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    const tagihanLink = location.origin + '/invoice?code=' + encodeURIComponent(j.id) + '&dp=1';
+    const msgDp = greet + ' ' + nama + ',\n\nTerima kasih telah memesan layanan KONIG Auto Detailing.' + (scheduledStr ? '\n\nJadwal masuk kendaraan Anda: ' + scheduledStr + '.' : '') + '\n\nMohon transfer Down Payment sebesar:\n*Rp ' + dpAmt.toLocaleString('id-ID') + '*\n\nke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.\n\nTagihan DP: ' + tagihanLink + '\n\nSetelah DP diterima, slot Anda akan kami konfirmasi. Invoice pelunasan akan dikirimkan setelah pengerjaan selesai.\n\nSalam,\nKONIG Auto Detailing';
     window.__invMsg = msgDp;
     if (new URLSearchParams(location.search).get('embed')) { document.getElementById('bar').style.display = 'none'; return; }
     document.getElementById('bar').style.display = 'flex';
@@ -229,7 +231,8 @@ a.n. PT KONIG MOBIL INDONESIA</div>
       </div>
     </div>
   </div></div>`;
-  const msg = 'Halo ' + nama + ',\n\nBerikut invoice ' + inv.no + ' untuk ' + (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '') + ':\n' + location.href + '\n\n'
+  const _ih = new Date().getHours(); const _ig = _ih < 12 ? 'Good morning' : _ih < 18 ? 'Good afternoon' : 'Good evening';
+  const msg = _ig + ' ' + nama + ',\n\nBerikut invoice ' + inv.no + ' untuk ' + (j.car || 'kendaraan Anda') + (j.plate ? ' (' + j.plate + ')' : '') + ':\n' + location.href + '\n\n'
     + (inv.pay === 'lunas' ? 'Status: Lunas. Terima kasih.' : 'Jumlah tertagih: Rp ' + Number(inv.tertagih||0).toLocaleString('id-ID') + '\nPembayaran ke BCA 7615866016 a.n. PT KONIG MOBIL INDONESIA.')
     + '\n\nSalam,\nKONIG Auto Detailing';
   // Selalu 1 halaman: kecilkan isi kalau melebihi tinggi A4
