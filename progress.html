@@ -1177,6 +1177,7 @@ window.lookupCode = async function() {
                 const jWa = normWaLocal(j.wa);
                 const jCode = String(j.code||'').trim().toUpperCase();
                 const match = (waKey.length >= 9 && jWa === waKey) || (custCode && jCode === custCode);
+                console.log('[KONIG] doc filter:', id, '| j.wa=', j.wa, '| jWa=', jWa, '| waKey=', waKey, '| match=', match);
                 if (!match) return;
                 sameWaJobs.push({ id, ...j });
                 if (id !== code) {
