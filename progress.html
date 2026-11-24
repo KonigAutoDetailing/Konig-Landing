@@ -3547,7 +3547,6 @@ window.saveJob = async function() {
   const brand = document.getElementById('jobBrand').value.trim().toUpperCase();
   const model = document.getElementById('jobModel').value.trim().toUpperCase();
   const color = document.getElementById('jobColor').value.trim().toUpperCase();
-  const car = [brand, model].filter(Boolean).join(' ');
   const custTitle = document.getElementById('jobCustTitle').value;
   const custName = document.getElementById('jobCustName').value.trim().toUpperCase();
   const plate = document.getElementById('jobPlate').value.trim().toUpperCase();
@@ -3560,10 +3559,9 @@ window.saveJob = async function() {
   const dpOnly = document.getElementById('jobDpOnly') && document.getElementById('jobDpOnly').checked;
   const dpNominalRaw = document.getElementById('jobDpNominal') ? parseInt(document.getElementById('jobDpNominal').value) : 0;
   const dpNominal = isNaN(dpNominalRaw) ? 0 : dpNominalRaw;
-  if (!car) {
-    if (dpOnly) { car = 'TBD'; }
-    else { alert('Isi merk atau tipe mobil'); return; }
-  }
+  const carRaw = [brand, model].filter(Boolean).join(' ');
+  const car = carRaw || (dpOnly ? 'TBD' : '');
+  if (!car) { alert('Isi merk atau tipe mobil'); return; }
 
   const btn = document.getElementById('btnSaveJob');
   btn.textContent = 'Menyimpan...'; btn.disabled = true;
