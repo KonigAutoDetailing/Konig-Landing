@@ -3142,7 +3142,12 @@ window.scanFromPhoto = async function(input){
 window.toggleCodeList = function(){
   const sel = document.getElementById('codeList');
   if (sel.style.display === 'block') { sel.style.display = 'none'; return; }
-  const used = new Set((window._allJobs||[]).map(j => j.id.toUpperCase()));
+  // Cek terpakai: dari doc ID (format KNG-XXXXX) ATAU dari field j.code
+  const used = new Set((window._allJobs||[]).flatMap(j => {
+    const ids = [j.id.toUpperCase()];
+    if (j.code) ids.push(String(j.code).trim().toUpperCase());
+    return ids;
+  }));
   const nums = [...used].map(id => { const m = id.match(/^([A-Z]+)-(\d+)$/); return m ? { p: m[1], n: +m[2], w: m[2].length } : null; }).filter(Boolean);
   const prefix = nums.length ? nums[nums.length - 1].p : 'KNG', width = nums.length ? nums[0].w : 5;
   const max = nums.filter(x => x.p === prefix).reduce((a, x) => Math.max(a, x.n), 0);
