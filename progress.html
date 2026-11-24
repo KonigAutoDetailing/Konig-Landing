@@ -1136,14 +1136,6 @@ window.lookupCode = async function() {
                 where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: data.wa } } }
               }
             } : null;
-            // Juga coba format 62xxx kalau WA-nya format 0xxx
-            const wa62 = waKey; // sudah dinormalisasi ke 62xxx
-            const queryBody62 = waKey.length >= 9 && waKey !== data.wa ? {
-              structuredQuery: {
-                from: [{ collectionId: 'konig_progress' }],
-                where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: '0' + waKey.slice(2) } } }
-              }
-            } : null;
             // Semua kemungkinan format WA yang mungkin tersimpan
             const wa0 = '0' + waKey.slice(2); // 081218...
             const wa62 = waKey; // 6281218...
