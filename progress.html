@@ -1571,7 +1571,8 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
 
   try {
     // Ambil data dari _sameWaJobs (semua job docs per WA) atau fallback ke visits[]
-    console.log('[KONIG] renderAllVisitsForCustomer:', currentCode, '| sameWaJobs:', (window._sameWaJobs||[]).length, '| visits[]:', (currentData.visits||[]).length);
+    console.log('[KONIG] renderAllVisitsForCustomer:', currentCode, '| sameWaJobs:', (window._sameWaJobs||[]).length, '| visits[]:', (currentData.visits||[]).length, '| visits data:', JSON.stringify(currentData.visits||[]));
+
     const allVisits = [];
     const isDone = (currentData.doneSteps||[]).includes('done');
 
@@ -1635,6 +1636,7 @@ function renderAllVisitsForCustomer(currentCode, currentData) {
     });
 
     // Kalau cuma 1 kunjungan, tidak perlu section ini
+    console.log('[KONIG] allVisits total:', allVisits.length, JSON.stringify(allVisits.map(v => ({service:v.service,createdAt:v.createdAt,isCurrent:v.isCurrent}))));
     if (allVisits.length <= 1) return;
 
     // Group per mobil (by normalized plate)
