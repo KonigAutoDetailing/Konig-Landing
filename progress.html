@@ -1087,7 +1087,7 @@ window.lookupCode = async function() {
     const data = snap.data();
 
     // Redirect ke job terbaru jika WA customer ini punya job yang lebih baru
-    if ((data.wa || data.code) && !localStorage.getItem('konig_admin') && !window._sameWaJobs) {
+    if ((data.wa || data.code) && !window._sameWaJobs) {
       const normWaLocal = w => { let n = String(w||'').replace(/\D/g,''); if(n.startsWith('0'))n='62'+n.slice(1); else if(n.startsWith('8'))n='62'+n; return n; };
       const waKey = normWaLocal(data.wa);
       const custCode = String(data.code||'').trim().toUpperCase();
