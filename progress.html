@@ -2264,7 +2264,7 @@ function jobCardHtml(j) {
           <a class="btn-sm btn-inspect" href="/inspection?code=${j.id}" target="_blank">🔍 Inspeksi</a>
           <button class="btn-sm" style="background:#128C7E;color:#fff" onclick="sendWelcomeForJob('${j.id}')">💬 WA Welcome</button>
           ${!isDone ? `<button class="btn-sm" style="background:#25D366;color:#fff" onclick="window.openWaUpdate('${j.id}')">📲 Update WA</button>` : ''}
-          ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : (j.dp && !j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&dp=1&a=1" target="_blank">💰 Tagihan DP</a>` : (j.invoice && j.invoice.pay === 'dp' ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice DP</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice DP</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">💰 Invoice DP</button>`))}
+          ${isDone ? (j.invoice ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">📄 Buat Invoice</button>`) : (j.dp && !j.invoice ? `${j.dpPaid ? `<span class="lock-note" style="color:#4ade80">✅ DP Lunas</span>` : `<button class="btn-sm" style="background:#15803d;color:#fff" onclick="confirmDpPaid('${j.id}')">✅ DP Diterima</button>`}<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&dp=1&a=1" target="_blank">💰 Tagihan DP</a>` : (j.invoice && j.invoice.pay === 'dp' ? `<a class="btn-sm btn-inv" href="/invoice?code=${j.id}&a=1" target="_blank">📄 Invoice DP</a><button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">✏️ Edit Invoice DP</button>` : `<button class="btn-sm btn-inv" onclick="openInvoiceFor('${j.id}')">💰 Invoice DP</button>`))}
           ${isDone ? lunasBtn(j) : ''}
           ${!isDone ? `<button class="btn-sm btn-done" onclick="markDone('${j.id}')">✅ Selesai</button>` : ''}
           ${isDone ? `<button class="btn-sm" style="color:#f87171" onclick="deleteVisit('${j.id}', null)">🗑️ Hapus kunjungan</button>` : ''}
@@ -2975,6 +2975,15 @@ window.sendWelcomeForJob = function(id) {
   const j = (window._allJobs || []).find(x => x.id === id);
   if (!j) return;
   window.openWelcome(j);
+};
+
+window.confirmDpPaid = async function(id) {
+  if (!confirm('Konfirmasi DP sudah diterima untuk job ' + id + '?')) return;
+  const { doc, updateDoc } = window._fbFns;
+  await updateDoc(doc(window._db, 'konig_progress', id), { dpPaid: true });
+  const j = (window._allJobs || []).find(x => x.id === id);
+  if (j) j.dpPaid = true;
+  renderJobs();
 };
 
 window.openWaUpdate = async function(onlyId){
