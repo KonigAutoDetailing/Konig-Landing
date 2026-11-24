@@ -1948,7 +1948,7 @@ window.renderCalendar = async function() {
     const isToday = ds === todayStr;
     const scheds = window._schedules[ds] || [];
     const jobsOnDay = activeJobs.filter(j => {
-      const jd = tsDay(j.createdAt);
+      const jd = j.scheduledAt ? j.scheduledAt.slice(0,10) : tsDay(j.createdAt);
       return jd === ds;
     });
     const hasEvent = scheds.length > 0 || jobsOnDay.length > 0;
