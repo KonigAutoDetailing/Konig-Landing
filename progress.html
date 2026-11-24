@@ -698,6 +698,18 @@
         <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:1px">NOMINAL DP (Rp)</label>
         <input type="number" id="jobDpNominal" placeholder="500000" inputmode="numeric" min="0"
           style="width:100%;background:var(--dark);border:1px solid rgba(251,146,60,0.4);border-radius:6px;padding:10px 12px;color:var(--white);font-size:15px;font-family:'Barlow',sans-serif"/>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <div style="flex:1">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:1px">📅 RENCANA MASUK</label>
+            <input type="date" id="jobScheduledDate"
+              style="width:100%;background:var(--dark);border:1px solid rgba(251,146,60,0.4);border-radius:6px;padding:10px 12px;color:var(--white);font-size:15px;font-family:'Barlow',sans-serif"/>
+          </div>
+          <div style="flex:1">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:1px">🕐 JAM</label>
+            <input type="time" id="jobScheduledTime"
+              style="width:100%;background:var(--dark);border:1px solid rgba(251,146,60,0.4);border-radius:6px;padding:10px 12px;color:var(--white);font-size:15px;font-family:'Barlow',sans-serif"/>
+          </div>
+        </div>
       </div>
     </div>
     <!-- Pilih mobil dari history customer -->
@@ -3429,6 +3441,8 @@ window.openNewJobModal = function() {
   document.getElementById('jobWa').value = '';
   const dpOnly = document.getElementById('jobDpOnly'); if(dpOnly){ dpOnly.checked = false; window.toggleDpOnly(false); }
   const dpNom = document.getElementById('jobDpNominal'); if(dpNom) dpNom.value = '';
+  const sdEl = document.getElementById('jobScheduledDate'); if(sdEl) sdEl.value = '';
+  const stEl = document.getElementById('jobScheduledTime'); if(stEl) stEl.value = '';
   const chr = document.getElementById('carHistoryRow'); if(chr) chr.style.display = 'none';
   document.getElementById('jobVoucher').value = ''; document.getElementById('jobVoucherInfo').style.display = 'none'; loadPromos();
   window._repeatOf = null; window._ownerChoice = null; window._skipVouchers = []; setCodeLocked(false); window.fillCustList(); document.getElementById('repeatNotice').style.display = 'none'; document.getElementById('waNotice').style.display = 'none';
@@ -3470,6 +3484,11 @@ window.openEditJobModal = async function(id) {
   if (d.dp) {
     const dpCb = document.getElementById('jobDpOnly'); if(dpCb) { dpCb.checked = true; window.toggleDpOnly(true); }
     const dpNomEl = document.getElementById('jobDpNominal'); if(dpNomEl) dpNomEl.value = d.dp;
+    if (d.scheduledAt) {
+      const [datePart, timePart] = d.scheduledAt.split('T');
+      const sdEl = document.getElementById('jobScheduledDate'); if(sdEl) sdEl.value = datePart || '';
+      const stEl = document.getElementById('jobScheduledTime'); if(stEl) stEl.value = timePart || '';
+    }
   }
   const chr = document.getElementById('carHistoryRow'); if(chr) chr.style.display = 'none';
   // Load size (dari jobSize yg disimpan, atau invoice, atau guess)
@@ -3538,6 +3557,9 @@ window.saveJob = async function() {
   const dpOnly = document.getElementById('jobDpOnly') && document.getElementById('jobDpOnly').checked;
   const dpNominalRaw = document.getElementById('jobDpNominal') ? parseInt(document.getElementById('jobDpNominal').value) : 0;
   const dpNominal = isNaN(dpNominalRaw) ? 0 : dpNominalRaw;
+  const scheduledDate = dpOnly ? (document.getElementById('jobScheduledDate')?.value || '') : '';
+  const scheduledTime = dpOnly ? (document.getElementById('jobScheduledTime')?.value || '') : '';
+  const scheduledAt = (scheduledDate && scheduledTime) ? scheduledDate + 'T' + scheduledTime : (scheduledDate || '');
   const carRaw = [brand, model].filter(Boolean).join(' ');
   const car = carRaw || (dpOnly ? 'TBD' : '');
   if (!car) { alert('Isi merk atau tipe mobil'); return; }
@@ -3562,6 +3584,7 @@ window.saveJob = async function() {
       const jobSizeVal = document.getElementById('jobSize').value || 'Medium';
       const upd = { car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, updatedAt: serverTimestamp() };
       if (dpOnly && dpNominal) upd.dp = dpNominal;
+      if (dpOnly && scheduledAt) upd.scheduledAt = scheduledAt; else if (!dpOnly) upd.scheduledAt = '';
       if (nowDone && !wasDone) { upd.doneAt = serverTimestamp(); upd.locked = true; justDone = editId; }
       await updateDoc(doc(window._db, 'konig_progress', editId), upd);
     } else {
@@ -3585,7 +3608,7 @@ window.saveJob = async function() {
         if (window._ownerChoice !== 'new' && normWa(old.wa) === normWa(wa)) { if (old.reviewed) carry.reviewed = old.reviewed; if (old.reviewReminder) carry.reviewReminder = old.reviewReminder; }
       }
       const jobSizeVal = document.getElementById('jobSize').value || 'Medium';
-      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(dpOnly && dpNominal ? { dp: dpNominal } : {}), ...(nowDone ? { doneAt: serverTimestamp(), locked: true } : { locked: false }) });
+      await setDoc(doc(window._db, 'konig_progress', code), { ...carry, car, brand, model, color, custTitle, custName, plate, wa, service, note, voucherCode, doneSteps, activeStep, stepTimes, jobSize: jobSizeVal, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), ...(dpOnly && dpNominal ? { dp: dpNominal } : {}), ...(dpOnly && scheduledAt ? { scheduledAt } : {}), ...(nowDone ? { doneAt: serverTimestamp(), locked: true } : { locked: false }) });
       window._repeatOf = null;
       if (nowDone) justDone = code;
       else window._welcomeJob = { id: code, car, plate, wa, service, custTitle, custName, voucherCode };
