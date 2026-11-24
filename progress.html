@@ -1144,6 +1144,11 @@ window.lookupCode = async function() {
                 where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: '0' + waKey.slice(2) } } }
               }
             } : null;
+            // Semua kemungkinan format WA yang mungkin tersimpan
+            const wa0 = '0' + waKey.slice(2); // 081218...
+            const wa62 = waKey; // 6281218...
+            const waPlus = '+' + waKey; // +6281218...
+            const makeBody = val => ({ structuredQuery: { from: [{ collectionId: 'konig_progress' }], where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: val } } } } });
             const fetchQuery = async (body) => {
               if (!body) return [];
               const r = await fetch(queryUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -1151,10 +1156,13 @@ window.lookupCode = async function() {
               const rows = await r.json();
               return (Array.isArray(rows) ? rows : []).filter(x => x.document).map(x => x.document);
             };
-            const [docs1, docs2] = await Promise.all([fetchQuery(queryBody), fetchQuery(queryBody62)]);
+            const allFormats = [wa0, wa62, waPlus, data.wa].filter((v,i,a) => v && a.indexOf(v)===i);
+            console.log('[KONIG] REST query WA formats:', allFormats);
+            const allResults = await Promise.all(allFormats.map(v => fetchQuery(makeBody(v))));
             // Gabung, deduplicate by id
             const seenIds = new Set();
-            const docs = [...docs1, ...docs2].filter(d => { const id = d.name.split('/').pop(); if (seenIds.has(id)) return false; seenIds.add(id); return true; });
+            const docs = allResults.flat().filter(d => { const id = d.name.split('/').pop(); if (seenIds.has(id)) return false; seenIds.add(id); return true; });
+            console.log('[KONIG] REST query hasil:', docs.length, 'docs');
             if (docs.length > 0) {
               const parseFs = (fields) => {
                 if (!fields) return {};
