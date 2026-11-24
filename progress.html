@@ -1097,98 +1097,61 @@ window.lookupCode = async function() {
           if (custCode && String(j.code||'').trim().toUpperCase() === custCode) return true;
           return false;
         };
+        // Selalu pakai REST API untuk query WA (lebih reliable, tidak terblokir Safari ITP)
         try {
-          const { collection, getDocs } = window._fbFns;
-          const allSnap = await getDocs(collection(window._db, 'konig_progress'));
-          let newestCode = code, newestTime = toDateObj(data.updatedAt||data.createdAt)||new Date(0);
-          allSnap.forEach(d => {
-            if (d.id.startsWith('_') || d.id === code) return;
-            const j = d.data();
-            if (!isSameCust(j)) return;
-            const t = toDateObj(j.updatedAt||j.createdAt)||new Date(0);
-            if (t > newestTime) { newestTime = t; newestCode = d.id; }
-          });
-          // Kumpulkan semua jobs milik customer ini untuk history
-          const sameWaJobs = [];
-          allSnap.forEach(d => {
-            if (d.id.startsWith('_')) return;
-            const j = d.data();
-            if (!isSameCust(j)) return;
-            sameWaJobs.push({ id: d.id, ...j });
-          });
-          window._sameWaJobs = sameWaJobs;
-
-          if (newestCode !== code) {
-            // Redirect ke job terbaru
-            const newestSnap = await getDoc(doc(window._db, 'konig_progress', newestCode));
-            if (newestSnap.exists()) { renderTrack(newestCode, newestSnap.data()); return; }
-          }
-        } catch(e) {
-          // Fallback: Firestore SDK blocked (Safari CORS/ITP) → pakai REST API structured query
-          try {
-            const proj = 'konig-auto-detailing';
-            const apiKey = 'AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es';
-            // Structured query: filter by WA number langsung, tidak perlu ambil semua
-            const queryUrl = `https://firestore.googleapis.com/v1/projects/${proj}/databases/(default)/documents:runQuery?key=${apiKey}`;
-            const queryBody = waKey.length >= 9 ? {
-              structuredQuery: {
-                from: [{ collectionId: 'konig_progress' }],
-                where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: data.wa } } }
+          const proj = 'konig-auto-detailing';
+          const apiKey = 'AIzaSyApef7fcfnPPjRN15L58n3D87AGnQ30_es';
+          const queryUrl = `https://firestore.googleapis.com/v1/projects/${proj}/databases/(default)/documents:runQuery?key=${apiKey}`;
+          // Query semua kemungkinan format WA yang mungkin tersimpan
+          const wa0 = '0' + waKey.slice(2); // 081218...
+          const wa62 = waKey; // 6281218...
+          const waPlus = '+' + waKey; // +6281218...
+          const makeBody = val => ({ structuredQuery: { from: [{ collectionId: 'konig_progress' }], where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: val } } }, limit: 500 } });
+          const fetchQuery = async (body) => {
+            const r = await fetch(queryUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (!r.ok) return [];
+            const rows = await r.json();
+            return (Array.isArray(rows) ? rows : []).filter(x => x.document).map(x => x.document);
+          };
+          const allFormats = [wa0, wa62, waPlus, data.wa].filter((v,i,a) => v && a.indexOf(v)===i);
+          console.log('[KONIG] REST query WA formats:', allFormats);
+          const allResults = await Promise.all(allFormats.map(v => fetchQuery(makeBody(v))));
+          // Gabung, deduplicate by doc id
+          const seenIds = new Set();
+          const docs = allResults.flat().filter(d => { const id = d.name.split('/').pop(); if (seenIds.has(id)) return false; seenIds.add(id); return true; });
+          console.log('[KONIG] REST query hasil:', docs.length, 'docs found:', docs.map(d=>d.name.split('/').pop()));
+          if (docs.length > 0) {
+            const parseFs = (fields) => {
+              if (!fields) return {};
+              const out = {};
+              for (const [k, v] of Object.entries(fields)) {
+                if (v.stringValue !== undefined) out[k] = v.stringValue;
+                else if (v.integerValue !== undefined) out[k] = Number(v.integerValue);
+                else if (v.timestampValue !== undefined) out[k] = v.timestampValue;
+                else if (v.arrayValue !== undefined) out[k] = (v.arrayValue.values||[]).map(x => x.mapValue ? parseFs(x.mapValue.fields) : (x.stringValue||x.integerValue||''));
+                else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
               }
-            } : null;
-            // Semua kemungkinan format WA yang mungkin tersimpan
-            const wa0 = '0' + waKey.slice(2); // 081218...
-            const wa62 = waKey; // 6281218...
-            const waPlus = '+' + waKey; // +6281218...
-            const makeBody = val => ({ structuredQuery: { from: [{ collectionId: 'konig_progress' }], where: { fieldFilter: { field: { fieldPath: 'wa' }, op: 'EQUAL', value: { stringValue: val } } }, limit: 500 } });
-            const fetchQuery = async (body) => {
-              if (!body) return [];
-              const r = await fetch(queryUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-              if (!r.ok) return [];
-              const rows = await r.json();
-              return (Array.isArray(rows) ? rows : []).filter(x => x.document).map(x => x.document);
+              return out;
             };
-            const allFormats = [wa0, wa62, waPlus, data.wa].filter((v,i,a) => v && a.indexOf(v)===i);
-            console.log('[KONIG] REST query WA formats:', allFormats);
-            const allResults = await Promise.all(allFormats.map(v => fetchQuery(makeBody(v))));
-            // Gabung, deduplicate by id
-            const seenIds = new Set();
-            const docs = allResults.flat().filter(d => { const id = d.name.split('/').pop(); if (seenIds.has(id)) return false; seenIds.add(id); return true; });
-            console.log('[KONIG] REST query hasil:', docs.length, 'docs');
-            if (docs.length > 0) {
-              const parseFs = (fields) => {
-                if (!fields) return {};
-                const out = {};
-                for (const [k, v] of Object.entries(fields)) {
-                  if (v.stringValue !== undefined) out[k] = v.stringValue;
-                  else if (v.integerValue !== undefined) out[k] = Number(v.integerValue);
-                  else if (v.timestampValue !== undefined) out[k] = v.timestampValue;
-                  else if (v.arrayValue !== undefined) out[k] = (v.arrayValue.values||[]).map(x => x.mapValue ? parseFs(x.mapValue.fields) : (x.stringValue||x.integerValue||''));
-                  else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
-                }
-                return out;
-              };
-              const sameWaJobs = [];
-              let newestCode = code, newestTime = toDateObj(data.updatedAt||data.createdAt)||new Date(0);
-              docs.forEach(d => {
-                const id = d.name.split('/').pop();
-                if (id.startsWith('_')) return;
-                const j = parseFs(d.fields);
-                // Semua docs dari query WA sudah relevan — tidak perlu filter ulang
-                sameWaJobs.push({ id, ...j });
-                if (id !== code) {
-                  const t = toDateObj(j.updatedAt||j.createdAt)||new Date(0);
-                  if (t > newestTime) { newestTime = t; newestCode = id; }
-                }
-              });
-              window._sameWaJobs = sameWaJobs;
-              if (newestCode !== code) {
-                const newestDoc = docs.find(d => d.name.split('/').pop() === newestCode);
-                if (newestDoc) { renderTrack(newestCode, parseFs(newestDoc.fields)); return; }
+            const sameWaJobs = [];
+            let newestCode = code, newestTime = toDateObj(data.updatedAt||data.createdAt)||new Date(0);
+            docs.forEach(d => {
+              const id = d.name.split('/').pop();
+              if (id.startsWith('_')) return;
+              const j = parseFs(d.fields);
+              sameWaJobs.push({ id, ...j });
+              if (id !== code) {
+                const t = toDateObj(j.updatedAt||j.createdAt)||new Date(0);
+                if (t > newestTime) { newestTime = t; newestCode = id; }
               }
+            });
+            window._sameWaJobs = sameWaJobs;
+            if (newestCode !== code) {
+              const newestDoc = docs.find(d => d.name.split('/').pop() === newestCode);
+              if (newestDoc) { renderTrack(newestCode, parseFs(newestDoc.fields)); return; }
             }
-          } catch(e2) { window._sameWaJobs = null; }
-        }
+          }
+        } catch(e2) { console.warn('[KONIG] REST query error:', e2); window._sameWaJobs = null; }
       }
     }
 
