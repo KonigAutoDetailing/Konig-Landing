@@ -827,7 +827,7 @@
       <div class="form-row2">
         <div class="form-group" id="pValueGroup"><label id="pValueLbl">Diskon (%)</label><input type="text" id="pValue" inputmode="numeric" placeholder="10" style="text-align:center"/></div>
         <div class="form-group" id="pServiceGroup" style="display:none"><label>Layanan gratis</label>
-          <select id="pService" class="inv-select"><option>Premium Wash Exterior</option><option>Premium Maintenance</option><option>Professional Maintenance</option><option>Engine Detailing</option><option>Window Coating — Kaca Depan</option><option>Interior Detailing — 1 Row</option></select></div>
+          <select id="pService" class="inv-select"><option>Premium Wash Exterior</option><option>Premium Maintenance</option><option>Professional Maintenance</option><option>Engine Detailing</option><option>Window Polishing — Kaca Depan</option><option>Window Polishing — Semua Kaca</option><option>Window Coating — Kaca Depan</option><option>Window Coating — Semua Kaca</option><option>Interior Detailing — 1 Row</option></select></div>
         <div class="form-group" id="pRefJobGroup" style="display:none"><label>ID Job Pengaju</label><input type="text" id="pRefJobId" placeholder="ID job pemilik kode" style="text-align:center;letter-spacing:1px"/></div>
         <div class="form-group"><label>Batas pemakaian</label><input type="text" id="pMax" inputmode="numeric" placeholder="Tanpa batas" style="text-align:center"/></div>
       </div>
@@ -2389,7 +2389,7 @@ function sapa(j){ const n = stripTitle(String(j.custName||'').trim()); return n 
 function sapaGreet(j){ const h = new Date().getHours(); const g = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; return g + ' ' + sapa(j); }
 const REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJp3i9aan9aS4R_-5C2TtFhXg';
 const REVIEW_TEXT = '\n\nApabila berkenan, kami akan sangat menghargai ulasan Anda di Google melalui tautan berikut:\n' + REVIEW_URL + '\nSetiap ulasan sangat berharga bagi perkembangan KONIG.';
-// Link tracking hanya untuk Coating (bukan Window Coating) & Premium Polish
+// Link tracking hanya untuk Coating (bukan Window Polishing/Coating) & Premium Polish
 function needsTrackLink(j){
   return String(j.service||'').split(', ').some(x => (/Coating/i.test(x) && !/Window/i.test(x)) || /Premium Polish/i.test(x));
 }
@@ -4203,6 +4203,8 @@ const PRICELIST = {
   'Interior Detailing — 2 Row': [550000,550000,550000,550000],
   'Interior Detailing — 3 Row': [800000,800000,800000,800000],
   'Engine Detailing': [450000,450000,450000,450000],
+  'Window Polishing — Kaca Depan': [200000,200000,200000,200000],
+  'Window Polishing — Semua Kaca': [500000,500000,500000,500000],
   'Window Coating — Kaca Depan': [200000,200000,200000,200000],
   'Window Coating — Semua Kaca': [500000,500000,500000,500000],
 };
@@ -4680,6 +4682,8 @@ const LAYANAN_DURASI = {
   'Interior Detailing — 1 Row': 180,
   'Interior Detailing — 2 Row': 240,
   'Interior Detailing — 3 Row': 300,
+  'Window Polishing — Kaca Depan': 120,
+  'Window Polishing — Semua Kaca': 180,
   'Window Coating — Kaca Depan': 120,
   'Window Coating — Semua Kaca': 180,
   'Express Polish': 240,
@@ -4756,6 +4760,8 @@ const LAYANAN_LIST = [
   'Interior Detailing — 2 Row',
   'Interior Detailing — 3 Row',
   'Engine Detailing',
+  'Window Polishing — Kaca Depan',
+  'Window Polishing — Semua Kaca',
   'Window Coating — Kaca Depan',
   'Window Coating — Semua Kaca',
 ];
