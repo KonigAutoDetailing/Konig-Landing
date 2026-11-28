@@ -1393,7 +1393,7 @@ function renderTrack(code, data) {
     };
     // Semua job dari WA yang sama (semua kendaraan customer)
     allJ.forEach(addEntry);
-    addEntry({ service: data.service, doneAt: data.doneAt, createdAt: data.createdAt, custName: data.custName, car: data.car, plate: data.plate });
+    if (data.doneAt) addEntry({ service: data.service, doneAt: data.doneAt, createdAt: data.createdAt, custName: data.custName, car: data.car, plate: data.plate });
     if (certMap.size === 0) { certEl.style.display = 'none'; return; }
     // Render all certificates
     let allHtml = '';
@@ -2874,8 +2874,11 @@ function reviewReminders(jobs, today){
 function reviewMessage(r){
   const mobil = namaKendaraan(r.j);
   const isCoating = isCoatingJob(r.j.service);
+  const ageLabel = r.age <= 4 ? 'beberapa hari' : r.age <= 9 ? '1 minggu' : r.age + ' hari';
+  const fw = jobVouchers(r.j).filter(v => !v.used && /Wash/i.test(v.service||''));
+  const washLine = isCoating ? (fw.length ? '\n\nAnda memiliki voucher *Free ' + fw[0].service + '* (kode ' + fw[0].code + ') yang bisa dipakai untuk cuci pertama. Silakan balas pesan ini untuk menjadwalkan.' : '\n\nApabila memungkinkan, mobil bisa dibawa ke KONIG untuk cuci perdana sekaligus kami cek kondisi coating-nya.') : '';
   const intro = isCoating
-    ? 'Sudah 7 hari sejak ' + mobil + ' selesai di-coating di KONIG. Masa curing sudah lewat, jadi mobil Anda sekarang sudah boleh dicuci seperti biasa ya.\n\nBagaimana hasilnya sejauh ini? Apabila ada pertanyaan atau hal yang ingin dikonsultasikan mengenai perawatan coating, jangan ragu untuk menghubungi kami.\n\nSelain itu, kami juga mengundang Anda untuk membawa kembali kendaraan ke KONIG untuk Premium Wash dengan harga spesial Rp 100.000 (diskon 50%). Sekaligus kami akan cek kondisi coating dan memastikan tidak ada hal yang perlu kami perbaiki.'
+    ? 'Sudah ' + ageLabel + ' sejak ' + mobil + ' selesai di-coating di KONIG. Bagaimana hasilnya sejauh ini? Apabila ada pertanyaan atau hal yang ingin dikonsultasikan mengenai perawatan coating, jangan ragu untuk menghubungi kami.' + washLine
     : 'Bagaimana hasil pengerjaan ' + mobil + ' sejauh ini? Apabila ada keluhan atau hal yang ingin dikonsultasikan, silakan sampaikan kepada kami — kami siap membantu.';
   return sapaGreet(r.j) + ',\n\n' + intro + '\n\nApabila berkenan, kami juga akan sangat menghargai ulasan Anda di Google:\n' + REVIEW_URL + '\nSetiap ulasan sangat berarti bagi perkembangan KONIG.\n\nSalam,\nKONIG Auto Detailing';
 }
