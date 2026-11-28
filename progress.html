@@ -1383,7 +1383,8 @@ function renderTrack(code, data) {
     const addEntry = j => {
       const coat = extractCoatSvc(j.service);
       if (!coat) return;
-      const d = toDateObj(j.doneAt || j.createdAt);
+      if (!j.doneAt) return; // hanya job yang sudah selesai
+      const d = toDateObj(j.doneAt);
       if (!d) return;
       const key = vehicleKey(j);
       const existing = certMap.get(key);
